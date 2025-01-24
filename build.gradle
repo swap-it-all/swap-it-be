@@ -55,12 +55,7 @@ def loadPropertiesFile(filePath) {
     return props
 }
 
-def appProperties = loadPropertiesFile("src/main/resources/env.properties")
-
-def sonarToken = appProperties.getProperty("sonarqube.token")
-if (!sonarToken) {
-    throw new GradleException("SonarQube token is not set in env.properties.")
-}
+def sonarToken = System.getenv("SONARQUBETOKEN")
 
 sonarqube {
     properties {
