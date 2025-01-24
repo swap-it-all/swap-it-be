@@ -3,6 +3,7 @@ package com.example.swapit.domain;
 import java.time.LocalDateTime;
 
 import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -27,6 +28,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Entity
 @SQLDelete(sql = "UPDATE goods SET is_deleted = true WHERE goods_id = ?")
+@SQLRestriction("is_deleted = false")
 @Table(name = "goods")
 public class Goods {
 

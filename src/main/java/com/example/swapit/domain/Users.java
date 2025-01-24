@@ -3,8 +3,6 @@ package com.example.swapit.domain;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.annotations.Where;
-
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -43,12 +41,10 @@ public class Users {
 	private String loginInfo;
 
 	@Builder.Default
-	@Where(clause = "is_deleted = false")
 	@OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
 	private List<Goods> goodsList = new ArrayList<>();
 
 	@Builder.Default
-	@Where(clause = "is_read = false")
 	@OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
 	private List<Notifications> notificationsList = new ArrayList<>();
 }
