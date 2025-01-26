@@ -57,7 +57,7 @@ public class Goods extends BaseEntity {
 	@Builder.Default
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false)
-	private GoodsTradeStatus goodsTradeStatus = GoodsTradeStatus.SOLD_OUT;
+	private GoodsTradeStatus goodsTradeStatus = GoodsTradeStatus.AVAILABLE;
 
 	@Column(nullable = false)
 	private double latitude;
