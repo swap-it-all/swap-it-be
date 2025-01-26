@@ -1,7 +1,5 @@
 package com.example.swapit.domain;
 
-import java.time.LocalDateTime;
-
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
@@ -14,8 +12,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -30,7 +26,7 @@ import lombok.NoArgsConstructor;
 @SQLDelete(sql = "UPDATE goods SET is_deleted = true WHERE goods_id = ?")
 @SQLRestriction("is_deleted = false")
 @Table(name = "goods")
-public class Goods {
+public class Goods extends BaseEntity {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -75,26 +71,4 @@ public class Goods {
 	@Builder.Default
 	@Column(nullable = false)
 	private long viewCount = 0;
-
-	@Column(nullable = false, updatable = false)
-	private LocalDateTime createdAt;
-
-	@Column(nullable = false)
-	private LocalDateTime updatedAt;
-
-	@Builder.Default
-	@Column(nullable = false)
-	private boolean isDeleted = false;
-
-	@PrePersist
-	protected void onCreate() {
-		LocalDateTime now = LocalDateTime.now();
-		this.createdAt = now;
-		this.updatedAt = now;
-	}
-
-	@PreUpdate
-	protected void onUpdate() {
-		this.updatedAt = LocalDateTime.now();
-	}
 }
