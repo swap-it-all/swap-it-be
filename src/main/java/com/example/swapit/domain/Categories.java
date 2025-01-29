@@ -22,7 +22,7 @@ public class Categories {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "categories_id")
-	private long id;
+	private Long id;
 
 	@Column(columnDefinition = "VARCHAR(20)", nullable = false)
 	private String name;

@@ -28,7 +28,7 @@ public class Notifications extends BaseEntity {
 	@Id
 	@GeneratedValue
 	@Column(name = "notifications_id")
-	private long id;
+	private Long id;
 
 	@ManyToOne
 	@JoinColumn(name = "users_id", nullable = false)
