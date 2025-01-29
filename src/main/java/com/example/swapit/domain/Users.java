@@ -32,7 +32,7 @@ public class Users {
 	private String nickname;
 
 	@Column(name = "profile_image_url", columnDefinition = "TEXT", nullable = false)
-	private String profileImageurl;
+	private String profileImageUrl;
 
 	@Column(name = "email", columnDefinition = "VARCHAR(255)", nullable = false)
 	private String email;
