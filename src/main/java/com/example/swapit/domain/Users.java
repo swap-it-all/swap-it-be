@@ -21,17 +21,20 @@ public class Users {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "users_id", columnDefinition = "BIGINT", nullable = false)
-	private Long users_id;
+	private Long usersId;
 
 	@Column(name = "nickname", columnDefinition = "VARCHAR(20)", nullable = false)
 	private String nickname;
 
 	@Column(name = "profile_image_url", columnDefinition = "TEXT", nullable = false)
-	private String profile_image_url;
+	private String profileImageUrl;
 
 	@Column(name = "email", columnDefinition = "VARCHAR(255)", nullable = false)
 	private String email;
 
 	@Column(name = "login_info", columnDefinition = "VARCHAR(20)", nullable = false)
-	private String login_info;
+	private String provider;
+
+	@Column(name = "provider_id", columnDefinition = "VARCHAR(255)", nullable = false)
+	private String providerId;
 }
