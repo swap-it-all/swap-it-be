@@ -1,4 +1,4 @@
-package com.example.swapit.config.oauth;
+package com.example.swapit.config.security.oauth2;
 
 import java.util.Collection;
 import java.util.List;

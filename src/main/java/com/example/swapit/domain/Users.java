@@ -35,6 +35,4 @@ public class Users {
 	@Column(name = "login_info", columnDefinition = "VARCHAR(20)", nullable = false)
 	private String provider;
 
-	@Column(name = "provider_id", columnDefinition = "VARCHAR(255)", nullable = false)
-	private String providerId;
 }

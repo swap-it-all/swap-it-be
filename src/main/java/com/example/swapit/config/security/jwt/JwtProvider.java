@@ -1,4 +1,4 @@
-package com.example.swapit.config.oauth;
+package com.example.swapit.config.security.jwt;
 
 import static com.example.swapit.util.Constant.*;
 
@@ -11,6 +11,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.oauth2.jwt.JwtException;
 import org.springframework.stereotype.Component;
+
+import com.example.swapit.domain.dto.TokenDTO;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;

@@ -1,4 +1,4 @@
-package com.example.swapit.config.oauth;
+package com.example.swapit.config.security.jwt;
 
 import java.sql.Timestamp;
 import java.time.Instant;
@@ -9,14 +9,13 @@ import com.example.swapit.domain.Tokens;
 import com.example.swapit.domain.Users;
 import com.example.swapit.repository.TokensRepository;
 
+import lombok.RequiredArgsConstructor;
+
 @Service
+@RequiredArgsConstructor
 public class JwtService {
 
 	private final TokensRepository repository;
-
-	public JwtService(TokensRepository repository) {
-		this.repository = repository;
-	}
 
 	public void saveRefreshToken(Users user, String refreshToken) {
 		// 만료 시간 설정 (14일 후)

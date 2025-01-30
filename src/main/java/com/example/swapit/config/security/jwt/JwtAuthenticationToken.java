@@ -1,4 +1,4 @@
-package com.example.swapit.config.oauth;
+package com.example.swapit.config.security.jwt;
 
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 

@@ -1,4 +1,4 @@
-package com.example.swapit.config.oauth;
+package com.example.swapit.config.security.oauth2;
 
 import java.util.Optional;
 
@@ -44,7 +44,6 @@ public class PrincipalOauth2UserService extends DefaultOAuth2UserService {
 				.nickname(nickname)
 				.profileImageUrl(profile)
 				.provider(provider)
-				.providerId(provideId)
 				.build();
 
 			usersRepository.save(newUser);

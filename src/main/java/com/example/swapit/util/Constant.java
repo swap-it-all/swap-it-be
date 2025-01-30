@@ -7,4 +7,6 @@ public class Constant {
 	public static final String ACCESS_SECRET_KEY = System.getenv("ACCESS_SECRET_KEY");
 	public static final String REFRESH_SECRET_KEY = System.getenv("REFRESH_SECRET_KEY");
 
+	public static final String KAKAO_CLIENT_ID = System.getenv("KAKAO_CLIENT_ID");
+	public static final String KAKAO_REDIRECT_URI = "http://localhost:8080/auth/kakao/callback";
 }

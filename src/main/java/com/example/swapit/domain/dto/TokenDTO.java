@@ -1,4 +1,4 @@
-package com.example.swapit.config.oauth;
+package com.example.swapit.domain.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

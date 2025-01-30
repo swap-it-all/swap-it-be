@@ -1,10 +1,14 @@
-package com.example.swapit.config.oauth;
+package com.example.swapit.config.security.oauth2;
 
 import java.io.IOException;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
+
+import com.example.swapit.config.security.jwt.JwtProvider;
+import com.example.swapit.config.security.jwt.JwtService;
+import com.example.swapit.domain.dto.TokenDTO;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -39,6 +43,5 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
 		// JWT 토큰을 response에 담아서 전송
 		response.setContentType("application/json");
 		response.getWriter().write("{\"token\": \"" + token + "\"}");
-		System.out.println("ACCESS TOKEN : " + token.getAccessToken() + "\nREFRESH TOKEN : " + token.getRefreshToken());
 	}
 }
