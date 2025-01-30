@@ -28,7 +28,7 @@ public class Trades extends BaseEntity {
 	@Id
 	@GeneratedValue
 	@Column(name = "trades_id")
-	private long id;
+	private Long id;
 
 	@Builder.Default
 	@Enumerated(EnumType.STRING)
