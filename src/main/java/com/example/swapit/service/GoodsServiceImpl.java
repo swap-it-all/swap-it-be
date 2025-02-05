@@ -19,7 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Transactional
 @RequiredArgsConstructor
-public class GoodServiceImpl implements GoodService {
+public class GoodsServiceImpl implements GoodsService {
 
 	private final GoodsRepository goodsRepository;
 	private final UsersRepository usersRepository;

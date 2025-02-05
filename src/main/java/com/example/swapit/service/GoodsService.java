@@ -7,7 +7,7 @@ import com.example.swapit.domain.dto.GoodsListDto;
 import com.example.swapit.domain.dto.GoodsRequestDto;
 
 @Service
-public interface GoodService {
+public interface GoodsService {
 
 	// 물건 조회
 	GoodsListDto getGoods();
