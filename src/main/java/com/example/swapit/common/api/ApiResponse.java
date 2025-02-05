@@ -18,6 +18,10 @@ public class ApiResponse<T> {
 		return new ApiResponse<>(true, "요청에 성공하였습니다.", null);
 	}
 
+	public static <T> ApiResponse<T> successKeyword(String keyword) {
+		return new ApiResponse<>(true, keyword + "가 정상적으로 수행되었습니다.", null);
+	}
+
 	public static <T> ApiResponse<T> success(String message) {
 		return new ApiResponse<>(true, message, null);
 	}
