@@ -47,8 +47,6 @@ class JpaAuditingTest {
 			.price(1000)
 			.quality(GoodsQuality.GOOD)
 			.content("Brand new laptop for sale.")
-			.latitude(37.7749)
-			.longitude(-122.4194)
 			.placeName("San Francisco")
 			.build();
 
