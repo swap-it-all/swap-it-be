@@ -6,9 +6,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import com.example.swapit.repository.CategoryRepository;
-import com.example.swapit.repository.GoodRepository;
-import com.example.swapit.repository.UserRepository;
+import com.example.swapit.repository.CategoriesRepository;
+import com.example.swapit.repository.GoodsRepository;
+import com.example.swapit.repository.UsersRepository;
 
 import jakarta.transaction.Transactional;
 
@@ -17,18 +17,18 @@ import jakarta.transaction.Transactional;
 class JpaAuditingTest {
 
 	@Autowired
-	private GoodRepository goodRepository;
+	private GoodsRepository goodsRepository;
 
 	@Autowired
-	private UserRepository userRepository;
+	private UsersRepository usersRepository;
 
 	@Autowired
-	private CategoryRepository categoryRepository;
+	private CategoriesRepository categoriesRepository;
 
 	@Test
 	void findGood() {
 		// Given
-		Users user = userRepository.save(
+		Users user = usersRepository.save(
 			Users.builder()
 				.nickname("John Doe")
 				.profileImageUrl("asdfasdf")
@@ -36,7 +36,7 @@ class JpaAuditingTest {
 				.loginInfo("kakao")
 				.build());
 
-		Categories category = categoryRepository.save(Categories.builder()
+		Categories category = categoriesRepository.save(Categories.builder()
 			.name("Electronics")
 			.build());
 
@@ -53,7 +53,7 @@ class JpaAuditingTest {
 			.build();
 
 		// When
-		Goods savedGoods = goodRepository.save(goods);
+		Goods savedGoods = goodsRepository.save(goods);
 
 		// Then
 		assertThat(savedGoods.getCreatedAt()).isNotNull();
