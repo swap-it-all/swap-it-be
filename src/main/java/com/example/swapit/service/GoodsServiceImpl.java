@@ -1,5 +1,7 @@
 package com.example.swapit.service;
 
+import org.springframework.stereotype.Service;
+
 import com.example.swapit.common.exception.CustomException;
 import com.example.swapit.common.exception.ErrorCode;
 import com.example.swapit.domain.Categories;
@@ -17,6 +19,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@Service
 @Transactional
 @RequiredArgsConstructor
 public class GoodsServiceImpl implements GoodsService {
@@ -78,7 +81,8 @@ public class GoodsServiceImpl implements GoodsService {
 	}
 
 	private void checkAuthorization(Users goodsUser, Users currentUser) {
-		if (goodsUser.getUsersId().equals(currentUser.getUsersId())) {
+		log.info("(글 소유주 ID: {}), (로그인한 사용자 ID: {})", goodsUser.getUsersId(), currentUser.getUsersId());
+		if (!goodsUser.getUsersId().equals(currentUser.getUsersId())) {
 			throw new CustomException(ErrorCode.UNAUTHORIZED_ACCESS);
 		}
 	}
