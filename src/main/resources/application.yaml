@@ -1,0 +1,6 @@
+spring:
+  application:
+    name: swapit
+
+  jpa:
+    open-in-view: false
