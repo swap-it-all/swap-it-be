@@ -66,7 +66,7 @@ public class Goods extends BaseEntity {
 	@Column(nullable = false)
 	private GoodsTradeStatus goodsTradeStatus = GoodsTradeStatus.AVAILABLE;
 
-	@Column(columnDefinition = "VARCHAR(100)", nullable = false)
+	@Column(columnDefinition = "VARCHAR(100)")
 	private String placeName;
 
 	@Builder.Default
