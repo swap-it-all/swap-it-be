@@ -57,7 +57,6 @@ class GoodServiceTest {
 			.build();
 
 		testGood = Goods.builder()
-			.id(1L)
 			.user(testUser)
 			.title("test 물건")
 			.price(1000L)

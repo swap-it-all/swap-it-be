@@ -1,5 +1,7 @@
 package com.example.swapit.service;
 
+import java.util.List;
+
 import org.springframework.stereotype.Service;
 
 import com.example.swapit.common.exception.CustomException;
@@ -8,6 +10,7 @@ import com.example.swapit.domain.Categories;
 import com.example.swapit.domain.Goods;
 import com.example.swapit.domain.Users;
 import com.example.swapit.domain.dto.GoodsDetailDto;
+import com.example.swapit.domain.dto.GoodsDto;
 import com.example.swapit.domain.dto.GoodsListDto;
 import com.example.swapit.domain.dto.GoodsRequestDto;
 import com.example.swapit.repository.CategoriesRepository;
@@ -28,9 +31,29 @@ public class GoodsServiceImpl implements GoodsService {
 	private final UsersRepository usersRepository;
 	private final CategoriesRepository categoriesRepository;
 
+	private final int size = 30;
+
 	@Override
-	public GoodsListDto getGoods() {
-		return null;
+	public GoodsListDto getGoods(
+		Long cursor, List<Long> categoryIds, String keyword, String sortBy
+	) {
+
+		// Goods 조회
+		List<Goods> goodsList = goodsRepository.findGoodsByCursor(
+			cursor, categoryIds, keyword, sortBy, size);
+
+		boolean hasNext = goodsList.size() > size;
+
+		// 요청한 크기만큼 데이터 제한
+		List<Goods> paginateGoods = hasNext ? goodsList.subList(0, size) : goodsList;
+
+		List<GoodsDto> goodsDtoList = paginateGoods.stream()
+			.map(GoodsDto::of)
+			.toList();
+
+		Long lastCursorId = paginateGoods.isEmpty() ? null : paginateGoods.get(paginateGoods.size() - 1).getId();
+
+		return new GoodsListDto(goodsDtoList, hasNext, lastCursorId, size);
 	}
 
 	@Override
