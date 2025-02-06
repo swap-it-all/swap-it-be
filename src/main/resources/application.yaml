@@ -1,22 +1,10 @@
 spring:
   application:
     name: swapit
-  config:
-    import: optional:file:.env[.properties]
 
-  datasource:
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    url: ${DB_URL}
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
-
-  jpa:
-    show-sql: true
-    properties:
-      hibernate:
-        format_sql: true
-        dialect: org.hibernate.dialect.MySQLDialect
-    open-in-view: false
+  profiles:
+    active:
+      - prd   # 로컬에서는 dev로 변경해서 사용.
 
   security:
     oauth2:
