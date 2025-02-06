@@ -51,6 +51,9 @@ dependencies {
     annotationProcessor "com.querydsl:querydsl-apt:${queryDslVersion}:jakarta"
     annotationProcessor "jakarta.annotation:jakarta.annotation-api"
     annotationProcessor "jakarta.persistence:jakarta.persistence-api"
+
+    // env 의존성 추가
+    implementation 'me.paulschwarz:spring-dotenv:4.0.0'
 }
 
 //-- Query DSL generated path --//
