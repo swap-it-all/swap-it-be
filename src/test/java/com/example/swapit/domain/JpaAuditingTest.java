@@ -34,6 +34,7 @@ class JpaAuditingTest {
 				.profileImageUrl("asdfasdf")
 				.email("abc@gmail.com")
 				.loginInfo("kakao")
+				.role("ROLE_USER")
 				.build());
 
 		Categories category = categoriesRepository.save(Categories.builder()
