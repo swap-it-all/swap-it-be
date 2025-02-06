@@ -17,6 +17,7 @@ import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @AllArgsConstructor
@@ -35,6 +36,7 @@ public class Tokens {
 	@JoinColumn(name = "users_id", columnDefinition = "BIGINT", nullable = false)
 	private Users user;
 
+	@Setter
 	@Column(name = "refresh_token", columnDefinition = "TEXT", nullable = false)
 	private String refreshToken;
 
@@ -42,6 +44,7 @@ public class Tokens {
 	@Column(name = "created_at", columnDefinition = "TIMESTAMP", nullable = false)
 	private Timestamp createdAt;
 
+	@Setter
 	@Column(name = "expires_at", columnDefinition = "TIMESTAMP", nullable = false)
 	private Timestamp expiresAt;
 

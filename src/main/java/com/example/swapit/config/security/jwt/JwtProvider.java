@@ -3,6 +3,7 @@ package com.example.swapit.config.security.jwt;
 import static com.example.swapit.util.Constant.*;
 
 import java.nio.charset.StandardCharsets;
+import java.security.Key;
 import java.util.Date;
 
 import org.springframework.security.authentication.AuthenticationProvider;
@@ -18,6 +19,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.security.Keys;
 import lombok.RequiredArgsConstructor;
 
 /**
@@ -57,18 +59,21 @@ public class JwtProvider implements AuthenticationProvider {
 		Claims claims = Jwts.claims().setSubject(email);
 		Date now = new Date();
 
+		Key accessKey = Keys.hmacShaKeyFor(ACCESS_SECRET_KEY.getBytes(StandardCharsets.UTF_8));
+		Key refreshKey = Keys.hmacShaKeyFor(REFRESH_SECRET_KEY.getBytes(StandardCharsets.UTF_8));
+
 		String accessToken = Jwts.builder()
 			.setClaims(claims) // 정보 저장
 			.setIssuedAt(now)
 			.setExpiration(new Date(now.getTime() + ACCESS_TOKEN_VALID_TIME))
-			.signWith(SignatureAlgorithm.HS256, ACCESS_SECRET_KEY.getBytes(StandardCharsets.UTF_8))
+			.signWith(accessKey, SignatureAlgorithm.HS256)
 			.compact();
 
 		String refreshToken = Jwts.builder()
 			.setClaims(claims) // 정보 저장
 			.setIssuedAt(now)
 			.setExpiration(new Date(now.getTime() + REFRESH_TOKEN_VALID_TIME))
-			.signWith(SignatureAlgorithm.HS256, REFRESH_SECRET_KEY.getBytes(StandardCharsets.UTF_8))
+			.signWith(refreshKey, SignatureAlgorithm.HS256)
 			.compact();
 
 		return TokenDTO.builder().accessToken(accessToken).refreshToken(refreshToken).key(email).build();
@@ -81,8 +86,9 @@ public class JwtProvider implements AuthenticationProvider {
 	 */
 	public boolean validateToken(String token) {
 		try {
-			Jwts.parser()
+			Jwts.parserBuilder()
 				.setSigningKey(ACCESS_SECRET_KEY.getBytes(StandardCharsets.UTF_8))
+				.build()
 				.parseClaimsJws(token);
 			return true;
 		} catch (ExpiredJwtException e) {
@@ -100,8 +106,18 @@ public class JwtProvider implements AuthenticationProvider {
 	 * @return
 	 */
 	public String getEmailFromToken(String token) {
-		Claims claims = Jwts.parser()
+		Claims claims = Jwts.parserBuilder()
 			.setSigningKey(ACCESS_SECRET_KEY.getBytes(StandardCharsets.UTF_8))
+			.build()
+			.parseClaimsJws(token)
+			.getBody();
+		return claims.getSubject();
+	}
+
+	public String getEmailFromRefreshToken(String token) {
+		Claims claims = Jwts.parserBuilder()
+			.setSigningKey(REFRESH_SECRET_KEY.getBytes(StandardCharsets.UTF_8))
+			.build()
 			.parseClaimsJws(token)
 			.getBody();
 		return claims.getSubject();

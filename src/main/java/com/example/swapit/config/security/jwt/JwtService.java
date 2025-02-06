@@ -2,6 +2,7 @@ package com.example.swapit.config.security.jwt;
 
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 
@@ -18,11 +19,20 @@ public class JwtService {
 	private final TokensRepository repository;
 
 	public void saveRefreshToken(Users user, String refreshToken) {
+		Optional<Tokens> existingTokenOpt = repository.findByUserEmail(user.getEmail());
+
 		// 만료 시간 설정 (14일 후)
 		Timestamp expiresAt = Timestamp.from(Instant.now().plusSeconds(60 * 60 * 24 * 14));
 
-		// Tokens 객체 생성 후 저장
-		repository.save(new Tokens(user, refreshToken, expiresAt));
+		if (existingTokenOpt.isPresent()) {
+			Tokens existingToken = existingTokenOpt.get();
+			existingToken.setRefreshToken(refreshToken);
+			existingToken.setExpiresAt(expiresAt);
+			repository.save(existingToken);
+		} else {
+			// Tokens 객체 생성 후 저장
+			repository.save(new Tokens(user, refreshToken, expiresAt));
+		}
 	}
 
 	public void updateRefreshToken(Users user, String newRefreshToken) {

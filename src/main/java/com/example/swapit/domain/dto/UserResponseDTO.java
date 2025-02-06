@@ -8,6 +8,6 @@ import lombok.Getter;
 public class UserResponseDTO {
 	private String nickname;
 	private String email;
-	private String provider;
+	private String loginInfo;
 	private String profileImgUrl;
 }

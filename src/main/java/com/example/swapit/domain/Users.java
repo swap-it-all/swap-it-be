@@ -6,6 +6,7 @@ import java.util.List;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -40,11 +41,14 @@ public class Users {
 	@Column(name = "login_info", columnDefinition = "VARCHAR(20)", nullable = false)
 	private String loginInfo;
 
+	@Column(name = "role", columnDefinition = "VARCHAR(20)", nullable = false)
+	private String role;
+
 	@Builder.Default
-	@OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+	@OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
 	private List<Goods> goodsList = new ArrayList<>();
 
 	@Builder.Default
-	@OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+	@OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
 	private List<Notifications> notificationsList = new ArrayList<>();
 }
