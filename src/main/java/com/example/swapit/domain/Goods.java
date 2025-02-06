@@ -1,8 +1,14 @@
 package com.example.swapit.domain;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
+import com.example.swapit.domain.dto.GoodsRequestDto;
+
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -12,6 +18,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -37,10 +44,6 @@ public class Goods extends BaseEntity {
 	@JoinColumn(name = "users_id", nullable = false)
 	private Users user;
 
-	@ManyToOne
-	@JoinColumn(name = "categories_id", nullable = false)
-	private Categories category;
-
 	@Column(columnDefinition = "VARCHAR(20)", nullable = false)
 	private String title;
 
@@ -51,6 +54,10 @@ public class Goods extends BaseEntity {
 	@Column(nullable = false)
 	private GoodsQuality quality;
 
+	@ManyToOne
+	@JoinColumn(name = "categories_id", nullable = false)
+	private Categories category;
+
 	@Column(columnDefinition = "TEXT", nullable = false)
 	private String content;
 
@@ -59,16 +66,24 @@ public class Goods extends BaseEntity {
 	@Column(nullable = false)
 	private GoodsTradeStatus goodsTradeStatus = GoodsTradeStatus.AVAILABLE;
 
-	@Column(nullable = false)
-	private double latitude;
-
-	@Column(nullable = false)
-	private double longitude;
-
-	@Column(columnDefinition = "VARCHAR(100)", nullable = false)
+	@Column(columnDefinition = "VARCHAR(100)")
 	private String placeName;
 
 	@Builder.Default
 	@Column(nullable = false)
 	private long viewCount = 0;
+
+	@Builder.Default
+	@OneToMany(mappedBy = "good", cascade = CascadeType.ALL, orphanRemoval = true)
+	private List<GoodsImages> goodsImagesList = new ArrayList<>();
+
+	// todo: 사진 api 추가 후, 수정 필요.
+	public void update(GoodsRequestDto request, Categories category) {
+		this.title = request.getTitle();
+		this.price = request.getPrice();
+		this.quality = GoodsQuality.valueOf(request.getQuality().toUpperCase());
+		this.category = category;
+		this.content = request.getContent();
+		this.placeName = request.getPlaceName();
+	}
 }
