@@ -142,7 +142,6 @@ public class AuthServiceImpl implements AuthService {
 
 	@Override
 	public Users getKakaoUserInfo(String accessToken) {
-		// 카카오 사용자 정보 가져오는 로직 동일하게 구현
 		String userInfoUrl = "https://kapi.kakao.com/v2/user/me";
 		HttpHeaders headers = new HttpHeaders();
 		headers.add("Authorization", accessToken);

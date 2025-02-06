@@ -18,7 +18,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class AuthController {
 
-	private final AuthService authService; // 인터페이스 사용
+	private final AuthService authService;
 
 	@PostMapping("/user/auth/refresh")
 	public ApiResponse<TokenDTO> refresh(@RequestHeader("Authorization") String token) {
