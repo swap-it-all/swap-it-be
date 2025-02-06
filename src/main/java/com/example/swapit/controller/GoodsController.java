@@ -28,6 +28,15 @@ public class GoodsController {
 
 	private final GoodsService goodsService;
 
+	/**
+	 * 배포 확인용
+	 * todo : 운영 시, 삭제.
+	 */
+	@GetMapping("/all/sample")
+	public String hello() {
+		return "안녕하세요";
+	}
+
 	@GetMapping("/all/goods")
 	public ApiResponse<GoodsListDto> getAllGoods(
 		@RequestParam(required = false) Long cursor,               // 마지막 조회 항목 ID
