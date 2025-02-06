@@ -2,6 +2,7 @@ package com.example.swapit.domain;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
@@ -20,14 +21,14 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Getter
-@Builder
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Entity
 @SQLDelete(sql = "UPDATE goods SET is_deleted = true WHERE goods_id = ?")
@@ -61,21 +62,33 @@ public class Goods extends BaseEntity {
 	@Column(columnDefinition = "TEXT", nullable = false)
 	private String content;
 
-	@Builder.Default
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false)
-	private GoodsTradeStatus goodsTradeStatus = GoodsTradeStatus.AVAILABLE;
+	private GoodsTradeStatus goodsTradeStatus;
 
 	@Column(columnDefinition = "VARCHAR(100)")
 	private String placeName;
 
-	@Builder.Default
 	@Column(nullable = false)
 	private long viewCount = 0;
 
-	@Builder.Default
 	@OneToMany(mappedBy = "good", cascade = CascadeType.ALL, orphanRemoval = true)
-	private List<GoodsImages> goodsImagesList = new ArrayList<>();
+	private List<GoodsImages> goodsImagesList;
+
+	@Builder
+	public Goods(Users user, String title, long price, GoodsQuality quality, Categories category, String content,
+		String placeName, List<GoodsImages> goodsImagesList) {
+		this.user = user;
+		this.title = title;
+		this.price = price;
+		this.quality = quality;
+		this.category = category;
+		this.content = content;
+		this.goodsTradeStatus = GoodsTradeStatus.AVAILABLE; // 기본값 적용
+		this.viewCount = 0;    // 기본값 적용
+		this.placeName = placeName;
+		this.goodsImagesList = Objects.requireNonNullElse(goodsImagesList, new ArrayList<>()); // null이면 초기화.
+	}
 
 	// todo: 사진 api 추가 후, 수정 필요.
 	public void update(GoodsRequestDto request, Categories category) {

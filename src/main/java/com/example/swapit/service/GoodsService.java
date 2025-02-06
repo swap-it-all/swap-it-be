@@ -1,5 +1,7 @@
 package com.example.swapit.service;
 
+import java.util.List;
+
 import com.example.swapit.domain.dto.GoodsDetailDto;
 import com.example.swapit.domain.dto.GoodsListDto;
 import com.example.swapit.domain.dto.GoodsRequestDto;
@@ -7,7 +9,7 @@ import com.example.swapit.domain.dto.GoodsRequestDto;
 public interface GoodsService {
 
 	// 물건 조회
-	GoodsListDto getGoods();
+	GoodsListDto getGoods(Long cursor, List<Long> categoryIds, String keyword, String sortBy);
 
 	GoodsDetailDto getGoodDetail(Long goodsId);
 
