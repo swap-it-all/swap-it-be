@@ -6,6 +6,10 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
+import com.example.swapit.config.security.jwt.JwtAuthenticationFilter;
+import com.example.swapit.config.security.jwt.JwtProvider;
 
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +18,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @EnableWebSecurity
 public class SecurityConfig {
+	private final JwtProvider jwtProvider;
+	private final CustomUserDetailsService userDetailsService;
 
 	@Bean
 	public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -26,6 +32,8 @@ public class SecurityConfig {
 				.anyRequest()
 				.authenticated() // 그 외 요청은 인증 필요
 			)
+			.addFilterBefore(new JwtAuthenticationFilter(jwtProvider, userDetailsService),
+				UsernamePasswordAuthenticationFilter.class)
 			.exceptionHandling((exception) -> exception.authenticationEntryPoint(
 				(request, response, authException) -> response.sendError(HttpServletResponse.SC_UNAUTHORIZED,
 					"Unauthorized")));
