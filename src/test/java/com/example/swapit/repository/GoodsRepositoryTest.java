@@ -2,7 +2,7 @@ package com.example.swapit.repository;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.time.ZoneId;
+import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
 
@@ -96,7 +96,7 @@ class GoodsRepositoryTest {
 
 		// when
 		List<Goods> results = goodsRepository.findGoodsByCursor(
-			null, null, null, null, size
+			null, null, null, null, null, null, size
 		);
 
 		// then
@@ -108,112 +108,22 @@ class GoodsRepositoryTest {
 	}
 
 	@Test
-	@DisplayName("마지막 커서 기반, 최신순 물건 목록 조회")
-	void findGoodsByCursor_sortByRecent() {
-		// given
-		Goods cursorGoods = goodsRepository.findAll()
-			.stream()
-			.max(Comparator.comparing(Goods::getCreatedAt)) // 최신 데이터 찾기
-			.orElseThrow();
-		Long cursor = cursorGoods.getCreatedAt().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
-		// cursor를 createdAt 값으로 설정
-
-		List<Long> categoryIds = List.of(testCategory.getId());
-		String sortBy = "recent";
-		int size = 2; // 조회 할 데이터 개수
-
-		// when
-		List<Goods> results = goodsRepository.findGoodsByCursor(
-			cursor, categoryIds, null, sortBy, size
-		);
-
-		// then
-		for (Goods good : results) {
-			System.out.println("Good Title: " + good.getTitle() + " | Good Category ID: " + good.getCategory().getId());
-		}
-
-		assertEquals(size + 1, results.size());
-		for (Goods good : results) {
-			assertTrue(good.getCreatedAt().isBefore(cursorGoods.getCreatedAt()),
-				"Good ID: " + good.getId() + " 의 createdAt이 커서보다 오래된 데이터여야 합니다.");
-		}
-	}
-
-	@Test
-	@DisplayName("마지막 커서 기반, 가격 높은 순 물건 목록 조회")
-	void findGoodsByCursor_sortByPriceHigh() {
-		// given
-		Goods cursorGoods = goodsRepository.findAll()
-			.stream()
-			.max(Comparator.comparing(Goods::getPrice)) // 가장 높은 가격 데이터 찾기.
-			.orElseThrow();
-		Long cursor = cursorGoods.getPrice();
-
-		List<Long> categoryIds = List.of(testCategory.getId());
-		String sortBy = "priceHigh";
-		int size = 2; // 조회 할 데이터 개수
-
-		// when
-		List<Goods> results = goodsRepository.findGoodsByCursor(
-			cursor, categoryIds, null, sortBy, size
-		);
-
-		// then
-		for (Goods good : results) {
-			System.out.println("Good Title: " + good.getTitle() + " | Good Category ID: " + good.getCategory().getId());
-		}
-
-		assertEquals(size + 1, results.size());
-		for (Goods good : results) {
-			assertTrue(good.getPrice() < cursor,
-				"Good ID: " + good.getId() + " 의 가격이 cursor보다 낮은 가격이여야 합니다.");
-		}
-	}
-
-	@Test
-	@DisplayName("특정 카테고리로 필터링된 물건 목록")
-	void findBoodsByCategory() {
-		// given
-		List<Long> categoryIds = List.of(testCategory2.getId()); // 가전제품
-		int size = 2;
-
-		// when
-		List<Goods> results = goodsRepository.findGoodsByCursor(
-			null, categoryIds, null, null, size
-		);
-
-		// then
-		for (Goods good : results) {
-			System.out.println("Good Title: " + good.getTitle() + " | Good Category ID: " + good.getCategory().getId());
-		}
-		assertFalse(results.isEmpty(), "조회 된 목록이 비어있지 않아야 합니다.");
-		assertTrue(results.stream().allMatch(c -> c.getCategory().getId().equals(testCategory2.getId())),
-			"모든 결과값의 카테고리가 " + testCategory2.getId() + " 이(가) 아닙니다.");
-	}
-
-	@Test
 	@DisplayName("최신순으로 정렬된 물건 목록 조회")
 	void findGoods_sortedByRecent() {
 		// given
-		// 마지막 커서 id 없음
-		List<Long> categoryIds = List.of(testCategory2.getId());
+		List<Long> categoryIds = List.of(testCategory.getId());
 		String sortBy = "recent";
-		int size = 2; // 조회 할 데이터 개수
+		int size = 2;
 
 		// when
-		List<Goods> results = goodsRepository.findGoodsByCursor(
-			null, categoryIds, null, sortBy, size
-		);
+		List<Goods> results = goodsRepository.findGoodsByCursor(null, null, null, categoryIds, null, sortBy, size);
 
 		// then
 		assertEquals(size + 1, results.size());
 
-		// createdAt이 내림차순인지 확인
-		for (int i = 0; i < results.size() - 1; i++) {
-			assertTrue(
-				results.get(i).getCreatedAt().isAfter(results.get(i + 1).getCreatedAt()) ||
-					results.get(i).getCreatedAt().isEqual(results.get(i + 1).getCreatedAt())
-			);
+		for (int i = 0; i < results.size() - 1; i++) { // createdAt이 내림차순인지 확인
+			assertTrue(results.get(i).getCreatedAt().isAfter(results.get(i + 1).getCreatedAt()) ||
+				results.get(i).getCreatedAt().isEqual(results.get(i + 1).getCreatedAt()));
 		}
 	}
 
@@ -226,17 +136,108 @@ class GoodsRepositoryTest {
 		int size = 2;
 
 		// when
+		List<Goods> results = goodsRepository.findGoodsByCursor(null, null, null, categoryIds, null, sortBy, size);
+
+		// then
+		assertEquals(size + 1, results.size());
+
+		for (int i = 0; i < results.size() - 1; i++) { // 가격 높은 순 검증
+			assertTrue(results.get(i).getPrice() >= results.get(i + 1).getPrice());
+		}
+	}
+
+	@Test
+	@DisplayName("마지막 커서 기반, 최신순 물건 목록 조회")
+	void findGoodsByCursor_sortByRecent() {
+		// given
+		Goods cursorGoods = goodsRepository.findAll()
+			.stream()
+			.max(Comparator.comparing(Goods::getCreatedAt)) // 최신 데이터 찾기
+			.orElseThrow();
+
+		LocalDateTime cursorCreatedAt = cursorGoods.getCreatedAt();
+		Long cursorId = cursorGoods.getId(); // 최신 데이터의 goodsId를 추가
+
+		List<Long> categoryIds = List.of(testCategory.getId());
+		String sortBy = "recent";
+		int size = 2; // 조회할 데이터 개수
+
+		// when
 		List<Goods> results = goodsRepository.findGoodsByCursor(
-			null, categoryIds, null, sortBy, size
+			null, cursorId, cursorCreatedAt, categoryIds, null, sortBy, size
 		);
 
 		// then
-		assertEquals(size + 1, results.size()); // ✅ 개수 검증
-
-		// ✅ 가격 높은 순 검증
-		for (int i = 0; i < results.size() - 1; i++) {
-			assertTrue(results.get(i).getPrice() >= results.get(i + 1).getPrice());
+		for (Goods good : results) {
+			System.out.println("Good Title: " + good.getTitle() +
+				" | CreatedAt: " + good.getCreatedAt() +
+				" | Good ID: " + good.getId());
 		}
+
+		assertEquals(size + 1, results.size());
+		for (Goods good : results) {
+			assertTrue(
+				good.getCreatedAt().isBefore(cursorGoods.getCreatedAt()) ||
+					(good.getCreatedAt().isEqual(cursorGoods.getCreatedAt()) && good.getId() > cursorId),
+				"Good ID: " + good.getId() + " 의 createdAt이 커서보다 오래된 데이터여야 하며, 같은 시간이라면 goodsId가 커야 합니다."
+			);
+		}
+	}
+
+	@Test
+	@DisplayName("마지막 커서 기반, 가격 높은 순 물건 목록 조회")
+	void findGoodsByCursor_sortByPriceHigh() {
+		// given
+		Goods cursorGoods = goodsRepository.findAll()
+			.stream()
+			.max(Comparator.comparing(Goods::getPrice)) // 가장 높은 가격 데이터 찾기.
+			.orElseThrow();
+
+		Long cursorValue = cursorGoods.getPrice(); // 가격을 기준으로
+		Long cursorId = cursorGoods.getId(); // 상품 ID 추가
+
+		List<Long> categoryIds = List.of(testCategory.getId());
+		String sortBy = "priceHigh";
+		int size = 2; // 조회 할 데이터 개수
+
+		// when
+		List<Goods> results = goodsRepository.findGoodsByCursor(
+			cursorValue, cursorId, null, categoryIds, null, sortBy, size
+		);
+
+		// then
+		for (Goods good : results) {
+			System.out.println("Good Title: " + good.getTitle() + " | Good Category ID: " + good.getCategory().getId());
+		}
+
+		assertEquals(size + 1, results.size());
+		for (Goods good : results) {
+			assertTrue(good.getPrice() < cursorValue ||
+					(good.getPrice() == cursorValue && good.getId() > cursorId),
+				"Good ID: " + good.getId() + " 의 가격이 cursor보다 낮거나, 같은 가격이면 goodsId가 커야 합니다."
+			);
+		}
+	}
+
+	@Test
+	@DisplayName("특정 카테고리로 필터링된 물건 목록")
+	void findBoodsByCategory() {
+		// given
+		List<Long> categoryIds = List.of(testCategory2.getId()); // 가전제품
+		int size = 2;
+
+		// when
+		List<Goods> results = goodsRepository.findGoodsByCursor(
+			null, null, null, categoryIds, null, null, size
+		);
+
+		// then
+		for (Goods good : results) {
+			System.out.println("Good Title: " + good.getTitle() + " | Good Category ID: " + good.getCategory().getId());
+		}
+		assertFalse(results.isEmpty(), "조회 된 목록이 비어있지 않아야 합니다.");
+		assertTrue(results.stream().allMatch(c -> c.getCategory().getId().equals(testCategory2.getId())),
+			"모든 결과값의 카테고리가 " + testCategory2.getId() + " 이(가) 아닙니다.");
 	}
 
 	@Test
@@ -249,11 +250,12 @@ class GoodsRepositoryTest {
 
 		// when
 		List<Goods> results = goodsRepository.findGoodsByCursor(
-			null, categoryIds, keyword, null, size
+			null, null, null, categoryIds, keyword, null, size
 		);
 
 		// then
 		assertFalse(results.isEmpty()); // 갤럭시 매물이 잇어야 함.
 		assertTrue(results.stream().allMatch(t -> t.getTitle().contains(keyword))); // 키워드 포함 확인.
 	}
+
 }
