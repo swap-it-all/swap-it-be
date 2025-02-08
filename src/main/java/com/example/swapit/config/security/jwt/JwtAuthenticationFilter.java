@@ -28,7 +28,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 		"/api/user/auth/refresh",
 		"/api/all/auth/login/google",
 		"/api/all/auth/login/kakao",
-		"/api/user/auth/logout"
+		"/api/user/auth/logout",
+		"/api/all/sample"
 	);
 
 	@Override
