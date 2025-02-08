@@ -52,6 +52,7 @@ class GoodsRepositoryTest {
 			.profileImageUrl("/images/testUser")
 			.email("test@gmail.com")
 			.loginInfo("google")
+			.role("ROLE_USER")
 			.build();
 		testCategory = Categories.builder().name("ELECTRONICS").build();
 		testCategory2 = Categories.builder().name("APPLIANCES").build();
