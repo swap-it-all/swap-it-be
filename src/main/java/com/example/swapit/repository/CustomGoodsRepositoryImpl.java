@@ -1,8 +1,6 @@
 package com.example.swapit.repository;
 
-import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
 
@@ -33,7 +31,8 @@ public class CustomGoodsRepositoryImpl implements CustomGoodsRepository {
 	 */
 	@Override
 	public List<Goods> findGoodsByCursor(
-		Long cursorValue, Long cursorId, List<Long> categoryIds, String keyword, String sortBy, int size
+		Long cursorValue, Long cursorId, LocalDateTime createdAt, List<Long> categoryIds, String keyword, String sortBy,
+		int size
 	) {
 		// 동적 조건: 검색어 (제목 검색만 가능)
 		BooleanExpression keywordCondition = (keyword == null || keyword.isEmpty())
@@ -68,14 +67,11 @@ public class CustomGoodsRepositoryImpl implements CustomGoodsRepository {
 				.or(qGoods.viewCount.eq(cursorValue).and(qGoods.id.gt(cursorId)));
 
 			// 최신순 (생성일 내림차순)
-			// WHERE created_at < cursorFieldValue
-			// OR (created_at = cursorFieldValue AND goods_id > goodsId)
-			case "recent" -> {
-				LocalDateTime cursorDateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(cursorValue),
-					ZoneId.systemDefault());
-				yield qGoods.createdAt.lt(cursorDateTime)
-					.or(qGoods.createdAt.eq(cursorDateTime)).and(qGoods.id.gt(cursorId));
-			}
+			// WHERE created_at < cursorCreatedAt
+			// OR (created_at = cursorCreatedAt AND goods_id > cursorId)
+			case "recent" -> (createdAt == null || cursorId == null) ? null
+				: qGoods.createdAt.lt(createdAt)
+				.or(qGoods.createdAt.eq(createdAt)).and(qGoods.id.gt(cursorId));
 
 			// 높은 가격순 (가격 내림차순)
 			// WHERE price < cursorFieldValue
