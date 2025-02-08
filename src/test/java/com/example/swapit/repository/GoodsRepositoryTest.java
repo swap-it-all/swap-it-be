@@ -258,4 +258,36 @@ class GoodsRepositoryTest {
 		assertTrue(results.stream().allMatch(t -> t.getTitle().contains(keyword))); // 키워드 포함 확인.
 	}
 
+	@Test
+	@DisplayName("가격이 같은 여러 물건 중 1번째 물건을 cursorId로 다음 데이터를 조회")
+	void findGoodsByCursor_samePrice() {
+		// given
+		// 가격이 1000원인 상품 중 첫 번째 상품 찾기
+		Goods firstGoods = goodsRepository.findAll().stream()
+			.filter(g -> g.getPrice() == 1000L)
+			.min(Comparator.comparing(Goods::getId))
+			.orElseThrow();
+
+		Long cursorPrice = firstGoods.getPrice();
+		Long cursorId = firstGoods.getId();
+		String sortBy = "priceHigh";
+		int size = 2;
+
+		// when
+		List<Goods> results = goodsRepository.findGoodsByCursor(cursorPrice, cursorId, null, null, null, sortBy, size);
+
+		// then
+		assertFalse(results.isEmpty());
+		assertEquals(size + 1, results.size());
+
+		for (Goods good : results) {
+			System.out.println(
+				"Goods ID: " + good.getId() + " | Title: " + good.getTitle() + " | Price: " + good.getPrice());
+
+			assertTrue(good.getPrice() <= cursorPrice);
+			if (good.getPrice() == cursorPrice) {
+				assertTrue(good.getId() > cursorId);
+			}
+		}
+	}
 }
