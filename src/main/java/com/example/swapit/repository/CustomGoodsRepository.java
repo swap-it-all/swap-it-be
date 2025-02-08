@@ -6,7 +6,8 @@ import com.example.swapit.domain.Goods;
 
 public interface CustomGoodsRepository {
 	List<Goods> findGoodsByCursor(
-		Long cursor,                // 마지막으로 조회된 항목 ID
+		Long cursorValue,           // 마지막 커서 값 (createdAt, price, viewCount 등등..)
+		Long cursorId,              // 마지막으로 조회된 물건 ID
 		List<Long> categoryIds,     // 카테고리 ID 리스트
 		String keyword,             // 검색어
 		String sortBy,              // 정렬 기준
