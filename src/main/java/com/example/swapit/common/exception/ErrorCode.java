@@ -21,7 +21,8 @@ public enum ErrorCode {
 
 	// goods error
 	GOOD_NOT_FOUND(HttpStatus.NOT_FOUND, "물건을 찾을 수 없습니다."),
-
+	MISSING_CURSOR_VALUE(HttpStatus.BAD_REQUEST, "정렬 조건에 맞는 필드 값이 필요합니다."),
+	
 	// categories error
 	CATEGORY_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 카테고리를 찾을 수 없습니다."),
 

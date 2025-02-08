@@ -1,5 +1,6 @@
 package com.example.swapit.controller;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -39,13 +40,15 @@ public class GoodsController {
 
 	@GetMapping("/all/goods")
 	public ApiResponse<GoodsListDto> getAllGoods(
-		@RequestParam(required = false) Long cursor,               // 마지막 조회 항목 ID
-		@RequestParam(required = false) List<Long> categoryIds,    // 카테고리 필터
-		@RequestParam(required = false) String keyword,            // 검색어
-		@RequestParam(defaultValue = "popular") String sortBy      // 정렬 기준 (기본값: 최신순)
+		@RequestParam(required = false) Long cursorValue,                // 커서 필드 기준 값(조회수, 가격)
+		@RequestParam(required = false) Long cursorId,                    // 마지막 조회 항목 ID
+		@RequestParam(required = false) LocalDateTime createdAt,        // 최신순일 경우, 커서 기준 값
+		@RequestParam(required = false) List<Long> categoryIds,            // 카테고리 필터
+		@RequestParam(required = false) String keyword,                    // 검색어
+		@RequestParam(defaultValue = "popular") String sortBy            // 정렬 기준 (기본값: 최신순)
 	) {
 		return ApiResponse.success(
-			goodsService.getGoods(cursor, categoryIds, keyword, sortBy)
+			goodsService.getGoods(cursorValue, cursorId, createdAt, categoryIds, keyword, sortBy)
 		);
 	}
 
