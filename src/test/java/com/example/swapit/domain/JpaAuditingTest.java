@@ -6,6 +6,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import com.example.swapit.common.exception.CustomException;
+import com.example.swapit.common.exception.ErrorCode;
 import com.example.swapit.repository.CategoriesRepository;
 import com.example.swapit.repository.GoodsRepository;
 import com.example.swapit.repository.UsersRepository;
@@ -37,9 +39,8 @@ class JpaAuditingTest {
 				.role("ROLE_USER")
 				.build());
 
-		Categories category = categoriesRepository.save(Categories.builder()
-			.name("Electronics")
-			.build());
+		Categories category = categoriesRepository.findById(1L)
+			.orElseThrow(() -> new CustomException(ErrorCode.CATEGORY_NOT_FOUND));
 
 		Goods goods = Goods.builder()
 			.user(user)
