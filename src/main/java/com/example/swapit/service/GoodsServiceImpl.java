@@ -37,10 +37,12 @@ public class GoodsServiceImpl implements GoodsService {
 	public GoodsListDto getGoods(
 		Long cursorValue, Long cursorId, LocalDateTime createdAt, List<Long> categoryIds, String keyword, String sortBy
 	) {
-
-		// 최신순으로 정렬하는데, createdAt 필드값이 null이라면 에러.
-		if (sortBy.equals("recent") && createdAt == null) {
-			throw new CustomException(ErrorCode.MISSING_CURSOR_VALUE);
+		log.debug("cursorValue : {}, cursorId : {}, createdAt : {}, categoryIds : {}, keyword : {}, sortBy : {}",
+			cursorValue, cursorId, createdAt, categoryIds, keyword, sortBy);
+		
+		// 최신순으로 정렬하는데, cursor가 있으면 createdAt이 null이면 안됨.
+		if (sortBy.equals("recent") && cursorId != null && createdAt == null) {
+			throw new CustomException(ErrorCode.MISSING_CURSOR_CREATEDAT);
 		}
 
 		// Goods 조회
