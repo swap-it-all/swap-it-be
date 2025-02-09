@@ -57,36 +57,40 @@ public class CustomGoodsRepositoryImpl implements CustomGoodsRepository {
 		OrderSpecifier<?> orderSpecifier = orderByMap.get(safeSortby);
 
 		// 동적 조건: 커서 기반 페이지네이션 (cursorFieldValue + goodsId)
-		BooleanExpression cursorCondition = (cursorValue == null || cursorId == null)
+		BooleanExpression cursorCondition = (cursorId == null)
 			? null // 처음 요청일 경우 커서 조건 제외
 			: switch (safeSortby) {
 			// 인기순 (조회수 내림차순)
 			// WHERE view_count < cursorFieldValue
 			// OR (view_count = cursorFieldValue AND goods_id > goodsId)
-			case "popular" -> qGoods.viewCount.lt(cursorValue)
+			case "popular" -> (cursorValue == null) ? null
+				: qGoods.viewCount.lt(cursorValue)
 				.or(qGoods.viewCount.eq(cursorValue).and(qGoods.id.gt(cursorId)));
 
 			// 최신순 (생성일 내림차순)
 			// WHERE created_at < cursorCreatedAt
-			// OR (created_at = cursorCreatedAt AND goods_id > cursorId)
-			case "recent" -> (createdAt == null || cursorId == null) ? null
-				: qGoods.createdAt.lt(createdAt)
-				.or(qGoods.createdAt.eq(createdAt)).and(qGoods.id.gt(cursorId));
+			// OR (created_at = cursorCreatedAt AND goods_id < cursorId)
+			case "recent" -> (createdAt == null) ? null
+				: qGoods.createdAt.lt(createdAt) // 현재 커서 날짜 이전 데이터만 가져옴
+				.or(qGoods.createdAt.eq(createdAt).and(qGoods.id.lt(cursorId))); // 같은 날짜면 id가 작은 것만 가져옴
 
 			// 높은 가격순 (가격 내림차순)
 			// WHERE price < cursorFieldValue
 			// OR (price = cursorFieldValue AND goods_id > goodsId)
-			case "priceHigh" -> qGoods.price.lt(cursorValue)
+			case "priceHigh" -> (cursorValue == null) ? null
+				: qGoods.price.lt(cursorValue)
 				.or(qGoods.price.eq(cursorValue).and(qGoods.id.gt(cursorId)));
 
 			// 낮은 가격순 (가격 오름차순)
 			// WHERE price > cursorFieldValue
 			// OR (price = cursorFieldValue AND goods_id > goodsId)
-			case "priceLow" -> qGoods.price.gt(cursorValue)
-				.or(qGoods.price.eq(cursorValue).and(qGoods.id.gt(cursorId)));
+			case "priceLow" -> (cursorValue == null) ? null
+				: qGoods.price.gt(cursorValue) // 가격이 cursorValue 초과 (>)
+				.or(qGoods.price.eq(cursorValue).and(qGoods.id.gt(cursorId))); // 같은 가격이면 id가 cursorId보다 큰 것 (>)
 
 			// 기본값 : 인기순
-			default -> qGoods.viewCount.lt(cursorValue)
+			default -> (cursorValue == null) ? null
+				: qGoods.viewCount.lt(cursorValue)
 				.or(qGoods.viewCount.eq(cursorValue).and(qGoods.id.gt(cursorId)));
 		};
 
