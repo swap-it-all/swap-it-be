@@ -14,6 +14,8 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Import;
 
+import com.example.swapit.common.exception.CustomException;
+import com.example.swapit.common.exception.ErrorCode;
 import com.example.swapit.config.QueryDslConfig;
 import com.example.swapit.domain.Categories;
 import com.example.swapit.domain.Goods;
@@ -41,8 +43,8 @@ class GoodsRepositoryTest {
 	private EntityManager em;
 
 	private Users testUser;
-	private Categories testCategory;
-	private Categories testCategory2;
+	private Categories category;
+	private Categories category2;
 
 	@BeforeEach
 	void setUp() {
@@ -54,33 +56,36 @@ class GoodsRepositoryTest {
 			.loginInfo("google")
 			.role("ROLE_USER")
 			.build();
-		testCategory = Categories.builder().name("ELECTRONICS").build();
-		testCategory2 = Categories.builder().name("APPLIANCES").build();
+
+		category = categoriesRepository.findById(1L)
+			.orElseThrow(() -> new CustomException(ErrorCode.CATEGORY_NOT_FOUND));
+		category2 = categoriesRepository.findById(2L)
+			.orElseThrow(() -> new CustomException(ErrorCode.CATEGORY_NOT_FOUND));
 
 		usersRepository.save(testUser);
-		categoriesRepository.save(testCategory);
-		categoriesRepository.save(testCategory2);
+		categoriesRepository.save(category);
+		categoriesRepository.save(category2);
 
 		// Goods 저장
 		goodsRepository.saveAll(List.of(
 			// 전자기기 : ELECTRONICS : 5개
 			Goods.builder().user(testUser).title("아이폰 14").price(1000L).quality(GoodsQuality.NEW)
-				.category(testCategory).content("싸게 드려요! 교환주세요!").build(),
+				.category(category).content("싸게 드려요! 교환주세요!").build(),
 			Goods.builder().user(testUser).title("아이폰 15").price(1000L).quality(GoodsQuality.NEW)
-				.category(testCategory).content("싸게 드려요! 교환주세요!").build(),
+				.category(category).content("싸게 드려요! 교환주세요!").build(),
 			Goods.builder().user(testUser).title("아이폰 16").price(1000L).quality(GoodsQuality.NEW)
-				.category(testCategory).content("싸게 드려요! 교환주세요!").build(),
+				.category(category).content("싸게 드려요! 교환주세요!").build(),
 			Goods.builder().user(testUser).title("아이폰 16 Pro").price(10_000L).quality(GoodsQuality.NEW)
-				.category(testCategory).content("싸게 드려요! 교환주세요!").build(),
+				.category(category).content("싸게 드려요! 교환주세요!").build(),
 			Goods.builder().user(testUser).title("갤럭시 S25").price(1000L).quality(GoodsQuality.NEW)
-				.category(testCategory).content("싸게 드려요! 교환주세요!").build(),
+				.category(category).content("싸게 드려요! 교환주세요!").build(),
 			// 가전제품 : APPLIANCES : 3개
 			Goods.builder().user(testUser).title("전자레인지").price(1000L).quality(GoodsQuality.NEW)
-				.category(testCategory2).content("싸게 드려요! 교환주세요!").build(),
+				.category(category2).content("싸게 드려요! 교환주세요!").build(),
 			Goods.builder().user(testUser).title("오븐").price(1000L).quality(GoodsQuality.NEW)
-				.category(testCategory2).content("싸게 드려요! 교환주세요!").build(),
+				.category(category2).content("싸게 드려요! 교환주세요!").build(),
 			Goods.builder().user(testUser).title("세탁기").price(1000L).quality(GoodsQuality.NEW)
-				.category(testCategory2).content("싸게 드려요! 교환주세요!").build()
+				.category(category2).content("싸게 드려요! 교환주세요!").build()
 		));
 
 		em.flush(); // db 반영
@@ -107,7 +112,7 @@ class GoodsRepositoryTest {
 	@DisplayName("최신순으로 정렬된 물건 목록 조회")
 	void findGoods_sortedByRecent() {
 		// given
-		List<Long> categoryIds = List.of(testCategory.getId());
+		List<Long> categoryIds = List.of(category.getId());
 		String sortBy = "recent";
 		int size = 2;
 
@@ -127,7 +132,7 @@ class GoodsRepositoryTest {
 	@DisplayName("가격 높은 순으로 정렬된 물건 목록 조회")
 	void findGoods_sortedByHighPrice() {
 		// given
-		List<Long> categoryIds = List.of(testCategory.getId());
+		List<Long> categoryIds = List.of(category.getId());
 		String sortBy = "priceHigh";
 		int size = 2;
 
@@ -154,7 +159,7 @@ class GoodsRepositoryTest {
 		LocalDateTime cursorCreatedAt = cursorGoods.getCreatedAt();
 		Long cursorId = cursorGoods.getId(); // 최신 데이터의 goodsId를 추가
 
-		List<Long> categoryIds = List.of(testCategory.getId());
+		List<Long> categoryIds = List.of(category.getId());
 		String sortBy = "recent";
 		int size = 2; // 조회할 데이터 개수
 
@@ -186,7 +191,7 @@ class GoodsRepositoryTest {
 		Long cursorValue = cursorGoods.getPrice(); // 가격을 기준으로
 		Long cursorId = cursorGoods.getId(); // 상품 ID 추가
 
-		List<Long> categoryIds = List.of(testCategory.getId());
+		List<Long> categoryIds = List.of(category.getId());
 		String sortBy = "priceHigh";
 		int size = 2; // 조회 할 데이터 개수
 
@@ -209,7 +214,7 @@ class GoodsRepositoryTest {
 	@DisplayName("특정 카테고리로 필터링된 물건 목록")
 	void findBoodsByCategory() {
 		// given
-		List<Long> categoryIds = List.of(testCategory2.getId()); // 가전제품
+		List<Long> categoryIds = List.of(category2.getId()); // 가전제품
 		int size = 2;
 
 		// when
@@ -219,15 +224,15 @@ class GoodsRepositoryTest {
 
 		// then
 		assertFalse(results.isEmpty(), "조회 된 목록이 비어있지 않아야 합니다.");
-		assertTrue(results.stream().allMatch(c -> c.getCategory().getId().equals(testCategory2.getId())),
-			"모든 결과값의 카테고리가 " + testCategory2.getId() + " 이(가) 아닙니다.");
+		assertTrue(results.stream().allMatch(c -> c.getCategory().getId().equals(category2.getId())),
+			"모든 결과값의 카테고리가 " + category2.getId() + " 이(가) 아닙니다.");
 	}
 
 	@Test
 	@DisplayName("검색어 필터링이 적용된 물건 목록 조회")
 	void findGoodsByKeyword() {
 		// given
-		List<Long> categoryIds = List.of(testCategory.getId());
+		List<Long> categoryIds = List.of(category.getId());
 		String keyword = "갤럭시";
 		int size = 2; // 조회 할 데이터 개수
 
