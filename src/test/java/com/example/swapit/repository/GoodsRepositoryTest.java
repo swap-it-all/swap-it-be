@@ -101,10 +101,6 @@ class GoodsRepositoryTest {
 
 		// then
 		assertEquals(size + 1, results.size());
-
-		for (Goods good : results) {
-			System.out.println("Goods ID: " + good.getId() + "  | Title: " + good.getTitle());
-		}
 	}
 
 	@Test
@@ -168,12 +164,6 @@ class GoodsRepositoryTest {
 		);
 
 		// then
-		for (Goods good : results) {
-			System.out.println("Good Title: " + good.getTitle() +
-				" | CreatedAt: " + good.getCreatedAt() +
-				" | Good ID: " + good.getId());
-		}
-
 		assertEquals(size + 1, results.size());
 		for (Goods good : results) {
 			assertTrue(
@@ -206,10 +196,6 @@ class GoodsRepositoryTest {
 		);
 
 		// then
-		for (Goods good : results) {
-			System.out.println("Good Title: " + good.getTitle() + " | Good Category ID: " + good.getCategory().getId());
-		}
-
 		assertEquals(size + 1, results.size());
 		for (Goods good : results) {
 			assertTrue(good.getPrice() < cursorValue ||
@@ -232,9 +218,6 @@ class GoodsRepositoryTest {
 		);
 
 		// then
-		for (Goods good : results) {
-			System.out.println("Good Title: " + good.getTitle() + " | Good Category ID: " + good.getCategory().getId());
-		}
 		assertFalse(results.isEmpty(), "조회 된 목록이 비어있지 않아야 합니다.");
 		assertTrue(results.stream().allMatch(c -> c.getCategory().getId().equals(testCategory2.getId())),
 			"모든 결과값의 카테고리가 " + testCategory2.getId() + " 이(가) 아닙니다.");
@@ -281,9 +264,6 @@ class GoodsRepositoryTest {
 		assertEquals(size + 1, results.size());
 
 		for (Goods good : results) {
-			System.out.println(
-				"Goods ID: " + good.getId() + " | Title: " + good.getTitle() + " | Price: " + good.getPrice());
-
 			assertTrue(good.getPrice() <= cursorPrice);
 			if (good.getPrice() == cursorPrice) {
 				assertTrue(good.getId() > cursorId);
