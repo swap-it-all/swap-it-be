@@ -1,11 +1,10 @@
 package com.example.swapit.config.security.jwt;
 
-import static com.example.swapit.util.Constant.*;
-
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.util.Date;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.Authentication;
@@ -29,6 +28,18 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class JwtProvider implements AuthenticationProvider {
 
+	@Value("${jwt.secret.access-token}")
+	private String ACCESS_SECRET_KEY;
+
+	@Value("${jwt.secret.refresh-token}")
+	private String REFRESH_SECRET_KEY;
+
+	@Value("${jwt.secret.access-expiration}")
+	private long ACCESS_TOKEN_VALID_TIME;
+
+	@Value("${jwt.secret.refresh-expiration}")
+	private long REFRESH_TOKEN_VALID_TIME;
+
 	/**
 	 * JwtFilter에서 authentication을 받아오는데, authentication에는 토큰이 저장되어 있음
 	 * 토큰을 사용하여 유저의 아이디와 권한을 가지고 오고
@@ -38,6 +49,7 @@ public class JwtProvider implements AuthenticationProvider {
 	 * @return JwtAuthenticationToekn (유저의 정보를 담아 보내줌)
 	 * @throws AuthenticationException
 	 */
+
 	@Override
 	public Authentication authenticate(Authentication authentication) throws AuthenticationException {
 		String token = authentication.getCredentials().toString();
