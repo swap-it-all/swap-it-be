@@ -22,7 +22,8 @@ public enum ErrorCode {
 	// goods error
 	GOOD_NOT_FOUND(HttpStatus.NOT_FOUND, "물건을 찾을 수 없습니다."),
 	MISSING_CURSOR_CREATEDAT(HttpStatus.BAD_REQUEST, "최신순에는 createdAt 필드값 입력이 필수입니다."),
-	MISSING_CURSOR_VALUE(HttpStatus.BAD_REQUEST, "정렬 조건에 맞는 필드 값이 필요합니다."),
+	MISSING_CURSOR_VALUE(HttpStatus.BAD_REQUEST, "정렬 조건에 맞는 cursor 필드 값이 필요합니다."),
+	INVALID_SORT_BY(HttpStatus.BAD_REQUEST, "잘못된 정렬 조건입니다."),
 
 	// categories error
 	CATEGORY_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 카테고리를 찾을 수 없습니다."),

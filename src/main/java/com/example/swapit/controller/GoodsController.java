@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.swapit.common.api.ApiResponse;
+import com.example.swapit.common.exception.CustomException;
+import com.example.swapit.common.exception.ErrorCode;
 import com.example.swapit.domain.dto.GoodsDetailDto;
 import com.example.swapit.domain.dto.GoodsDto;
 import com.example.swapit.domain.dto.GoodsListDto;
@@ -22,7 +24,9 @@ import com.example.swapit.service.GoodsService;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @RestController
 @RequestMapping("/api")
 @RequiredArgsConstructor
@@ -48,6 +52,22 @@ public class GoodsController {
 		@RequestParam(required = false) String keyword,                    // 검색어
 		@RequestParam(defaultValue = "popular") String sortBy            // 정렬 기준 (기본값: 최신순)
 	) {
+		log.debug("cursorValue : {}, cursorId : {}, createdAt : {}, categoryIds : {}, keyword : {}, sortBy : {}",
+			cursorValue, cursorId, createdAt, categoryIds, keyword, sortBy);
+
+		// 허용된 sortBy 값 체크
+		List<String> allowedSortValues = List.of("popular", "recent", "priceHigh", "priceLow");
+		if (sortBy != null && !allowedSortValues.contains(sortBy)) {
+			throw new CustomException(ErrorCode.INVALID_SORT_BY);
+		}
+		// 필수 요청 값 검증
+		if ("recent".equals(sortBy) && cursorId != null && createdAt == null) {
+			throw new CustomException(ErrorCode.MISSING_CURSOR_CREATEDAT);
+		}
+		if (cursorId != null && cursorValue == null) {
+			throw new CustomException(ErrorCode.MISSING_CURSOR_VALUE);
+		}
+
 		return ApiResponse.success(
 			goodsService.getGoods(cursorValue, cursorId, createdAt, categoryIds, keyword, sortBy)
 		);
