@@ -62,6 +62,15 @@ public class GoodsServiceImpl implements GoodsService {
 	}
 
 	@Override
+	public List<GoodsDto> getMyGoods() {
+		Users user = currentUserService.getCurrentUser();
+		log.debug("사용자 ID ({}) 가 내 물건 목록 조회.", user.getUsersId());
+
+		List<Goods> findGoods = goodsRepository.findByUserOrderByCreatedAtDesc(user);
+		return findGoods.stream().map(GoodsDto::of).toList();
+	}
+
+	@Override
 	public GoodsDetailDto getGoodDetail(Long goodsId) {
 		Goods good = goodsRepository.findById(goodsId)
 			.orElseThrow(() -> new CustomException(ErrorCode.GOOD_NOT_FOUND));

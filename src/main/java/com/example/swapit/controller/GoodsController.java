@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.swapit.common.api.ApiResponse;
 import com.example.swapit.domain.dto.GoodsDetailDto;
+import com.example.swapit.domain.dto.GoodsDto;
 import com.example.swapit.domain.dto.GoodsListDto;
 import com.example.swapit.domain.dto.GoodsRequestDto;
 import com.example.swapit.service.GoodsService;
@@ -57,6 +58,11 @@ public class GoodsController {
 		return ApiResponse.success(
 			goodsService.getGoodDetail(goodsId)
 		);
+	}
+
+	@GetMapping("/user/goods/my")
+	public ApiResponse<List<GoodsDto>> getMyAllGoods() {
+		return ApiResponse.success(goodsService.getMyGoods());
 	}
 
 	@PostMapping("/user/goods/register")
