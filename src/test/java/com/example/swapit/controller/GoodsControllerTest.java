@@ -1,5 +1,7 @@
 package com.example.swapit.controller;
 
+import static org.hamcrest.Matchers.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -125,6 +127,27 @@ class GoodsControllerTest {
 			.andExpect(jsonPath("$.results.placeName").value("서울 강남구"))
 			.andExpect(jsonPath("$.results.viewCount").value(120))
 			.andExpect(jsonPath("$.results.imageUrls").isArray());
+	}
+
+	@Test
+	@DisplayName("내 물건 목록 조회 API 테스트")
+	void getMyAllGoods() throws Exception {
+		// given
+		List<GoodsDto> mockGoodsList = List.of(
+			new GoodsDto(1L, "Laptop", 1000L, "Electronics", "/images/1", null, 100, LocalDateTime.now()),
+			new GoodsDto(2L, "Phone", 500L, "Mobile", "/images/2", null, 100, LocalDateTime.now())
+		);
+		when(goodsService.getMyGoods()).thenReturn(mockGoodsList);
+
+		// When & Then
+		mockMvc.perform(get("/api/user/goods/my") // ✅ GET 요청 실행
+				.contentType(MediaType.APPLICATION_JSON))
+			.andExpect(status().isOk()) // ✅ HTTP 200 응답 확인
+			.andExpect(jsonPath("$.success").value(true)) // ✅ 성공 여부 검증
+			.andExpect(jsonPath("$.message").value("요청에 성공하였습니다."))
+			.andExpect(jsonPath("$.results", hasSize(2))) // ✅ 반환된 리스트 크기 검증
+			.andExpect(jsonPath("$.results[0].title").value("Laptop")) // ✅ 첫 번째 상품 제목 검증
+			.andExpect(jsonPath("$.results[1].title").value("Phone")); // ✅ 두 번째 상품 제목 검증
 	}
 
 	@Test
