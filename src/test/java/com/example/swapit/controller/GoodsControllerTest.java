@@ -92,7 +92,7 @@ class GoodsControllerTest {
 		// given
 		GoodsDetailDto mockGoodsDetail = new GoodsDetailDto(
 			1L,
-			new UserProfileDto(1L, "testUser", 4.8), // 예제 사용자 데이터
+			new UserProfileDto(1L, "testUser", 4.8),
 			"전자기기",
 			"아이폰 15",
 			1200L,
@@ -109,7 +109,7 @@ class GoodsControllerTest {
 		given(goodsService.getGoodDetail(1L)).willReturn(mockGoodsDetail);
 
 		mockMvc.perform(get("/api/all/goods/{goodsId}", 1L))
-			.andDo(print()) // ✅ 실제 JSON 응답 확인
+			.andDo(print())
 			.andExpect(status().isOk());
 
 		// when & then
