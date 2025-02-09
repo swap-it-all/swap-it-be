@@ -29,8 +29,5 @@ public class GoodsImages {
 	private Goods good;
 
 	@Column(columnDefinition = "TEXT", nullable = false)
-	private String imageUrl;
-
-	@Column(columnDefinition = "VARCHAR(255)", nullable = false)
-	private String mimeType;
+	private String imageUrl; // S3 경로 저장
 }
