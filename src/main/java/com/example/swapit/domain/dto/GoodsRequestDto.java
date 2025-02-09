@@ -29,10 +29,9 @@ public class GoodsRequestDto {
 	@NotBlank(message = "상품 상태(quality)는 필수 입력 값입니다.")
 	private String quality;
 
-	@NotBlank(message = "카테고리는 필수 입력 값입니다.")
+	@NotNull(message = "카테고리는 필수 입력 값입니다.")
 	private Long categoryId;
 
-	@NotBlank(message = "거래 장소(placeName)는 필수 입력 값입니다.")
 	private String placeName;
 
 	@NotBlank(message = "상품 설명(content)은 필수 입력 값입니다.")
