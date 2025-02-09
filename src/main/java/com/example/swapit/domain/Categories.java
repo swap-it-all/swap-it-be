@@ -26,4 +26,7 @@ public class Categories {
 
 	@Column(columnDefinition = "VARCHAR(20)", nullable = false)
 	private String name;
+
+	@Column(columnDefinition = "VARCHAR(50)")
+	private String description;
 }

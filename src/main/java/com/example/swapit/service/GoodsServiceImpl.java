@@ -16,7 +16,6 @@ import com.example.swapit.domain.dto.GoodsListDto;
 import com.example.swapit.domain.dto.GoodsRequestDto;
 import com.example.swapit.repository.CategoriesRepository;
 import com.example.swapit.repository.GoodsRepository;
-import com.example.swapit.repository.UsersRepository;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -29,8 +28,8 @@ import lombok.extern.slf4j.Slf4j;
 public class GoodsServiceImpl implements GoodsService {
 
 	private final GoodsRepository goodsRepository;
-	private final UsersRepository usersRepository;
 	private final CategoriesRepository categoriesRepository;
+	private final CurrentUserService currentUserService;
 
 	private final int size = 30;
 
@@ -59,7 +58,16 @@ public class GoodsServiceImpl implements GoodsService {
 
 		Long lastCursorId = paginateGoods.isEmpty() ? null : paginateGoods.get(paginateGoods.size() - 1).getId();
 
-		return new GoodsListDto(goodsDtoList, hasNext, lastCursorId, size);
+		return new GoodsListDto(goodsDtoList, hasNext, lastCursorId, goodsDtoList.size());
+	}
+
+	@Override
+	public List<GoodsDto> getMyGoods() {
+		Users user = currentUserService.getCurrentUser();
+		log.debug("사용자 ID ({}) 가 내 물건 목록 조회.", user.getUsersId());
+
+		List<Goods> findGoods = goodsRepository.findByUserOrderByCreatedAtDesc(user);
+		return findGoods.stream().map(GoodsDto::of).toList();
 	}
 
 	@Override
@@ -71,7 +79,9 @@ public class GoodsServiceImpl implements GoodsService {
 
 	@Override
 	public void insertGood(GoodsRequestDto goodsRequestDto) {
-		Users user = findUser();
+		Users user = currentUserService.getCurrentUser();
+		log.debug("사용자 ID ({}) 가 Goods Title ({}) 생성 시도.", user.getUsersId(), goodsRequestDto.getTitle());
+
 		Categories category = categoriesRepository.findById(goodsRequestDto.getCategoryId())
 			.orElseThrow(() -> new CustomException(ErrorCode.CATEGORY_NOT_FOUND));
 
@@ -80,9 +90,11 @@ public class GoodsServiceImpl implements GoodsService {
 
 	@Override
 	public void updateGood(Long goodsId, GoodsRequestDto goodsRequestDto) {
+		Users currentUser = currentUserService.getCurrentUser();
+		log.debug("사용자 ID ({}) 가 Goods ID ({}) 수정 시도.", currentUser.getUsersId(), goodsId);
+
 		Goods good = goodsRepository.findById(goodsId)
 			.orElseThrow(() -> new CustomException(ErrorCode.GOOD_NOT_FOUND));
-		Users currentUser = findUser();
 
 		checkAuthorization(good.getUser(), currentUser);
 
@@ -94,19 +106,15 @@ public class GoodsServiceImpl implements GoodsService {
 
 	@Override
 	public void deleteGood(Long goodsId) {
+		Users currentUser = currentUserService.getCurrentUser();
+		log.debug("사용자 ID ({}) 가 Goods ID ({}) 삭제 시도.", currentUser.getUsersId(), goodsId);
+
 		Goods good = goodsRepository.findById(goodsId)
 			.orElseThrow(() -> new CustomException(ErrorCode.GOOD_NOT_FOUND));
-		Users currentUser = findUser();
 
 		checkAuthorization(good.getUser(), currentUser);
 
 		goodsRepository.delete(good);
-	}
-
-	// todo: User 가져오는 부분 변경
-	private Users findUser() {
-		return usersRepository.findById(1L)
-			.orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 	}
 
 	private void checkAuthorization(Users goodsUser, Users currentUser) {

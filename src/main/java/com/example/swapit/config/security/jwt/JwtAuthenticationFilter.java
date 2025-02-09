@@ -29,7 +29,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 		"/api/all/auth/login/google",
 		"/api/all/auth/login/kakao",
 		"/api/user/auth/logout",
-		"/api/all/sample"
+		"/api/all/sample",
+		"api/all/goods"
 	);
 
 	@Override
@@ -57,4 +58,3 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 		filterChain.doFilter(request, response);
 	}
 }
-
