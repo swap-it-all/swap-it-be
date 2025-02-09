@@ -22,17 +22,18 @@ import com.example.swapit.domain.dto.GoodsDetailDto;
 import com.example.swapit.domain.dto.GoodsRequestDto;
 import com.example.swapit.repository.CategoriesRepository;
 import com.example.swapit.repository.GoodsRepository;
-import com.example.swapit.repository.UsersRepository;
 
 @ExtendWith(MockitoExtension.class)
 class GoodServiceTest {
 
 	@Mock
 	private GoodsRepository goodsRepository;
-	@Mock
-	private UsersRepository usersRepository;
+
 	@Mock
 	private CategoriesRepository categoriesRepository;
+
+	@Mock
+	private CurrentUserService currentUserService;
 
 	@InjectMocks
 	private GoodsServiceImpl goodsService;
@@ -49,6 +50,7 @@ class GoodServiceTest {
 			.profileImageUrl("/images/testUser")
 			.email("test@gmail.com")
 			.loginInfo("google")
+			.role("ROLE_USER")
 			.build();
 
 		testCategory = Categories.builder()
@@ -88,7 +90,7 @@ class GoodServiceTest {
 		GoodsRequestDto requestDto = new GoodsRequestDto(
 			"아이폰 14 Pro", 1_300_000L, "NEW", 1L, "용산역 1번 출구", "채팅 주세요!",
 			null);
-		when(usersRepository.findById(1L)).thenReturn(Optional.of(testUser));
+		when(currentUserService.getCurrentUser()).thenReturn(testUser);
 		when(categoriesRepository.findById(1L)).thenReturn(Optional.of(testCategory));
 
 		// ArgumentCaptor를 생성해서 Goods객체를 캡쳐할 준비
@@ -114,7 +116,7 @@ class GoodServiceTest {
 		// given
 		GoodsRequestDto requestDto = new GoodsRequestDto("아이폰 14 Pro", 1_300_000L, "NEW", 1L, "용산역 1번 출구", "채팅 주세요!",
 			null);
-		when(usersRepository.findById(1L)).thenReturn(Optional.of(testUser));
+		when(currentUserService.getCurrentUser()).thenReturn(testUser);
 		when(categoriesRepository.findById(1L)).thenReturn(Optional.of(testCategory));
 		when(goodsRepository.findById(1L)).thenReturn(Optional.of(testGood));
 
@@ -132,7 +134,7 @@ class GoodServiceTest {
 	void deleteGood() {
 		// given
 		when(goodsRepository.findById(1L)).thenReturn(Optional.of(testGood));
-		when(usersRepository.findById(1L)).thenReturn(Optional.of(testUser));
+		when(currentUserService.getCurrentUser()).thenReturn(testUser);
 		when(goodsRepository.findById(1L)).thenReturn(Optional.of(testGood));
 
 		// when
