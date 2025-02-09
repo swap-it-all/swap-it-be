@@ -62,7 +62,7 @@ public class GoodsController {
 	@PostMapping("/user/goods/register")
 	public ApiResponse<Void> insertGood(@Valid @RequestBody GoodsRequestDto goodsRequestDto) {
 		goodsService.insertGood(goodsRequestDto);
-		return ApiResponse.successKeyword("물건 등록");
+		return ApiResponse.success();
 	}
 
 	@PutMapping("/user/goods/{goodsId}")
@@ -71,12 +71,12 @@ public class GoodsController {
 		@Valid @RequestBody GoodsRequestDto goodsRequestDto
 	) {
 		goodsService.updateGood(goodsId, goodsRequestDto);
-		return ApiResponse.successKeyword("수정");
+		return ApiResponse.success();
 	}
 
 	@DeleteMapping("/user/goods/{goodsId}")
 	public ApiResponse<Void> deleteGood(@PathVariable Long goodsId) {
 		goodsService.deleteGood(goodsId);
-		return ApiResponse.successKeyword("삭제");
+		return ApiResponse.success();
 	}
 }
