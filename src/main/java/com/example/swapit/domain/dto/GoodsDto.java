@@ -3,6 +3,7 @@ package com.example.swapit.domain.dto;
 import java.time.LocalDateTime;
 
 import com.example.swapit.domain.Goods;
+import com.example.swapit.domain.GoodsImages;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -29,8 +30,11 @@ public class GoodsDto {
 			.title(good.getTitle())
 			.price(good.getPrice())
 			.category(good.getCategory().getName())
-			// todo : 없으면 default 이미지 경로 추가
-			.photoUrl(good.getGoodsImagesList().stream().findFirst().get().getImageUrl())
+			.photoUrl(
+				good.getGoodsImagesList().stream()
+					.findFirst()
+					.map(GoodsImages::getImageUrl)
+					.orElseGet(() -> "/images/goods/default"))
 			.placeName(good.getPlaceName())
 			.viewCount(good.getViewCount())
 			.createdAt(good.getCreatedAt())
