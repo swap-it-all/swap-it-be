@@ -7,5 +7,5 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: create    # erd 안정화되면 "validate"로 변경 예정.
+      ddl-auto: update    # erd 안정화되면 "validate"로 변경 예정.
     open-in-view: false
