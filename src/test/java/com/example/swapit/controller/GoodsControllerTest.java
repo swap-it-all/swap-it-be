@@ -140,14 +140,14 @@ class GoodsControllerTest {
 		when(goodsService.getMyGoods()).thenReturn(mockGoodsList);
 
 		// When & Then
-		mockMvc.perform(get("/api/user/goods/my") // ✅ GET 요청 실행
+		mockMvc.perform(get("/api/user/goods/my")
 				.contentType(MediaType.APPLICATION_JSON))
-			.andExpect(status().isOk()) // ✅ HTTP 200 응답 확인
-			.andExpect(jsonPath("$.success").value(true)) // ✅ 성공 여부 검증
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.success").value(true))
 			.andExpect(jsonPath("$.message").value("요청에 성공하였습니다."))
-			.andExpect(jsonPath("$.results", hasSize(2))) // ✅ 반환된 리스트 크기 검증
-			.andExpect(jsonPath("$.results[0].title").value("Laptop")) // ✅ 첫 번째 상품 제목 검증
-			.andExpect(jsonPath("$.results[1].title").value("Phone")); // ✅ 두 번째 상품 제목 검증
+			.andExpect(jsonPath("$.results", hasSize(2)))
+			.andExpect(jsonPath("$.results[0].title").value("Laptop"))
+			.andExpect(jsonPath("$.results[1].title").value("Phone"));
 	}
 
 	@Test
@@ -167,7 +167,7 @@ class GoodsControllerTest {
 		// when & then
 		mockMvc.perform(post("/api/user/goods/register")
 				.contentType(MediaType.APPLICATION_JSON)
-				.content(objectMapper.writeValueAsString(requestDto))) // ✅ JSON 변환
+				.content(objectMapper.writeValueAsString(requestDto)))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.success").value(true))
 			.andExpect(jsonPath("$.message").value("요청에 성공하였습니다."));
@@ -190,7 +190,7 @@ class GoodsControllerTest {
 		// when & then
 		mockMvc.perform(put("/api/user/goods/{goodsId}", 1L)
 				.contentType(MediaType.APPLICATION_JSON)
-				.content(objectMapper.writeValueAsString(requestDto))) // ✅ JSON 변환
+				.content(objectMapper.writeValueAsString(requestDto)))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.success").value(true))
 			.andExpect(jsonPath("$.message").value("요청에 성공하였습니다."));
