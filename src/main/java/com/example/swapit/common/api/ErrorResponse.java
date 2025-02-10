@@ -9,7 +9,7 @@ import lombok.Getter;
 @AllArgsConstructor
 @JsonPropertyOrder({"status", "errorCode", "message"})
 public class ErrorResponse {
-	private int status;
-	private String errorCode;
-	private String message;
+	private final int status;
+	private final String errorCode;
+	private final String message;
 }
