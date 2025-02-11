@@ -99,4 +99,8 @@ public class Goods extends BaseEntity {
 		this.content = request.getContent();
 		this.placeName = request.getPlaceName();
 	}
+
+	public void incrementViewCount() {
+		this.viewCount++;
+	}
 }
