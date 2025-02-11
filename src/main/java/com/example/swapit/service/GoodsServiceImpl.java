@@ -68,6 +68,10 @@ public class GoodsServiceImpl implements GoodsService {
 	public GoodsDetailDto getGoodDetail(Long goodsId) {
 		Goods good = goodsRepository.findById(goodsId)
 			.orElseThrow(() -> new CustomException(ErrorCode.GOOD_NOT_FOUND));
+
+		// 물건의 viewCount 증가 (새로고침할 때 viewCount가 무한히 증가됨. -> 이 부분은 redis로 ip 제한 걸어서 30초 이내로 다시 요청할 때 변경 가능함.)
+		good.incrementViewCount();
+
 		return GoodsDetailDto.of(good);
 	}
 
