@@ -2,7 +2,6 @@ package com.example.swapit.domain;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
@@ -77,20 +76,19 @@ public class Goods extends BaseEntity {
 
 	@Builder
 	public Goods(Users user, String title, long price, GoodsQuality quality, Categories category, String content,
-		String placeName, List<GoodsImages> goodsImagesList) {
+		String placeName) {
 		this.user = user;
 		this.title = title;
 		this.price = price;
 		this.quality = quality;
 		this.category = category;
 		this.content = content;
-		this.goodsTradeStatus = GoodsTradeStatus.AVAILABLE; // 기본값 적용
-		this.viewCount = 0;    // 기본값 적용
 		this.placeName = placeName;
-		this.goodsImagesList = Objects.requireNonNullElse(goodsImagesList, new ArrayList<>()); // null이면 초기화.
+		this.viewCount = 0;
+		this.goodsTradeStatus = GoodsTradeStatus.AVAILABLE;
+		this.goodsImagesList = new ArrayList<>();
 	}
 
-	// todo: 사진 api 추가 후, 수정 필요.
 	public void update(GoodsRequestDto request, Categories category) {
 		this.title = request.getTitle();
 		this.price = request.getPrice();
@@ -102,5 +100,13 @@ public class Goods extends BaseEntity {
 
 	public void incrementViewCount() {
 		this.viewCount++;
+	}
+
+	public void addImage(GoodsImages image) {
+		this.goodsImagesList.add(image);
+	}
+
+	public void deleteImage(Long imagesId) {
+		this.goodsImagesList.removeIf(i -> i.getId().equals(imagesId));
 	}
 }
