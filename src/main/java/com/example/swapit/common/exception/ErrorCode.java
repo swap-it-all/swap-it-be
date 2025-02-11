@@ -29,6 +29,7 @@ public enum ErrorCode {
 	IMAGE_READ_FAILED(HttpStatus.BAD_REQUEST, "이미지를 읽는데 실패하였습니다."),
 	IMAGE_UPLOAD_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "AWS S3 이미지 업로드에 실패했습니다. 다시 시도해주세요."),
 	S3_NETWORK_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "AWS S3 통신에 실패했습니다."),
+	IMAGE_COUNT_EXCEEDED(HttpStatus.BAD_REQUEST, "이미지는 최대 10개까지 올릴 수 있습니다."),
 	FILE_SIZE_EXCEEDED(HttpStatus.PAYLOAD_TOO_LARGE, "파일 크기가 최대 한도를 초과했습니다. (5MB)"),
 	INVALID_IMAGE_FORMAT(HttpStatus.BAD_REQUEST, "파일 확장자는 JPG, JPEG, PNG만 가능합니다."),
 

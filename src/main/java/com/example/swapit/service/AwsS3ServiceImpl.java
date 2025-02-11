@@ -32,13 +32,22 @@ public class AwsS3ServiceImpl implements AwsS3Service {
 	@Value("${cloud.aws.s3.bucket}")
 	private String bucketName;
 
-	private static final List<String> ALLOWED_EXTENSIONS = List.of("jpg", "jpeg", "png");
+	private static final List<String> ALLOWED_EXTENSIONS = List.of("jpg", "jpeg", "png"); // 이미지 가능 확장자
+	private static final int MAX_IMAGES = 10; // 이미지 최대 개수
 
 	private final S3Client s3Client;
 	private final GoodsRepository goodsRepository;
 
 	@Override
 	public void uploadFiles(Long goodsId, List<MultipartFile> files) {
+		Goods good = goodsRepository.findById(goodsId)
+			.orElseThrow(() -> new CustomException(ErrorCode.GOOD_NOT_FOUND));
+
+		// 최대 이미지 개수를 초과하는지 검증
+		if (good.getGoodsImagesList().size() + files.size() > MAX_IMAGES) {
+			throw new CustomException(ErrorCode.IMAGE_COUNT_EXCEEDED);
+		}
+
 		try {
 			for (MultipartFile file : files) {
 				// 1. 확장자 검증 (이미지 파일만 허용)
@@ -66,9 +75,6 @@ public class AwsS3ServiceImpl implements AwsS3Service {
 
 				// 5. S3에 업로드 성공 시, 물건 DB에 업데이트
 				if (response.sdkHttpResponse().isSuccessful()) {
-					Goods good = goodsRepository.findById(goodsId)
-						.orElseThrow(() -> new CustomException(ErrorCode.GOOD_NOT_FOUND));
-
 					good.addImage(GoodsImages.builder()
 						.fileName(uniqueFileName)
 						.contentType(contentType)
