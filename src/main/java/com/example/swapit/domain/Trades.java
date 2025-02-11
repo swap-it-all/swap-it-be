@@ -31,16 +31,31 @@ public class Trades extends BaseEntity {
 	@Column(name = "trades_id")
 	private Long id;
 
-	@Builder.Default
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false)
-	private TradeStatus status = TradeStatus.PENDING;
+	private TradeStatus status;
 
 	@ManyToOne
 	@JoinColumn(name = "requested_goods_id", nullable = false)
-	private Goods requestedGood;
+	private Goods requestedGoods;
 
 	@ManyToOne
 	@JoinColumn(name = "target_goods_id", nullable = false)
-	private Goods targetGood;
+	private Goods targetGoods;
+
+	@ManyToOne
+	@JoinColumn(name = "requester_id", nullable = false)
+	private Users requester;
+
+	@ManyToOne
+	@JoinColumn(name = "owner_id", nullable = false)
+	private Users owner;
+
+	public Trades(Goods requestedGoods, Goods targetGoods) {
+		this.status = TradeStatus.PENDING;
+		this.requestedGoods = requestedGoods;
+		this.targetGoods = targetGoods;
+		this.requester = requestedGoods.getUser();
+		this.owner = targetGoods.getUser();
+	}
 }

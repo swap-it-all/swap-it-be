@@ -1,0 +1,98 @@
+package com.example.swapit.controller;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
+
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import com.example.swapit.common.api.ApiResponse;
+import com.example.swapit.common.exception.CustomException;
+import com.example.swapit.common.exception.ErrorCode;
+import com.example.swapit.domain.dto.TradesRequestDto;
+import com.example.swapit.service.TradesService;
+
+@ExtendWith(MockitoExtension.class)
+public class TradesControllerTest {
+
+	@InjectMocks
+	private TradesController tradesController;
+
+	@Mock
+	private TradesService tradesService;
+
+	@Test
+	@DisplayName("거래 요청 성공 테스트")
+	void requestTradeSuccess() {
+		// Given
+		TradesRequestDto dto = new TradesRequestDto(1L, 2L);
+
+		doNothing().when(tradesService).requestTrade(any(TradesRequestDto.class));
+
+		// When
+		ApiResponse<Void> response = tradesController.requestTrade(dto);
+
+		// Then
+		verify(tradesService, times(1)).requestTrade(dto);
+		assertTrue(response.isSuccess());
+		assertEquals("요청에 성공하였습니다.", response.getMessage());
+		assertNull(response.getResults());
+	}
+
+	@Test
+	@DisplayName("거래 요청 실패 테스트")
+	void requestTradeFailure() {
+		// Given
+		TradesRequestDto dto = new TradesRequestDto(null, 2L);
+
+		// When
+		CustomException exception = new CustomException(ErrorCode.GOOD_NOT_FOUND);
+		doThrow(exception).when(tradesService).requestTrade(dto);
+
+		// When & Then
+		CustomException thrown = assertThrows(CustomException.class, () -> {
+			tradesController.requestTrade(dto);
+		});
+		assertEquals(ErrorCode.GOOD_NOT_FOUND, thrown.getErrorCode());
+	}
+
+	@Test
+	@DisplayName("거래 삭제 성공 테스트")
+	void deleteTradeSuccess() {
+		// Given
+		Long tradesId = 1L;
+
+		doNothing().when(tradesService).cancelTrade(tradesId);
+
+		// When
+		ApiResponse<Void> response = tradesController.cancelTrade(tradesId);
+
+		// Then
+		verify(tradesService, times(1)).cancelTrade(tradesId);
+		assertTrue(response.isSuccess());
+		assertEquals("요청에 성공하였습니다.", response.getMessage());
+		assertNull(response.getResults());
+	}
+
+	@Test
+	@DisplayName("거래 삭제 실패 테스트")
+	void deleteTradeFailure() {
+		// Given
+		Long tradesId = null;
+
+		// When
+		CustomException exception = new CustomException(ErrorCode.TRADES_NOT_FOUND);
+		doThrow(exception).when(tradesService).cancelTrade(tradesId);
+
+		// When & Then
+		CustomException thrown = assertThrows(CustomException.class, () -> {
+			tradesController.cancelTrade(tradesId);
+		});
+		assertEquals(ErrorCode.TRADES_NOT_FOUND, thrown.getErrorCode());
+	}
+}

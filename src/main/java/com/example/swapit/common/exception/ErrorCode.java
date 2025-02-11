@@ -33,7 +33,10 @@ public enum ErrorCode {
 	NEW_REFRESH_TOKEN_FAIL(HttpStatus.BAD_REQUEST, "리프레시 토큰 발급에 실패했습니다."),
 	INVALID_ACCESS_TOKEN(HttpStatus.UNAUTHORIZED, "유효하지 않은 액세스 토큰입니다."),
 	GET_USER_INFO_FAIL(HttpStatus.BAD_REQUEST, "사용자 정보 조회에 실패했습니다."),
-	LOGIN_FAIL(HttpStatus.UNAUTHORIZED, "로그인에 실패했습니다.");
+	LOGIN_FAIL(HttpStatus.UNAUTHORIZED, "로그인에 실패했습니다."),
+
+	// trades error
+	TRADES_NOT_FOUND(HttpStatus.NOT_FOUND, "거래를 찾을 수 없습니다.");
 
 	private final HttpStatus httpStatus;
 	private final String message;
