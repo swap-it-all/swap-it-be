@@ -4,6 +4,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 import com.example.swapit.common.api.ErrorResponse;
 
@@ -22,6 +23,18 @@ public class GlobalExceptionHandler {
 				e.getStatusCode().value(),
 				ErrorCode.VALIDATION_FAIL.name(),
 				e.getMessage()
+			));
+	}
+
+	@ExceptionHandler(MaxUploadSizeExceededException.class)
+	public ResponseEntity<ErrorResponse> handleMaxSizeException(MaxUploadSizeExceededException e) {
+		log.error("[파일 용량 초과 Exception 발생] errorMessage : {}", e.getMessage());
+		return ResponseEntity
+			.status(e.getStatusCode())
+			.body(new ErrorResponse(
+				e.getStatusCode().value(),
+				ErrorCode.FILE_SIZE_EXCEEDED.name(),
+				ErrorCode.FILE_SIZE_EXCEEDED.getMessage()
 			));
 	}
 
