@@ -28,6 +28,9 @@ public class GoodsImages {
 	@JoinColumn(name = "goods_id", nullable = false)
 	private Goods good;
 
-	@Column(columnDefinition = "TEXT", nullable = false)
-	private String imageUrl; // S3 경로 저장
+	@Column(columnDefinition = "VARCHAR(255)", nullable = false)
+	private String fileName;
+
+	@Column(columnDefinition = "VARCHAR(50)", nullable = false)
+	private String contentType;
 }
