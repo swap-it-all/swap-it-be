@@ -11,7 +11,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.DataIntegrityViolationException;
 
+import com.example.swapit.common.exception.CustomException;
+import com.example.swapit.common.exception.ErrorCode;
 import com.example.swapit.domain.Goods;
 import com.example.swapit.domain.Trades;
 import com.example.swapit.domain.Users;
@@ -67,6 +70,77 @@ public class TradesServiceTest {
 		// Then
 		verify(goodsRepository, times(1)).findById(dto.getRequestedGoodsId());
 		verify(goodsRepository, times(1)).findById(dto.getTargetGoodsId());
+		verify(tradesRepository, times(1)).save(any(Trades.class));
+	}
+
+	@Test
+	@DisplayName("거래 요청 실패 - 요청된 거래가 10개 초과")
+	void requestTradesMaximumFailure() {
+		// Given
+		Users requester = Users.builder()
+			.email("email")
+			.build();
+		Goods requestedGoods = Goods.builder()
+			.user(requester)
+			.build();
+
+		Users target = Users.builder()
+			.email("email")
+			.build();
+		Goods targetGoods = Goods.builder()
+			.user(target)
+			.build();
+
+		dto = new TradesRequestDto(1L, 2L);
+
+		when(goodsRepository.findById(dto.getRequestedGoodsId())).thenReturn(Optional.of(requestedGoods));
+		when(goodsRepository.findById(dto.getTargetGoodsId())).thenReturn(Optional.of(targetGoods));
+		when(tradesRepository.countByTargetGoodsIdAndIsDeletedFalse(dto.getTargetGoodsId())).thenReturn(10L);
+
+		// When
+		CustomException exception = assertThrows(CustomException.class, () -> tradesService.requestTrade(dto));
+		assertEquals(ErrorCode.MAXIMUM_TRADE_REQUEST, exception.getErrorCode());
+
+		// Then
+		verify(goodsRepository, times(1)).findById(dto.getRequestedGoodsId());
+		verify(goodsRepository, times(1)).findById(dto.getTargetGoodsId());
+		verify(tradesRepository, times(1)).countByTargetGoodsIdAndIsDeletedFalse(dto.getTargetGoodsId());
+		verify(tradesRepository, never()).save(any(Trades.class));
+	}
+
+	@Test
+	@DisplayName("거래 요청 실패 - 중복 거래 요청")
+	void requestTradesDuplicateFailure() {
+		// Given
+		Users requester = Users.builder()
+			.email("email")
+			.build();
+		Goods requestedGoods = Goods.builder()
+			.user(requester)
+			.build();
+
+		Users target = Users.builder()
+			.email("email")
+			.build();
+		Goods targetGoods = Goods.builder()
+			.user(target)
+			.build();
+
+		dto = new TradesRequestDto(1L, 2L);
+
+		when(goodsRepository.findById(dto.getRequestedGoodsId())).thenReturn(Optional.of(requestedGoods));
+		when(goodsRepository.findById(dto.getTargetGoodsId())).thenReturn(Optional.of(targetGoods));
+		when(tradesRepository.countByTargetGoodsIdAndIsDeletedFalse(dto.getTargetGoodsId())).thenReturn(5L);
+		doThrow(new DataIntegrityViolationException("Duplicate")).when(tradesRepository).save(any(Trades.class));
+
+		// When
+		CustomException exception = assertThrows(CustomException.class, () -> tradesService.requestTrade(dto));
+		assertEquals(ErrorCode.DUPLICATE_TRADE_REQUEST, exception.getErrorCode());
+
+		// Then
+		verify(goodsRepository, times(1)).findById(dto.getRequestedGoodsId());
+		verify(goodsRepository, times(1)).findById(dto.getTargetGoodsId());
+		verify(tradesRepository, times(1)).countByTargetGoodsIdAndIsDeletedFalse(dto.getTargetGoodsId());
 		verify(tradesRepository, times(1)).save(any(Trades.class));
 	}
 

@@ -1,5 +1,6 @@
 package com.example.swapit.service;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import com.example.swapit.common.exception.CustomException;
@@ -28,7 +29,17 @@ public class TradesServiceImpl implements TradesService {
 		Goods targetGoods = goodsRepository.findById(tradesRequestDto.getTargetGoodsId())
 			.orElseThrow(() -> new CustomException(ErrorCode.GOOD_NOT_FOUND));
 
-		tradesRepository.save(new Trades(requestedGoods, targetGoods));
+		long count = tradesRepository.countByTargetGoodsIdAndIsDeletedFalse(tradesRequestDto.getTargetGoodsId());
+
+		if (count >= 10) {
+			throw new CustomException(ErrorCode.MAXIMUM_TRADE_REQUEST);
+		}
+
+		try {
+			tradesRepository.save(new Trades(requestedGoods, targetGoods));
+		} catch (DataIntegrityViolationException ex) {
+			throw new CustomException(ErrorCode.DUPLICATE_TRADE_REQUEST);
+		}
 	}
 
 	@Override
