@@ -59,7 +59,7 @@ public class AwsS3ServiceImpl implements AwsS3Service {
 				String originalFileName = file.getOriginalFilename();
 				String contentType = file.getContentType();
 				String uniqueFileName = UUID.randomUUID() + "_" + originalFileName;
-				String path = "goods/" + goodsId + "/";
+				String path = "images/goods/" + goodsId + "/";
 
 				// 3. S3 업로드 요청 생성
 				PutObjectRequest putRequest = PutObjectRequest.builder()
@@ -76,6 +76,7 @@ public class AwsS3ServiceImpl implements AwsS3Service {
 				// 5. S3에 업로드 성공 시, 물건 DB에 업데이트
 				if (response.sdkHttpResponse().isSuccessful()) {
 					good.addImage(GoodsImages.builder()
+						.good(good)
 						.fileName(uniqueFileName)
 						.contentType(contentType)
 						.build());
