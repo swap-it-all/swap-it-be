@@ -3,7 +3,6 @@ package com.example.swapit.domain.dto;
 import java.time.LocalDateTime;
 
 import com.example.swapit.domain.Goods;
-import com.example.swapit.domain.GoodsImages;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -24,17 +23,13 @@ public class GoodsDto {
 	private long viewCount;
 	private LocalDateTime createdAt;
 
-	public static GoodsDto of(Goods good) {
+	public static GoodsDto of(Goods good, String imageUrl) {
 		return GoodsDto.builder()
 			.goodsId(good.getId())
 			.title(good.getTitle())
 			.price(good.getPrice())
 			.category(good.getCategory().getName())
-			.photoUrl(
-				good.getGoodsImagesList().stream()
-					.findFirst()
-					.map(GoodsImages::getImageUrl)
-					.orElseGet(() -> "/images/goods/default"))
+			.photoUrl(imageUrl)
 			.placeName(good.getPlaceName())
 			.viewCount(good.getViewCount())
 			.createdAt(good.getCreatedAt())

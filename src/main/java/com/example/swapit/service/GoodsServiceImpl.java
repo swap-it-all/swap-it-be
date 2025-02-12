@@ -50,9 +50,15 @@ public class GoodsServiceImpl implements GoodsService {
 		// 요청한 크기만큼 데이터 제한
 		List<Goods> paginateGoods = hasNext ? goodsList.subList(0, size) : goodsList;
 
+		// todo : 트래픽이 많아지면 Goods 엔티티에 "대표 이미지" 필드 추가
 		List<GoodsDto> goodsDtoList = paginateGoods.stream()
-			.map(GoodsDto::of)
-			.toList();
+			.map(good -> {
+				String firstImageUrl = goodsImagesRepository.findFirstByGoodOrderByIdAsc(good)
+					.map(GoodsImages::getS3Key)
+					.map(awsS3Service::generatePreSignedImageUrl)
+					.orElse(null);
+				return GoodsDto.of(good, firstImageUrl);
+			}).toList();
 
 		Long lastCursorId = paginateGoods.isEmpty() ? null : paginateGoods.get(paginateGoods.size() - 1).getId();
 
@@ -65,7 +71,16 @@ public class GoodsServiceImpl implements GoodsService {
 		log.debug("사용자 ID ({}) 가 내 물건 목록 조회.", user.getUsersId());
 
 		List<Goods> findGoods = goodsRepository.findByUserOrderByCreatedAtDesc(user);
-		return findGoods.stream().map(GoodsDto::of).toList();
+
+		// todo : 트래픽이 많아지면 Goods 엔티티에 "대표 이미지" 필드 추가
+		return findGoods.stream()
+			.map(good -> {
+				String firstImageUrl = goodsImagesRepository.findFirstByGoodOrderByIdAsc(good)
+					.map(GoodsImages::getS3Key)
+					.map(awsS3Service::generatePreSignedImageUrl)
+					.orElse(null);
+				return GoodsDto.of(good, firstImageUrl);
+			}).toList();
 	}
 
 	@Override
