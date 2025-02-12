@@ -36,7 +36,9 @@ public enum ErrorCode {
 	LOGIN_FAIL(HttpStatus.UNAUTHORIZED, "로그인에 실패했습니다."),
 
 	// trades error
-	TRADES_NOT_FOUND(HttpStatus.NOT_FOUND, "거래를 찾을 수 없습니다.");
+	TRADES_NOT_FOUND(HttpStatus.NOT_FOUND, "거래를 찾을 수 없습니다."),
+	DUPLICATE_TRADE_REQUEST(HttpStatus.BAD_REQUEST, "이미 해당 물건에 스왑 요청한 내역이 있습니다."),
+	MAXIMUM_TRADE_REQUEST(HttpStatus.BAD_REQUEST, "가능한 스왑 요청 횟수를 초과하였습니다.");
 
 	private final HttpStatus httpStatus;
 	private final String message;
