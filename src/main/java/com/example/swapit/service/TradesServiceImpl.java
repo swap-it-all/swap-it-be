@@ -19,6 +19,7 @@ public class TradesServiceImpl implements TradesService {
 
 	private final TradesRepository tradesRepository;
 	private final GoodsRepository goodsRepository;
+	public static final int MAX_REQUEST_COUNT = 10;
 
 	@Override
 	public void requestTrade(TradesRequestDto tradesRequestDto) {
@@ -29,7 +30,7 @@ public class TradesServiceImpl implements TradesService {
 
 		long count = tradesRepository.countByTargetGoodsIdAndIsDeletedFalse(tradesRequestDto.getTargetGoodsId());
 
-		if (count >= 10) {
+		if (count >= MAX_REQUEST_COUNT) {
 			throw new CustomException(ErrorCode.MAXIMUM_TRADE_REQUEST);
 		}
 
