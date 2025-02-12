@@ -2,10 +2,8 @@ package com.example.swapit.domain.dto;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import com.example.swapit.domain.Goods;
-import com.example.swapit.domain.GoodsImages;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -30,7 +28,7 @@ public class GoodsDetailDto {
 	private List<String> imageUrls;
 	private LocalDateTime createdAt;
 
-	public static GoodsDetailDto of(Goods good) {
+	public static GoodsDetailDto of(Goods good, List<String> imageUrls) {
 		return GoodsDetailDto.builder()
 			.goodsId(good.getId())
 			.user(UserProfileDto.of(good.getUser()))
@@ -42,13 +40,7 @@ public class GoodsDetailDto {
 			.goodsTradeStatus(good.getGoodsTradeStatus().name())
 			.placeName(good.getPlaceName())
 			.viewCount(good.getViewCount())
-			// todo: 성능 개선 필요.
-			.imageUrls(
-				good.getGoodsImagesList()
-					.stream()
-					.map(GoodsImages::getImageUrl)
-					.collect(Collectors.toList())
-			)
+			.imageUrls(imageUrls)
 			.createdAt(good.getCreatedAt())
 			.build();
 	}

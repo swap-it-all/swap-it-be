@@ -9,12 +9,14 @@ import com.example.swapit.common.exception.CustomException;
 import com.example.swapit.common.exception.ErrorCode;
 import com.example.swapit.domain.Categories;
 import com.example.swapit.domain.Goods;
+import com.example.swapit.domain.GoodsImages;
 import com.example.swapit.domain.Users;
 import com.example.swapit.domain.dto.GoodsDetailDto;
 import com.example.swapit.domain.dto.GoodsDto;
 import com.example.swapit.domain.dto.GoodsListDto;
 import com.example.swapit.domain.dto.GoodsRequestDto;
 import com.example.swapit.repository.CategoriesRepository;
+import com.example.swapit.repository.GoodsImagesRepository;
 import com.example.swapit.repository.GoodsRepository;
 
 import jakarta.transaction.Transactional;
@@ -30,8 +32,10 @@ public class GoodsServiceImpl implements GoodsService {
 	private final GoodsRepository goodsRepository;
 	private final CategoriesRepository categoriesRepository;
 	private final CurrentUserService currentUserService;
+	private final GoodsImagesRepository goodsImagesRepository;
+	private final AwsS3Service awsS3Service;
 
-	private final int size = 30;
+	private static final int size = 30;
 
 	@Override
 	public GoodsListDto getGoods(
@@ -69,10 +73,18 @@ public class GoodsServiceImpl implements GoodsService {
 		Goods good = goodsRepository.findById(goodsId)
 			.orElseThrow(() -> new CustomException(ErrorCode.GOOD_NOT_FOUND));
 
-		// 물건의 viewCount 증가 (새로고침할 때 viewCount가 무한히 증가됨. -> 이 부분은 redis로 ip 제한 걸어서 30초 이내로 다시 요청할 때 변경 가능함.)
+		// todo :  redis로 ip 제한 걸어서 30초 이내로 다시 요청할 때 변경 가능하도록 하능하게 하면 비기능 향상.
+		// 물건의 viewCount 증가 (새로고침할 때 viewCount가 무한히 증가됨. -> 이 부분은.)
 		good.incrementViewCount();
 
-		return GoodsDetailDto.of(good);
+		// 물건 이미지 리스트 조회
+		List<String> imageUrls = goodsImagesRepository.findByGood(good)
+			.stream()
+			.map(GoodsImages::getS3Key)
+			.map(awsS3Service::generatePreSignedImageUrl)
+			.toList();
+
+		return GoodsDetailDto.of(good, imageUrls);
 	}
 
 	@Override
