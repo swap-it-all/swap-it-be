@@ -29,8 +29,8 @@ public class GoodsImages {
 	@JoinColumn(name = "goods_id", nullable = false)
 	private Goods good;
 
-	@Column(columnDefinition = "VARCHAR(255)", nullable = false)
-	private String fileName;
+	@Column(name = "s3_key", columnDefinition = "VARCHAR(512)", nullable = false)
+	private String s3Key;
 
 	@Column(columnDefinition = "VARCHAR(50)", nullable = false)
 	private String contentType;
