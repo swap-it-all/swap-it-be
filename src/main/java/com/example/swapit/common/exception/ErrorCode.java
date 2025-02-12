@@ -32,6 +32,7 @@ public enum ErrorCode {
 	IMAGE_COUNT_EXCEEDED(HttpStatus.BAD_REQUEST, "이미지는 최대 10개까지 올릴 수 있습니다."),
 	FILE_SIZE_EXCEEDED(HttpStatus.PAYLOAD_TOO_LARGE, "파일 크기가 최대 한도를 초과했습니다. (5MB)"),
 	INVALID_IMAGE_FORMAT(HttpStatus.BAD_REQUEST, "파일 확장자는 JPG, JPEG, PNG만 가능합니다."),
+	IMAGE_NOT_FOUND(HttpStatus.NOT_FOUND, "이미지를 찾을 수 없습니다."),
 
 	// categories error
 	CATEGORY_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 카테고리를 찾을 수 없습니다."),

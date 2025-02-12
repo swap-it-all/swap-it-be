@@ -101,12 +101,4 @@ public class Goods extends BaseEntity {
 	public void incrementViewCount() {
 		this.viewCount++;
 	}
-
-	public void addImage(GoodsImages image) {
-		this.goodsImagesList.add(image);
-	}
-
-	public void deleteImage(Long imagesId) {
-		this.goodsImagesList.removeIf(i -> i.getId().equals(imagesId));
-	}
 }

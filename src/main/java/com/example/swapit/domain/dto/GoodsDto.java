@@ -18,7 +18,7 @@ public class GoodsDto {
 	private String title;
 	private long price;
 	private String category;
-	private String photoUrl;
+	private String imageUrl;
 	private String placeName;
 	private long viewCount;
 	private LocalDateTime createdAt;
@@ -29,7 +29,7 @@ public class GoodsDto {
 			.title(good.getTitle())
 			.price(good.getPrice())
 			.category(good.getCategory().getName())
-			.photoUrl(imageUrl)
+			.imageUrl(imageUrl)
 			.placeName(good.getPlaceName())
 			.viewCount(good.getViewCount())
 			.createdAt(good.getCreatedAt())

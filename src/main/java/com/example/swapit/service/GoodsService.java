@@ -3,6 +3,8 @@ package com.example.swapit.service;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import org.springframework.web.multipart.MultipartFile;
+
 import com.example.swapit.domain.dto.GoodsDetailDto;
 import com.example.swapit.domain.dto.GoodsDto;
 import com.example.swapit.domain.dto.GoodsListDto;
@@ -18,9 +20,14 @@ public interface GoodsService {
 
 	GoodsDetailDto getGoodDetail(Long goodsId);
 
-	void insertGood(GoodsRequestDto goodsRequestDto);
+	Long insertGood(GoodsRequestDto goodsRequestDto);
 
 	void updateGood(Long goodsId, GoodsRequestDto goodsRequestDto);
 
 	void deleteGood(Long goodsId);
+
+	// 물건 사진
+	void uploadGoodImages(Long goodsId, List<MultipartFile> images);
+
+	void deleteGoodImage(Long goodsId, Long imagesId);
 }

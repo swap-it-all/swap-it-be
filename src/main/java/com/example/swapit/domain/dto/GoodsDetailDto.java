@@ -25,10 +25,10 @@ public class GoodsDetailDto {
 	private String goodsTradeStatus;
 	private String placeName;
 	private long viewCount;
-	private List<String> imageUrls;
+	private List<GoodsImageDto> images;
 	private LocalDateTime createdAt;
 
-	public static GoodsDetailDto of(Goods good, List<String> imageUrls) {
+	public static GoodsDetailDto of(Goods good, List<GoodsImageDto> images) {
 		return GoodsDetailDto.builder()
 			.goodsId(good.getId())
 			.user(UserProfileDto.of(good.getUser()))
@@ -40,7 +40,7 @@ public class GoodsDetailDto {
 			.goodsTradeStatus(good.getGoodsTradeStatus().name())
 			.placeName(good.getPlaceName())
 			.viewCount(good.getViewCount())
-			.imageUrls(imageUrls)
+			.images(images)
 			.createdAt(good.getCreatedAt())
 			.build();
 	}

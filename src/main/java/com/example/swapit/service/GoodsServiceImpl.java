@@ -3,7 +3,9 @@ package com.example.swapit.service;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.example.swapit.common.exception.CustomException;
 import com.example.swapit.common.exception.ErrorCode;
@@ -13,6 +15,7 @@ import com.example.swapit.domain.GoodsImages;
 import com.example.swapit.domain.Users;
 import com.example.swapit.domain.dto.GoodsDetailDto;
 import com.example.swapit.domain.dto.GoodsDto;
+import com.example.swapit.domain.dto.GoodsImageDto;
 import com.example.swapit.domain.dto.GoodsListDto;
 import com.example.swapit.domain.dto.GoodsRequestDto;
 import com.example.swapit.repository.CategoriesRepository;
@@ -36,6 +39,7 @@ public class GoodsServiceImpl implements GoodsService {
 	private final AwsS3Service awsS3Service;
 
 	private static final int size = 30;
+	private static final int MAX_IMAGES = 10; // 이미지 최대 개수
 
 	@Override
 	public GoodsListDto getGoods(
@@ -93,24 +97,25 @@ public class GoodsServiceImpl implements GoodsService {
 		good.incrementViewCount();
 
 		// 물건 이미지 리스트 조회
-		List<String> imageUrls = goodsImagesRepository.findByGood(good)
+		List<GoodsImageDto> photos = goodsImagesRepository.findByGood(good)
 			.stream()
-			.map(GoodsImages::getS3Key)
-			.map(awsS3Service::generatePreSignedImageUrl)
+			.map(image -> new GoodsImageDto(image.getId(), awsS3Service.generatePreSignedImageUrl(image.getS3Key())))
 			.toList();
 
-		return GoodsDetailDto.of(good, imageUrls);
+		return GoodsDetailDto.of(good, photos);
 	}
 
 	@Override
-	public void insertGood(GoodsRequestDto goodsRequestDto) {
+	public Long insertGood(GoodsRequestDto goodsRequestDto) {
 		Users user = currentUserService.getCurrentUser();
 		log.debug("사용자 ID ({}) 가 Goods Title ({}) 생성 시도.", user.getUsersId(), goodsRequestDto.getTitle());
 
 		Categories category = categoriesRepository.findById(goodsRequestDto.getCategoryId())
 			.orElseThrow(() -> new CustomException(ErrorCode.CATEGORY_NOT_FOUND));
 
-		goodsRepository.save(goodsRequestDto.toEntity(user, category));
+		Goods good = goodsRequestDto.toEntity(user, category);
+		goodsRepository.save(good);
+		return good.getId();
 	}
 
 	@Override
@@ -147,5 +152,47 @@ public class GoodsServiceImpl implements GoodsService {
 		if (!goodsUser.getUsersId().equals(currentUser.getUsersId())) {
 			throw new CustomException(ErrorCode.UNAUTHORIZED_ACCESS);
 		}
+	}
+
+	@Override
+	public void uploadGoodImages(Long goodsId, List<MultipartFile> images) {
+		Goods good = goodsRepository.findById(goodsId)
+			.orElseThrow(() -> new CustomException(ErrorCode.GOOD_NOT_FOUND));
+
+		// 최대 이미지 개수를 초과하는지 검증
+		if (good.getGoodsImagesList().size() + images.size() > MAX_IMAGES) {
+			throw new CustomException(ErrorCode.IMAGE_COUNT_EXCEEDED);
+		}
+
+		// S3에 이미지 업로드
+		List<Pair<String, String>> uploadImages = awsS3Service.uploadFiles(good, images);
+
+		// DB에 이미지 업로드
+		for (Pair<String, String> image : uploadImages) {
+			goodsImagesRepository.save(
+				GoodsImages.builder()
+					.good(good)
+					.s3Key(image.getFirst())
+					.contentType(image.getSecond())
+					.build());
+		}
+	}
+
+	@Override
+	public void deleteGoodImage(Long goodsId, Long imagesId) {
+		// DB에서 이미지 조회
+		GoodsImages image = goodsImagesRepository.findById(imagesId)
+			.orElseThrow(() -> new CustomException(ErrorCode.IMAGE_NOT_FOUND));
+
+		// 이미지가 해당 상품에 속하는지 검증
+		if (!image.getGood().getId().equals(goodsId)) {
+			throw new CustomException(ErrorCode.IMAGE_NOT_FOUND);
+		}
+
+		// S3에서 이미지 삭제
+		awsS3Service.deleteFile(image);
+
+		// DB에서 이미지 삭제
+		goodsImagesRepository.delete(image);
 	}
 }
