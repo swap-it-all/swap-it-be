@@ -1,5 +1,6 @@
 package com.example.swapit.service;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import com.example.swapit.common.exception.CustomException;
@@ -11,15 +12,14 @@ import com.example.swapit.repository.GoodsRepository;
 import com.example.swapit.repository.TradesRepository;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
 @Service
 @RequiredArgsConstructor
 public class TradesServiceImpl implements TradesService {
 
 	private final TradesRepository tradesRepository;
 	private final GoodsRepository goodsRepository;
+	public static final int MAX_REQUEST_COUNT = 10;
 
 	@Override
 	public void requestTrade(TradesRequestDto tradesRequestDto) {
@@ -28,7 +28,17 @@ public class TradesServiceImpl implements TradesService {
 		Goods targetGoods = goodsRepository.findById(tradesRequestDto.getTargetGoodsId())
 			.orElseThrow(() -> new CustomException(ErrorCode.GOOD_NOT_FOUND));
 
-		tradesRepository.save(new Trades(requestedGoods, targetGoods));
+		long count = tradesRepository.countByTargetGoodsIdAndIsDeletedFalse(tradesRequestDto.getTargetGoodsId());
+
+		if (count >= MAX_REQUEST_COUNT) {
+			throw new CustomException(ErrorCode.MAXIMUM_TRADE_REQUEST);
+		}
+
+		try {
+			tradesRepository.save(new Trades(requestedGoods, targetGoods));
+		} catch (DataIntegrityViolationException ex) {
+			throw new CustomException(ErrorCode.DUPLICATE_TRADE_REQUEST);
+		}
 	}
 
 	@Override
