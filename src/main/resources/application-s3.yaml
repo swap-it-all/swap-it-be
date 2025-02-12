@@ -2,6 +2,8 @@ cloud:
   aws:
     s3:
       bucket: ${S3_BUCKET_NAME}
+    stack:
+      auto: false
 
 spring:
   servlet:
