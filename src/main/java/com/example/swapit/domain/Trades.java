@@ -12,6 +12,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -23,7 +24,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Entity
 @SQLDelete(sql = "UPDATE trades SET is_deleted = true WHERE trades_id = ?")
-@Table(name = "trades")
+@Table(name = "trades",
+	uniqueConstraints = @UniqueConstraint(columnNames = {"target_goods_id, requester_id"})
+)
 public class Trades extends BaseEntity {
 
 	@Id
