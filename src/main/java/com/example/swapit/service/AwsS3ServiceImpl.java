@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -13,17 +14,15 @@ import com.example.swapit.common.exception.CustomException;
 import com.example.swapit.common.exception.ErrorCode;
 import com.example.swapit.domain.Goods;
 import com.example.swapit.domain.GoodsImages;
-import com.example.swapit.repository.GoodsRepository;
+import com.example.swapit.domain.Users;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
-import software.amazon.awssdk.services.s3.model.PutObjectResponse;
-import software.amazon.awssdk.services.s3.model.S3Exception;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
 import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequest;
@@ -38,88 +37,35 @@ public class AwsS3ServiceImpl implements AwsS3Service {
 	private String bucketName;
 
 	private static final List<String> ALLOWED_EXTENSIONS = List.of("jpg", "jpeg", "png"); // 이미지 가능 확장자
-	private static final int MAX_IMAGES = 10; // 이미지 최대 개수
 	private static final int IMAGE_SHOW_TIME_LIMIT = 10; // 이미지 링크 유지 시간 (10분)
 
 	private final S3Client s3Client;
 	private final S3Presigner s3Presigner;
-	private final GoodsRepository goodsRepository;
 
 	/**
 	 * 이미지 업로드
 	 */
 	@Override
-	public void uploadFiles(Long goodsId, List<MultipartFile> files) {
-		Goods good = goodsRepository.findById(goodsId)
-			.orElseThrow(() -> new CustomException(ErrorCode.GOOD_NOT_FOUND));
-
-		// 최대 이미지 개수를 초과하는지 검증
-		if (good.getGoodsImagesList().size() + files.size() > MAX_IMAGES) {
-			throw new CustomException(ErrorCode.IMAGE_COUNT_EXCEEDED);
-		}
-
-		try {
-			for (MultipartFile file : files) {
-				// 1. 확장자 검증 (이미지 파일만 허용)
+	public List<Pair<String, String>> uploadFiles(Goods good, List<MultipartFile> files) {
+		return files.stream()
+			.map(file -> {
 				if (!isValidImageFile(file.getOriginalFilename())) {
 					throw new CustomException(ErrorCode.INVALID_IMAGE_FORMAT);
 				}
-
-				// 2. 파일 정보 생성
-				String originalFileName = file.getOriginalFilename();
-				String contentType = file.getContentType();
-				String uniqueFileName = UUID.randomUUID() + "_" + originalFileName;
-				String path = "images/goods/" + goodsId + "/";
-
-				// 3. S3 업로드 요청 생성
-				PutObjectRequest putRequest = PutObjectRequest.builder()
-					.bucket(bucketName)
-					.key(path + uniqueFileName)
-					.contentType(contentType)
-					.contentLength(file.getSize())
-					.build();
-
-				// 4. S3로 파일 업로드 실행 -> 응답 response
-				PutObjectResponse response = s3Client.putObject(
-					putRequest, RequestBody.fromBytes(file.getBytes()));
-
-				// 5. S3에 업로드 성공 시, 물건 DB에 업데이트
-				if (response.sdkHttpResponse().isSuccessful()) {
-					good.addImage(GoodsImages.builder()
-						.good(good)
-						.s3Key(path + uniqueFileName)
-						.contentType(contentType)
-						.build());
-				} else {
-					throw new CustomException(ErrorCode.IMAGE_UPLOAD_FAILED);
-				}
-			}
-		} catch (IOException e) {
-			log.error("good ID {} 의 {}", goodsId, ErrorCode.IMAGE_READ_FAILED.getMessage() + " /" + e.getMessage());
-			throw new CustomException(ErrorCode.IMAGE_READ_FAILED);
-		} catch (S3Exception e) {
-			log.error("AWS S3 통신 에러 발생: {}", e.getMessage());
-			throw new CustomException(ErrorCode.S3_NETWORK_FAILED);
-		} catch (IllegalStateException e) {
-			log.error("AWS S3 업로드 실패: {}", e.getMessage());
-			throw new CustomException(ErrorCode.IMAGE_UPLOAD_FAILED);
-		}
+				String s3Key = uploadFileToS3(file, "images/goods/" + good.getId());
+				return Pair.of(s3Key, file.getContentType());
+			}).toList();
 	}
 
 	/**
-	 * 단일 이미지 조회
+	 * 단일 이미지 조회 : Pre-signed URL 생성
 	 *  todo : 버킷 이름이 보여서, CloudFront 도입
 	 */
 	@Override
 	public String generatePreSignedImageUrl(String objectKey) {
-		GetObjectRequest getObjectRequest = GetObjectRequest.builder()
-			.bucket(bucketName)
-			.key(objectKey)
-			.build();
-
 		GetObjectPresignRequest presignRequest = GetObjectPresignRequest.builder()
 			.signatureDuration(Duration.ofMinutes(IMAGE_SHOW_TIME_LIMIT))
-			.getObjectRequest(getObjectRequest)
+			.getObjectRequest(req -> req.bucket(bucketName).key(objectKey))
 			.build();
 
 		// todo : 앱 배포 시, 앱에서만 사용하도록 CustomHeader 추가.
@@ -128,15 +74,64 @@ public class AwsS3ServiceImpl implements AwsS3Service {
 	}
 
 	@Override
-	public void deleteFile(Long goodsId, Long imagesId) {
-
+	public void deleteFile(GoodsImages image) {
+		// S3에서 이미지 삭제
+		deleteFileFromS3(image.getS3Key());
 	}
 
 	@Override
-	public void updateUserProfileImage(MultipartFile file) {
+	public String updateUserProfileImage(Users user, MultipartFile file) {
+		isValidImageFile(file.getOriginalFilename());
 
+		// 기존 프로필 이미지 삭제 (있다면)
+		if (user.getProfileImageUrl() != null) {
+			deleteFileFromS3(user.getProfileImageUrl()); // 기존 이미지 삭제
+		}
+
+		return uploadFileToS3(file, "images/users/" + user.getUsersId());
 	}
 
+	/**
+	 *  S3에 파일 업로드 후 S3 key 반환
+	 */
+	private String uploadFileToS3(MultipartFile file, String path) {
+		String uniqueFileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
+		String s3Key = path + "/" + uniqueFileName;
+
+		try {
+			PutObjectRequest putRequest = PutObjectRequest.builder()
+				.bucket(bucketName)
+				.key(s3Key)
+				.contentType(file.getContentType())
+				.build();
+
+			s3Client.putObject(putRequest, RequestBody.fromBytes(file.getBytes()));
+		} catch (IOException e) {
+			log.error("파일 변환 실패 : {}", ErrorCode.IMAGE_READ_FAILED.getMessage() + " /" + e.getMessage());
+			throw new CustomException(ErrorCode.IMAGE_READ_FAILED);
+		} catch (Exception e) {
+			log.error("AWS S3 업로드 실패: {}", e.getMessage());
+			throw new CustomException(ErrorCode.IMAGE_UPLOAD_FAILED);
+		}
+
+		return s3Key;
+	}
+
+	/**
+	 * S3에서 파일 삭제
+	 */
+	private void deleteFileFromS3(String s3Key) {
+		DeleteObjectRequest deleteObjectRequest = DeleteObjectRequest.builder()
+			.bucket(bucketName)
+			.key(s3Key)
+			.build();
+
+		s3Client.deleteObject(deleteObjectRequest);
+	}
+
+	/**
+	 *  이미지 파일 검증 (확장자 체크)
+	 */
 	private boolean isValidImageFile(String originalFileName) {
 		if (originalFileName == null || originalFileName.isEmpty()) {
 			return false;
