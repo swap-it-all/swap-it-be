@@ -1,6 +1,7 @@
 package com.example.swapit.service;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.util.List;
 import java.util.UUID;
 
@@ -19,9 +20,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectResponse;
 import software.amazon.awssdk.services.s3.model.S3Exception;
+import software.amazon.awssdk.services.s3.presigner.S3Presigner;
+import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
+import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequest;
 
 @Slf4j
 @Service
@@ -34,10 +39,15 @@ public class AwsS3ServiceImpl implements AwsS3Service {
 
 	private static final List<String> ALLOWED_EXTENSIONS = List.of("jpg", "jpeg", "png"); // 이미지 가능 확장자
 	private static final int MAX_IMAGES = 10; // 이미지 최대 개수
+	private static final int IMAGE_SHOW_TIME_LIMIT = 10; // 이미지 링크 유지 시간 (10분)
 
 	private final S3Client s3Client;
+	private final S3Presigner s3Presigner;
 	private final GoodsRepository goodsRepository;
 
+	/**
+	 * 이미지 업로드
+	 */
 	@Override
 	public void uploadFiles(Long goodsId, List<MultipartFile> files) {
 		Goods good = goodsRepository.findById(goodsId)
@@ -77,7 +87,7 @@ public class AwsS3ServiceImpl implements AwsS3Service {
 				if (response.sdkHttpResponse().isSuccessful()) {
 					good.addImage(GoodsImages.builder()
 						.good(good)
-						.fileName(uniqueFileName)
+						.s3Key(path + uniqueFileName)
 						.contentType(contentType)
 						.build());
 				} else {
@@ -94,6 +104,27 @@ public class AwsS3ServiceImpl implements AwsS3Service {
 			log.error("AWS S3 업로드 실패: {}", e.getMessage());
 			throw new CustomException(ErrorCode.IMAGE_UPLOAD_FAILED);
 		}
+	}
+
+	/**
+	 * 단일 이미지 조회
+	 *  todo : 버킷 이름이 보여서, CloudFront 도입
+	 */
+	@Override
+	public String generatePreSignedImageUrl(String objectKey) {
+		GetObjectRequest getObjectRequest = GetObjectRequest.builder()
+			.bucket(bucketName)
+			.key(objectKey)
+			.build();
+
+		GetObjectPresignRequest presignRequest = GetObjectPresignRequest.builder()
+			.signatureDuration(Duration.ofMinutes(IMAGE_SHOW_TIME_LIMIT))
+			.getObjectRequest(getObjectRequest)
+			.build();
+
+		// todo : 앱 배포 시, 앱에서만 사용하도록 CustomHeader 추가.
+		PresignedGetObjectRequest presignedRequest = s3Presigner.presignGetObject(presignRequest);
+		return presignedRequest.url().toString();
 	}
 
 	@Override
