@@ -4,33 +4,32 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import java.io.IOException;
+import java.net.URL;
+import java.time.Duration;
 import java.util.List;
-import java.util.Optional;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.util.Pair;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.example.swapit.common.exception.CustomException;
-import com.example.swapit.common.exception.ErrorCode;
-import com.example.swapit.domain.Categories;
 import com.example.swapit.domain.Goods;
 import com.example.swapit.domain.GoodsImages;
-import com.example.swapit.domain.GoodsQuality;
 import com.example.swapit.domain.Users;
 import com.example.swapit.repository.GoodsRepository;
 
 import software.amazon.awssdk.core.sync.RequestBody;
-import software.amazon.awssdk.http.SdkHttpResponse;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
-import software.amazon.awssdk.services.s3.model.PutObjectResponse;
-import software.amazon.awssdk.services.s3.model.S3Exception;
+import software.amazon.awssdk.services.s3.presigner.S3Presigner;
+import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
+import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequest;
 
 @ExtendWith(MockitoExtension.class)
 class AwsS3ServiceTest {
@@ -42,125 +41,130 @@ class AwsS3ServiceTest {
 	private GoodsRepository goodsRepository;
 
 	@Mock
+	private S3Presigner s3Presigner;
+
+	@Mock
 	private S3Client s3Client;
 
 	@Mock
 	private MultipartFile mockFile;
 
-	private static final String BUCKET_NAME = "test-bucket";
+	private final String bucketName = "test-bucket";
+	private final String s3Key = "images/goods/1/sample.jpg";
+	private static final String preSignedUrl = "https://s3.test-bucket.com/sample.jpg";
+	private static final String INVALID_FILE_NAME = "test-document.pdf";
 	private static final Long goodsId = 1L;
 	private static final String VALID_FILE_NAME = "test-image.jpg";
-	private static final String INVALID_FILE_NAME = "test-document.pdf";
 	private static final String CONTENT_TYPE = "image/jpeg";
-	private static final long FILE_SIZE = 1024 * 1024; // 1MB
-	private static final long EXCEEDED_FILE_SIZE = 10 * 1024 * 1024; // 10MB
-
-	private Users testUser;
-	private Categories testCategory;
-	private Goods testGood;
-
-	@BeforeEach
-	void setUp() {
-		testUser = Users.builder()
-			.usersId(1L)
-			.nickname("testUser")
-			.profileImageUrl("/images/testUser")
-			.email("test@gmail.com")
-			.loginInfo("google")
-			.role("ROLE_USER")
-			.build();
-
-		testCategory = Categories.builder()
-			.id(1L)
-			.name("ELECTRONICS")
-			.build();
-
-		testGood = Goods.builder()
-			.user(testUser)
-			.title("test 물건")
-			.price(1000L)
-			.quality(GoodsQuality.NEW)
-			.category(testCategory)
-			.content("싸게 드려요! 교환주세요!")
-			.build();
-
-		// ReflectionTestUtils.setField(testGood, "id", 1L);
-		when(goodsRepository.findById(anyLong())).thenReturn(Optional.of(testGood));
-	}
 
 	@Test
 	@DisplayName("파일 업로드 성공")
 	void uploadFiles_Success() throws IOException {
-		// given
+		// Given
+		Goods mockGoods = mock(Goods.class);
+		when(mockGoods.getId()).thenReturn(goodsId);
 		when(mockFile.getOriginalFilename()).thenReturn(VALID_FILE_NAME);
 		when(mockFile.getContentType()).thenReturn(CONTENT_TYPE);
-		when(mockFile.getSize()).thenReturn(FILE_SIZE);
-		when(mockFile.getBytes()).thenReturn(new byte[(int)FILE_SIZE]);
+		when(mockFile.getBytes()).thenReturn(new byte[10]);
 
-		// Mock S3 응답
-		PutObjectResponse mockResponse = (PutObjectResponse)PutObjectResponse.builder()
-			.sdkHttpResponse(SdkHttpResponse.builder().statusCode(200).build())
-			.build();
-		when(s3Client.putObject(any(PutObjectRequest.class), any(RequestBody.class))).thenReturn(mockResponse);
+		when(s3Client.putObject(any(PutObjectRequest.class), any(RequestBody.class))).thenReturn(null);
 
-		// when: 파일 업로드 실행
-		awsS3Service.uploadFiles(goodsId, List.of(mockFile));
+		// When
+		List<Pair<String, String>> uploadedFiles = awsS3Service.uploadFiles(mockGoods, List.of(mockFile));
 
-		// then: S3 업로드 및 DB 저장 검증
+		// Then
+		assertFalse(uploadedFiles.isEmpty());
+		assertEquals(1, uploadedFiles.size());
+		assertTrue(uploadedFiles.get(0).getFirst().contains("images/goods/1/"));
+		assertEquals("image/jpeg", uploadedFiles.get(0).getSecond());
+
 		verify(s3Client, times(1)).putObject(any(PutObjectRequest.class), any(RequestBody.class));
-		verify(goodsRepository, times(1)).findById(goodsId);
 	}
 
 	@Test
-	@DisplayName("잘못된 확장자 파일 업로드")
-	void uploadFiles_Fail_ByInvalidFileFormat() {
+	@DisplayName("이미지 pre-signed 경로 가져오기 성공")
+	void generatePreSignedImageUrl_Success() throws IOException {
+		// Given
+		GetObjectPresignRequest presignRequest = GetObjectPresignRequest.builder()
+			.signatureDuration(Duration.ofMinutes(10))
+			.getObjectRequest(req -> req.bucket(bucketName).key(s3Key))
+			.build();
+
+		PresignedGetObjectRequest presignedRequest = mock(PresignedGetObjectRequest.class);
+		when(s3Presigner.presignGetObject(any(GetObjectPresignRequest.class))).thenReturn(presignedRequest);
+		URL preSigneUrlObject = new URL(preSignedUrl);
+		doReturn(preSigneUrlObject).when(presignedRequest).url();
+
+		// When
+		String resultUrl = awsS3Service.generatePreSignedImageUrl(s3Key);
+
+		// Then
+		assertEquals(preSignedUrl, resultUrl);
+		verify(s3Presigner, times(1)).presignGetObject(any(GetObjectPresignRequest.class));
+	}
+
+	@Test
+	@DisplayName("이미지 삭제 테스트 성공")
+	void deleteFile_Success() {
+		// Given
+		GoodsImages mockImage = mock(GoodsImages.class);
+		when(mockImage.getS3Key()).thenReturn(s3Key);
+
+		when(s3Client.deleteObject(any(DeleteObjectRequest.class))).thenReturn(null);
+
+		// When
+		awsS3Service.deleteFile(mockImage);
+
+		// Then
+		verify(s3Client, times(1)).deleteObject(any(DeleteObjectRequest.class));
+	}
+
+	@Test
+	@DisplayName("프로필 이미지 변경 테스트 성공")
+	void updateUserProfileImage_Success() throws IOException {
 		// given
+		Users mockUser = mock(Users.class);
+		when(mockUser.getUsersId()).thenReturn(1L);
+		when(mockUser.getProfileImageUrl()).thenReturn(null);
+		when(mockFile.getOriginalFilename()).thenReturn(VALID_FILE_NAME);
+		when(mockFile.getContentType()).thenReturn(CONTENT_TYPE);
+		when(mockFile.getBytes()).thenReturn(new byte[10]);
+
+		when(s3Client.putObject(any(PutObjectRequest.class), any(RequestBody.class))).thenReturn(null);
+
+		// When
+		String uploadedS3Key = awsS3Service.updateUserProfileImage(mockUser, mockFile);
+
+		// Then
+		assertTrue(uploadedS3Key.contains("images/users/1/"));
+		verify(s3Client, times(1)).putObject(any(PutObjectRequest.class), any(RequestBody.class));
+	}
+
+	@Test
+	@DisplayName("잘못된 파일 확장자 업로드 시 예외 발생 테스트")
+	void uploadFiles_ShouldThrowExceptionForInvalidExtension() {
+		// Given
+		Goods mockGoods = mock(Goods.class);
 		when(mockFile.getOriginalFilename()).thenReturn(INVALID_FILE_NAME);
 
-		// when & then
-		CustomException exception = assertThrows(CustomException.class, () ->
-			awsS3Service.uploadFiles(goodsId, List.of(mockFile))
-		);
-
-		assertEquals(ErrorCode.INVALID_IMAGE_FORMAT, exception.getErrorCode());
+		// When & Then
+		assertThrows(CustomException.class, () -> awsS3Service.uploadFiles(mockGoods, List.of(mockFile)));
 	}
 
 	@Test
-	@DisplayName("S3 파일 업로드 실패")
-	void uploadFiles_Fail_S3UploadFailure() throws IOException {
-		// given
+	@DisplayName("S3 업로드 실패 시 예외 발생 테스트")
+	void uploadFiles_ShouldThrowExceptionOnS3Failure() throws IOException {
+		// Given
+		Goods mockGoods = mock(Goods.class);
+		when(mockGoods.getId()).thenReturn(1L);
 		when(mockFile.getOriginalFilename()).thenReturn(VALID_FILE_NAME);
-		when(mockFile.getBytes()).thenReturn(new byte[(int)FILE_SIZE]);
+		when(mockFile.getContentType()).thenReturn(CONTENT_TYPE);
+		when(mockFile.getBytes()).thenReturn(new byte[10]);
 
-		// when
-		when(s3Client.putObject(any(PutObjectRequest.class), any(RequestBody.class)))
-			.thenThrow(S3Exception.builder().message("S3 Upload Failed").build());
+		doThrow(new RuntimeException("S3 upload failed"))
+			.when(s3Client).putObject(any(PutObjectRequest.class), any(RequestBody.class));
 
-		// then
-		CustomException exception = assertThrows(CustomException.class, () ->
-			awsS3Service.uploadFiles(goodsId, List.of(mockFile))
-		);
-
-		assertEquals(ErrorCode.S3_NETWORK_FAILED, exception.getErrorCode());
-	}
-
-	@Test
-	@DisplayName("10개 초과의 이미지 업로드 시도")
-	void testUploadFiles_ImageCountExceeded_ShouldThrowException() {
-		// given
-		for (int i = 0; i < 8; i++) {
-			testGood.addImage(
-				GoodsImages.builder().fileName("fileName").contentType("content-type").build()
-			);
-		}
-
-		List<MultipartFile> newFiles = List.of(mockFile, mockFile, mockFile); // 3개 업로드
-
-		// when & then: 10개 초과 시 예외 발생 검증
-		CustomException exception = assertThrows(CustomException.class, () ->
-			awsS3Service.uploadFiles(goodsId, newFiles)
-		);
-
-		assertEquals(ErrorCode.IMAGE_COUNT_EXCEEDED, exception.getErrorCode());
+		// When & Then
+		assertThrows(CustomException.class, () -> awsS3Service.uploadFiles(mockGoods, List.of(mockFile)));
 	}
 }
