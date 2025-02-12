@@ -12,9 +12,7 @@ import com.example.swapit.repository.GoodsRepository;
 import com.example.swapit.repository.TradesRepository;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
 @Service
 @RequiredArgsConstructor
 public class TradesServiceImpl implements TradesService {
