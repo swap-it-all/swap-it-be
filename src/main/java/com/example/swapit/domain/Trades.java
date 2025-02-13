@@ -17,6 +17,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Getter
 @Builder
@@ -34,6 +35,7 @@ public class Trades extends BaseEntity {
 	@Column(name = "trades_id")
 	private Long id;
 
+	@Setter
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false)
 	private TradeStatus status;

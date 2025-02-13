@@ -6,11 +6,13 @@ import org.springframework.stereotype.Service;
 import com.example.swapit.common.exception.CustomException;
 import com.example.swapit.common.exception.ErrorCode;
 import com.example.swapit.domain.Goods;
+import com.example.swapit.domain.TradeStatus;
 import com.example.swapit.domain.Trades;
 import com.example.swapit.domain.dto.TradesRequestDto;
 import com.example.swapit.repository.GoodsRepository;
 import com.example.swapit.repository.TradesRepository;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -46,5 +48,25 @@ public class TradesServiceImpl implements TradesService {
 		Trades trades = tradesRepository.findById(tradesId)
 			.orElseThrow(() -> new CustomException(ErrorCode.TRADES_NOT_FOUND));
 		tradesRepository.delete(trades);
+	}
+
+	@Override
+	@Transactional
+	public void acceptTrade(Long tradesId) {
+		Trades trades = tradesRepository.findById(tradesId)
+			.orElseThrow(() -> new CustomException(ErrorCode.TRADES_NOT_FOUND));
+
+		trades.setStatus(TradeStatus.INPROGRESS);
+
+		// 같은 물건의 다른 거래 요청을 모두 REJECTED로 변경
+		tradesRepository.rejectOtherTrades(trades.getTargetGoods(), tradesId);
+	}
+
+	@Override
+	@Transactional
+	public void rejectTrade(Long tradesId) {
+		Trades trades = tradesRepository.findById(tradesId)
+			.orElseThrow(() -> new CustomException(ErrorCode.TRADES_NOT_FOUND));
+		trades.setStatus(TradeStatus.REJECTED);
 	}
 }
