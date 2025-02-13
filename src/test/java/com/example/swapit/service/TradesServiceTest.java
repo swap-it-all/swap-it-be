@@ -37,6 +37,9 @@ public class TradesServiceTest {
 	@Mock
 	private GoodsRepository goodsRepository;
 
+	@Mock
+	private CurrentUserServiceImpl currentUserService;
+
 	private TradesRequestDto dto;
 
 	@Test
@@ -168,12 +171,14 @@ public class TradesServiceTest {
 		// Given
 		Long tradesId = 1L;
 		Users requester = Users.builder()
+			.usersId(2L)
 			.email("email")
 			.build();
 		Goods requestedGood = Goods.builder()
 			.user(requester)
 			.build();
 		Users target = Users.builder()
+			.usersId(1L)
 			.email("email")
 			.build();
 		Goods targetGood = Goods.builder()
@@ -181,12 +186,14 @@ public class TradesServiceTest {
 			.build();
 		Trades trade = Trades.builder()
 			.id(1L)
+			.owner(target)
 			.targetGoods(targetGood)
 			.requestedGoods(requestedGood)
 			.status(TradeStatus.PENDING)
 			.build();
 
 		when(tradesRepository.findById(tradesId)).thenReturn(Optional.of(trade));
+		when(currentUserService.getCurrentUser()).thenReturn(target);
 		doNothing().when(tradesRepository).rejectOtherTrades(targetGood, tradesId);
 
 		// When
@@ -204,10 +211,14 @@ public class TradesServiceTest {
 		Long acceptedTradeId = 1L;
 		Goods targetGood = Goods.builder()
 			.build();
+		Users target = Users.builder()
+			.usersId(1L)
+			.build();
 
 		// 1. 거래 리스트 (거래를 요청한 사용자 3명)
 		Trades acceptedTrade = Trades.builder()
 			.id(acceptedTradeId)
+			.owner(target)
 			.targetGoods(targetGood)
 			.build();
 
@@ -222,8 +233,8 @@ public class TradesServiceTest {
 
 		List<Trades> pendingTrades = Arrays.asList(acceptedTrade, otherTrade1, otherTrade2);
 
-		// 2. Mock 설정: findById() 호출 시 acceptedTrade 반환
 		when(tradesRepository.findById(acceptedTradeId)).thenReturn(Optional.of(acceptedTrade));
+		when(currentUserService.getCurrentUser()).thenReturn(target);
 
 		// 3. Mock 설정: rejectOtherTrades() 호출 시 상태 변경 로직을 직접 수행
 		doAnswer(invocation -> {
@@ -264,17 +275,43 @@ public class TradesServiceTest {
 	}
 
 	@Test
+	@DisplayName("거래 수락 실패 - 거래 owner가 아닐 때 예외 발생")
+	void acceptTrade_ShouldThrowException_WhenUserIsNotOwner() {
+		// Given
+		Long tradesId = 1L;
+		Users owner = Users.builder().usersId(100L).nickname("owner").build();
+		Users otherUser = Users.builder().usersId(200L).nickname("notOwner").build();
+		Goods targetGoods = Goods.builder().user(owner).title("targetGood").build();
+		Trades trades = new Trades(Goods.builder().user(owner).build(), targetGoods);
+
+		// `findById(tradesId)`가 실행되면 `trades`를 반환하도록 설정
+		when(tradesRepository.findById(tradesId)).thenReturn(Optional.of(trades));
+
+		// `currentUserService.getCurrentUser()`가 실행되면 `otherUser`를 반환하도록 설정
+		when(currentUserService.getCurrentUser()).thenReturn(otherUser);
+
+		// When & Then: `acceptTrade(tradesId)` 실행 시 `TRADE_UNAUTHORIZED` 예외가 발생해야 함
+		CustomException exception = assertThrows(CustomException.class,
+			() -> tradesService.acceptTrade(tradesId));
+
+		// 예외 메시지 검증
+		assertEquals(ErrorCode.TRADE_UNAUTHORIZED, exception.getErrorCode());
+	}
+
+	@Test
 	@DisplayName("거래 거절 성공")
 	void rejectTrade_Success() {
 		// Given
 		Long tradesId = 1L;
 		Users requester = Users.builder()
+			.usersId(2L)
 			.email("email")
 			.build();
 		Goods requestedGood = Goods.builder()
 			.user(requester)
 			.build();
 		Users target = Users.builder()
+			.usersId(1L)
 			.email("email")
 			.build();
 		Goods targetGood = Goods.builder()
@@ -282,12 +319,14 @@ public class TradesServiceTest {
 			.build();
 		Trades trade = Trades.builder()
 			.id(1L)
+			.owner(target)
 			.targetGoods(targetGood)
 			.requestedGoods(requestedGood)
 			.status(TradeStatus.PENDING)
 			.build();
 
 		when(tradesRepository.findById(tradesId)).thenReturn(Optional.of(trade));
+		when(currentUserService.getCurrentUser()).thenReturn(target);
 
 		// When
 		tradesService.rejectTrade(tradesId);
@@ -306,5 +345,29 @@ public class TradesServiceTest {
 		// When & Then
 		CustomException exception = assertThrows(CustomException.class, () -> tradesService.rejectTrade(tradeId));
 		assertEquals(ErrorCode.TRADES_NOT_FOUND, exception.getErrorCode());
+	}
+
+	@Test
+	@DisplayName("거래 거절 실패 - 거래 owner가 아닐 때 예외 발생")
+	void rejectTrade_ShouldThrowException_WhenUserIsNotOwner() {
+		// Given
+		Long tradesId = 1L;
+		Users owner = Users.builder().usersId(100L).nickname("owner").build();
+		Users otherUser = Users.builder().usersId(200L).nickname("notOwner").build();
+		Goods targetGoods = Goods.builder().user(owner).title("targetGood").build();
+		Trades trades = new Trades(Goods.builder().user(owner).build(), targetGoods);
+
+		// `findById(tradesId)`가 실행되면 `trades`를 반환하도록 설정
+		when(tradesRepository.findById(tradesId)).thenReturn(Optional.of(trades));
+
+		// `currentUserService.getCurrentUser()`가 실행되면 `otherUser`를 반환하도록 설정
+		when(currentUserService.getCurrentUser()).thenReturn(otherUser);
+
+		// When & Then: `acceptTrade(tradesId)` 실행 시 `TRADE_UNAUTHORIZED` 예외가 발생해야 함
+		CustomException exception = assertThrows(CustomException.class,
+			() -> tradesService.rejectTrade(tradesId));
+
+		// 예외 메시지 검증
+		assertEquals(ErrorCode.TRADE_UNAUTHORIZED, exception.getErrorCode());
 	}
 }
