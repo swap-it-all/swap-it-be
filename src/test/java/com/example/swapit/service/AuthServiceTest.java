@@ -53,6 +53,9 @@ public class AuthServiceTest {
 	@Mock
 	private RestTemplate restTemplate;
 
+	@Mock
+	private AwsS3Service awsS3Service;
+
 	private final ObjectMapper objectMapper = new ObjectMapper();
 
 	@BeforeEach
@@ -143,11 +146,12 @@ public class AuthServiceTest {
 		// Given
 		String validAccessToken = "valid_access_token";
 		String email = "test@example.com";
+		String imageUrl = "http://presigned-url.com/image.jpg";
 
 		Users user = Users.builder()
 			.nickname("nickname")
 			.email(email)
-			.profileImageUrl("http://example.com/image.jpg")
+			.profileImageUrl(imageUrl)
 			.loginInfo("google")
 			.build();
 
@@ -155,13 +159,16 @@ public class AuthServiceTest {
 		when(jwtProvider.getEmailFromToken(validAccessToken)).thenReturn(email);
 		when(usersRepository.findByEmail(email)).thenReturn(Optional.of(user));
 
+		when(awsS3Service.generatePreSignedImageUrl(user.getProfileImageUrl()))
+			.thenReturn(imageUrl);
+
 		// When
 		UserResponseDTO userResponseDTO = authService.getUserInfo("Bearer " + validAccessToken);
 
 		// Then
 		assertEquals("nickname", userResponseDTO.getNickname());
 		assertEquals(email, userResponseDTO.getEmail());
-		assertEquals("http://example.com/image.jpg", userResponseDTO.getProfileImgUrl());
+		assertEquals(imageUrl, userResponseDTO.getProfileImgUrl());
 		assertEquals("google", userResponseDTO.getLoginInfo());
 
 		verify(jwtProvider, times(1)).validateToken(validAccessToken);
