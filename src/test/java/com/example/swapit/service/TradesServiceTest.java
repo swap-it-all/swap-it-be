@@ -3,6 +3,8 @@ package com.example.swapit.service;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.DisplayName;
@@ -193,6 +195,60 @@ public class TradesServiceTest {
 		// Then
 		assertEquals(TradeStatus.INPROGRESS, trade.getStatus());
 		verify(tradesRepository, times(1)).rejectOtherTrades(targetGood, tradesId);
+	}
+
+	@Test
+	@DisplayName("거래 수락 성공 - 다른 거래들 거절 되었는지 확인")
+	void acceptTrade_ShouldRejectAllOtherTrades() {
+		// Given
+		Long acceptedTradeId = 1L;
+		Goods targetGood = Goods.builder()
+			.build();
+
+		// 1. 거래 리스트 (거래를 요청한 사용자 3명)
+		Trades acceptedTrade = Trades.builder()
+			.id(acceptedTradeId)
+			.targetGoods(targetGood)
+			.build();
+
+		Trades otherTrade1 = Trades.builder()
+			.id(2L)
+			.targetGoods(targetGood)
+			.build();
+		Trades otherTrade2 = Trades.builder()
+			.id(3L)
+			.targetGoods(targetGood)
+			.build();
+
+		List<Trades> pendingTrades = Arrays.asList(acceptedTrade, otherTrade1, otherTrade2);
+
+		// 2. Mock 설정: findById() 호출 시 acceptedTrade 반환
+		when(tradesRepository.findById(acceptedTradeId)).thenReturn(Optional.of(acceptedTrade));
+
+		// 3. Mock 설정: rejectOtherTrades() 호출 시 상태 변경 로직을 직접 수행
+		doAnswer(invocation -> {
+			Goods myTargetGood = invocation.getArgument(0);
+			Long excludedTradeId = invocation.getArgument(1);
+
+			// 다른 거래 요청들을 모두 REJECTED 상태로 변경
+			pendingTrades.stream()
+				.filter(
+					trade -> trade.getTargetGoods().equals(myTargetGood) && !trade.getId().equals(excludedTradeId))
+				.forEach(trade -> trade.setStatus(TradeStatus.REJECTED));
+
+			return null;
+		}).when(tradesRepository).rejectOtherTrades(targetGood, acceptedTradeId);
+
+		// When
+		tradesService.acceptTrade(acceptedTradeId);
+
+		// Then
+		assertEquals(TradeStatus.INPROGRESS, acceptedTrade.getStatus()); // 선택한 거래는 INPROGRESS
+		assertEquals(TradeStatus.REJECTED, otherTrade1.getStatus()); // 다른 거래는 REJECTED
+		assertEquals(TradeStatus.REJECTED, otherTrade2.getStatus()); // 다른 거래는 REJECTED
+
+		// rejectOtherTrades() 메서드가 1번 호출되었는지 검증
+		verify(tradesRepository, times(1)).rejectOtherTrades(targetGood, acceptedTradeId);
 	}
 
 	@Test
