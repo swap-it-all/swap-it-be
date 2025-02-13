@@ -159,8 +159,11 @@ public class GoodsServiceImpl implements GoodsService {
 		Goods good = goodsRepository.findById(goodsId)
 			.orElseThrow(() -> new CustomException(ErrorCode.GOOD_NOT_FOUND));
 
+		// 현재 상품의 이미지 개수를 정확하게 가져오기 위해 Repository에서 직접 조회
+		List<GoodsImages> existingImages = goodsImagesRepository.findByGood(good);
+
 		// 최대 이미지 개수를 초과하는지 검증
-		if (good.getGoodsImagesList().size() + images.size() > MAX_IMAGES) {
+		if (existingImages.size() + images.size() > MAX_IMAGES) {
 			throw new CustomException(ErrorCode.IMAGE_COUNT_EXCEEDED);
 		}
 
