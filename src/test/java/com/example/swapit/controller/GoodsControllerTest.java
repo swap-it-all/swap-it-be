@@ -27,6 +27,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import com.example.swapit.domain.dto.GoodsDetailDto;
 import com.example.swapit.domain.dto.GoodsDto;
+import com.example.swapit.domain.dto.GoodsImageDto;
 import com.example.swapit.domain.dto.GoodsListDto;
 import com.example.swapit.domain.dto.GoodsRequestDto;
 import com.example.swapit.domain.dto.UserProfileDto;
@@ -101,7 +102,7 @@ class GoodsControllerTest {
 			"판매 중",
 			"서울 강남구",
 			120,
-			List.of("https://image1.com", "https://image2.com"),
+			List.of(new GoodsImageDto(1L, "imageUrl")),
 			LocalDateTime.now()
 		);
 
@@ -126,7 +127,7 @@ class GoodsControllerTest {
 			.andExpect(jsonPath("$.results.goodsTradeStatus").value("판매 중"))
 			.andExpect(jsonPath("$.results.placeName").value("서울 강남구"))
 			.andExpect(jsonPath("$.results.viewCount").value(120))
-			.andExpect(jsonPath("$.results.imageUrls").isArray());
+			.andExpect(jsonPath("$.results.images").isArray());
 	}
 
 	@Test
@@ -162,7 +163,7 @@ class GoodsControllerTest {
 			"placeName", "용산역 1번출구",
 			"content", "좋은 상태입니다."
 		);
-		doNothing().when(goodsService).insertGood(any(GoodsRequestDto.class));
+		when(goodsService.insertGood(any(GoodsRequestDto.class))).thenReturn(1L);
 
 		// when & then
 		mockMvc.perform(post("/api/user/goods/register")

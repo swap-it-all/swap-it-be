@@ -9,3 +9,8 @@ spring:
     hibernate:
       ddl-auto: update    # erd 안정화되면 "validate"로 변경 예정.
     open-in-view: false
+
+cloud:
+  aws:
+    credentials:
+      instance-profile: true  # IAM Role 사용
