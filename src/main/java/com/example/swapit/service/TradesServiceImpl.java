@@ -21,6 +21,7 @@ public class TradesServiceImpl implements TradesService {
 
 	private final TradesRepository tradesRepository;
 	private final GoodsRepository goodsRepository;
+	private final CurrentUserService currentUserService;
 	public static final int MAX_REQUEST_COUNT = 10;
 
 	@Override
@@ -56,6 +57,11 @@ public class TradesServiceImpl implements TradesService {
 		Trades trades = tradesRepository.findById(tradesId)
 			.orElseThrow(() -> new CustomException(ErrorCode.TRADES_NOT_FOUND));
 
+		// 거래 owner 인지 검증
+		if (!currentUserService.getCurrentUser().getUsersId().equals(trades.getOwner().getUsersId())) {
+			throw new CustomException(ErrorCode.TRADE_UNAUTHORIZED);
+		}
+
 		trades.setStatus(TradeStatus.INPROGRESS);
 
 		// 같은 물건의 다른 거래 요청을 모두 REJECTED로 변경
@@ -67,6 +73,12 @@ public class TradesServiceImpl implements TradesService {
 	public void rejectTrade(Long tradesId) {
 		Trades trades = tradesRepository.findById(tradesId)
 			.orElseThrow(() -> new CustomException(ErrorCode.TRADES_NOT_FOUND));
+
+		// 거래 owner 인지 검증
+		if (!currentUserService.getCurrentUser().getUsersId().equals(trades.getOwner().getUsersId())) {
+			throw new CustomException(ErrorCode.TRADE_UNAUTHORIZED);
+		}
+
 		trades.setStatus(TradeStatus.REJECTED);
 	}
 }
