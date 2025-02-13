@@ -16,6 +16,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import com.example.swapit.common.exception.CustomException;
 import com.example.swapit.common.exception.ErrorCode;
 import com.example.swapit.domain.Goods;
+import com.example.swapit.domain.TradeStatus;
 import com.example.swapit.domain.Trades;
 import com.example.swapit.domain.Users;
 import com.example.swapit.domain.dto.TradesRequestDto;
@@ -157,5 +158,97 @@ public class TradesServiceTest {
 
 		// Then
 		verify(tradesRepository, times(1)).delete(trade);
+	}
+
+	@Test
+	@DisplayName("거래 수락 성공")
+	void acceptTrade_Success() {
+		// Given
+		Long tradesId = 1L;
+		Users requester = Users.builder()
+			.email("email")
+			.build();
+		Goods requestedGood = Goods.builder()
+			.user(requester)
+			.build();
+		Users target = Users.builder()
+			.email("email")
+			.build();
+		Goods targetGood = Goods.builder()
+			.user(target)
+			.build();
+		Trades trade = Trades.builder()
+			.id(1L)
+			.targetGoods(targetGood)
+			.requestedGoods(requestedGood)
+			.status(TradeStatus.PENDING)
+			.build();
+
+		when(tradesRepository.findById(tradesId)).thenReturn(Optional.of(trade));
+		doNothing().when(tradesRepository).rejectOtherTrades(targetGood, tradesId);
+
+		// When
+		tradesService.acceptTrade(tradesId);
+
+		// Then
+		assertEquals(TradeStatus.INPROGRESS, trade.getStatus());
+		verify(tradesRepository, times(1)).rejectOtherTrades(targetGood, tradesId);
+	}
+
+	@Test
+	@DisplayName("거래 수락 실패 - 거래를 찾을 수 없음")
+	void acceptTrade_ThrowsException_WhenTradeNotFound() {
+		// Given
+		Long tradeId = 1L;
+		when(tradesRepository.findById(tradeId)).thenReturn(Optional.empty());
+
+		// When & Then
+		CustomException exception = assertThrows(CustomException.class, () -> tradesService.acceptTrade(tradeId));
+		assertEquals(ErrorCode.TRADES_NOT_FOUND, exception.getErrorCode());
+	}
+
+	@Test
+	@DisplayName("거래 거절 성공")
+	void rejectTrade_Success() {
+		// Given
+		Long tradesId = 1L;
+		Users requester = Users.builder()
+			.email("email")
+			.build();
+		Goods requestedGood = Goods.builder()
+			.user(requester)
+			.build();
+		Users target = Users.builder()
+			.email("email")
+			.build();
+		Goods targetGood = Goods.builder()
+			.user(target)
+			.build();
+		Trades trade = Trades.builder()
+			.id(1L)
+			.targetGoods(targetGood)
+			.requestedGoods(requestedGood)
+			.status(TradeStatus.PENDING)
+			.build();
+
+		when(tradesRepository.findById(tradesId)).thenReturn(Optional.of(trade));
+
+		// When
+		tradesService.rejectTrade(tradesId);
+
+		// Then
+		assertEquals(TradeStatus.REJECTED, trade.getStatus());
+	}
+
+	@Test
+	@DisplayName("거래 거절 실패 - 거래를 찾을 수 없음")
+	void rejectTrade_ThrowsException_WhenTradeNotFound() {
+		// Given
+		Long tradeId = 1L;
+		when(tradesRepository.findById(tradeId)).thenReturn(Optional.empty());
+
+		// When & Then
+		CustomException exception = assertThrows(CustomException.class, () -> tradesService.rejectTrade(tradeId));
+		assertEquals(ErrorCode.TRADES_NOT_FOUND, exception.getErrorCode());
 	}
 }
