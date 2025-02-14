@@ -1,6 +1,7 @@
 package com.example.swapit.controller;
 
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -29,6 +30,18 @@ public class TradesController {
 	@DeleteMapping("/user/swap/cancel/{tradesId}")
 	public ApiResponse<Void> cancelTrade(@PathVariable Long tradesId) {
 		tradesService.cancelTrade(tradesId);
+		return ApiResponse.success();
+	}
+
+	@PatchMapping("/user/swap/accept/{tradesId}")
+	public ApiResponse<Void> acceptTrade(@PathVariable Long tradesId) {
+		tradesService.acceptTrade(tradesId);
+		return ApiResponse.success();
+	}
+
+	@PatchMapping("/user/swap/reject/{tradesId}")
+	public ApiResponse<Void> rejectTrade(@PathVariable Long tradesId) {
+		tradesService.rejectTrade(tradesId);
 		return ApiResponse.success();
 	}
 }
