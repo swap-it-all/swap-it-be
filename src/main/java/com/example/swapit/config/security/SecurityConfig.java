@@ -25,7 +25,7 @@ public class SecurityConfig {
 	public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 		http.csrf(AbstractHttpConfigurer::disable)
 			.authorizeHttpRequests(auth -> auth
-				.requestMatchers("/api/user/auth/refresh", "/api/user/auth/logout")
+				.requestMatchers("/api/user/auth/refresh", "/api/user/auth/logout", "/connection/**")
 				.permitAll()
 				.requestMatchers("/api/all/**")
 				.permitAll() // 누구나 접근 가능

@@ -30,13 +30,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 		"/api/all/auth/login/kakao",
 		"/api/user/auth/logout",
 		"/api/all/sample",
-		"api/all/goods"
+		"api/all/goods",
+		"/connection"
 	);
 
 	@Override
 	protected boolean shouldNotFilter(HttpServletRequest request) {
 		return EXCLUDE_URLS.stream()
-			.anyMatch(exclude -> request.getServletPath().equals(exclude));
+			.anyMatch(exclude -> request.getServletPath().startsWith(exclude));
 	}
 
 	@Override
