@@ -37,7 +37,7 @@ public class JwtHandshakeInterceptor implements HandshakeInterceptor {
 				.orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
 			// 웹소켓 세션에 유저 정보 저장
-			attributes.put("user", user);
+			attributes.put("userId", user.getUsersId());
 
 			return true; // 핸드셰이크 성공
 		}
