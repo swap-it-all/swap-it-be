@@ -1,5 +1,7 @@
 package com.example.swapit.domain.dto;
 
+import java.time.LocalDateTime;
+
 import com.example.swapit.domain.Notifications;
 
 import lombok.AccessLevel;
@@ -15,6 +17,7 @@ public class NotificationDto {
 	private final String type;
 	private final String url;
 	private final String message;
+	private final LocalDateTime createdAt;
 
 	public static NotificationDto of(Notifications noti) {
 		return NotificationDto.builder()
@@ -22,6 +25,7 @@ public class NotificationDto {
 			.type(noti.getType().toString())
 			.url(noti.getUrl())
 			.message(noti.getMessage())
+			.createdAt(noti.getCreatedAt())
 			.build();
 	}
 }
