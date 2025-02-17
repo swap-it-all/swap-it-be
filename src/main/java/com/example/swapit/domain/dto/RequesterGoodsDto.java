@@ -5,8 +5,8 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public class ChatMessageDto {
-	private Long senderId;
-	private String messageType;
-	private String content;
+public class RequesterGoodsDto {
+	private Long goodsId;
+	private String title;
+	private String requesterNickname;
 }
