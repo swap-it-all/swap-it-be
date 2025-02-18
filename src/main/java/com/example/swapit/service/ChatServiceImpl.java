@@ -11,6 +11,7 @@ import com.example.swapit.domain.ChatRooms;
 import com.example.swapit.domain.ChatType;
 import com.example.swapit.domain.Chats;
 import com.example.swapit.domain.Goods;
+import com.example.swapit.domain.GoodsImages;
 import com.example.swapit.domain.Users;
 import com.example.swapit.domain.dto.ChatDto;
 import com.example.swapit.domain.dto.ChatListDto;
@@ -18,9 +19,11 @@ import com.example.swapit.domain.dto.ChatRoomRequestDto;
 import com.example.swapit.domain.dto.ChatRoomResponseDto;
 import com.example.swapit.domain.dto.ChatStompRequestDto;
 import com.example.swapit.domain.dto.ChatStompResponseDto;
+import com.example.swapit.domain.dto.GoodsDto;
 import com.example.swapit.domain.dto.RequesterGoodsDto;
 import com.example.swapit.repository.ChatRoomsRepository;
 import com.example.swapit.repository.ChatsRepository;
+import com.example.swapit.repository.GoodsImagesRepository;
 import com.example.swapit.repository.GoodsRepository;
 import com.example.swapit.repository.UsersRepository;
 
@@ -35,6 +38,8 @@ public class ChatServiceImpl implements ChatService {
 	private final CurrentUserService currentUserService;
 	private final ChatRoomsRepository chatRoomsRepository;
 	private final ChatsRepository chatRepository;
+	private final GoodsImagesRepository goodsImagesRepository;
+	private final AwsS3Service awsS3Service;
 
 	private static final int size = 30;
 
@@ -136,5 +141,27 @@ public class ChatServiceImpl implements ChatService {
 
 		chatRepository.save(chats);
 		return new ChatStompResponseDto(chats);
+	}
+
+	@Override
+	public GoodsDto getChatRoomGoods(Long chatroomId) {
+		ChatRooms chatRooms = chatRoomsRepository.findById(chatroomId)
+			.orElseThrow(() -> new CustomException(ErrorCode.CHATROOMS_NOT_FOUND));
+		Goods goods = chatRooms.getGoods();
+		String firstImageUrl = goodsImagesRepository.findFirstByGoodOrderByIdAsc(goods)
+			.map(GoodsImages::getS3Key)
+			.map(awsS3Service::generatePreSignedImageUrl)
+			.orElse(null);
+
+		return new GoodsDto(
+			goods.getId(),
+			goods.getTitle(),
+			goods.getPrice(),
+			goods.getCategory().getName(),
+			firstImageUrl,
+			goods.getPlaceName(),
+			goods.getViewCount(),
+			goods.getCreatedAt()
+		);
 	}
 }

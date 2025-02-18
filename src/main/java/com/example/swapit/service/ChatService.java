@@ -8,6 +8,7 @@ import com.example.swapit.domain.dto.ChatRoomRequestDto;
 import com.example.swapit.domain.dto.ChatRoomResponseDto;
 import com.example.swapit.domain.dto.ChatStompRequestDto;
 import com.example.swapit.domain.dto.ChatStompResponseDto;
+import com.example.swapit.domain.dto.GoodsDto;
 
 public interface ChatService {
 	Long addChatRoom(ChatRoomRequestDto chatRoomRequestDto);
@@ -17,4 +18,6 @@ public interface ChatService {
 	ChatListDto getChatList(Long chatroomId, Long cursorId, LocalDateTime createdAt);
 
 	ChatStompResponseDto saveChat(Long chatroomId, ChatStompRequestDto chatDto, String email);
+
+	GoodsDto getChatRoomGoods(Long chatroomId);
 }

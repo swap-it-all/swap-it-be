@@ -24,6 +24,7 @@ import com.example.swapit.domain.dto.ChatRoomRequestDto;
 import com.example.swapit.domain.dto.ChatRoomResponseDto;
 import com.example.swapit.domain.dto.ChatStompRequestDto;
 import com.example.swapit.domain.dto.ChatStompResponseDto;
+import com.example.swapit.domain.dto.GoodsDto;
 import com.example.swapit.service.ChatService;
 
 import lombok.RequiredArgsConstructor;
@@ -61,5 +62,10 @@ public class ChatController {
 		@RequestParam(required = false) LocalDateTime createdAt        // 마지막 조회 항목의 생성일
 	) {
 		return ApiResponse.success(chatService.getChatList(chatroomId, cursorId, createdAt));
+	}
+
+	@GetMapping("/api/user/chatroom/{chatroomId}/goods")
+	public ApiResponse<GoodsDto> getChatRoomGoods(@PathVariable Long chatroomId) {
+		return ApiResponse.success(chatService.getChatRoomGoods(chatroomId));
 	}
 }
