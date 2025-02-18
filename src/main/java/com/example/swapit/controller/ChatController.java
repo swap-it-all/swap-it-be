@@ -46,9 +46,8 @@ public class ChatController {
 	}
 
 	@PostMapping("/api/user/chatroom")
-	public ApiResponse<Void> addChatRoom(@RequestBody ChatRoomRequestDto chatRoomRequestDto) {
-		chatService.addChatRoom(chatRoomRequestDto);
-		return ApiResponse.success();
+	public ApiResponse<Long> addChatRoom(@RequestBody ChatRoomRequestDto chatRoomRequestDto) {
+		return ApiResponse.success(chatService.addChatRoom(chatRoomRequestDto));
 	}
 
 	@GetMapping("/api/user/chatroom")
@@ -59,7 +58,7 @@ public class ChatController {
 	@GetMapping("/api/user/chatroom/{chatroomId}")
 	public ApiResponse<ChatListDto> getChats(@PathVariable Long chatroomId,
 		@RequestParam(required = false) Long cursorId,                    // 마지막 조회 항목 ID
-		@RequestParam(required = false) LocalDateTime createdAt        // 최신순일 경우, 커서 기준 값
+		@RequestParam(required = false) LocalDateTime createdAt        // 마지막 조회 항목의 생성일
 	) {
 		return ApiResponse.success(chatService.getChatList(chatroomId, cursorId, createdAt));
 	}

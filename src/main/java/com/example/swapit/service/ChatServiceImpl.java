@@ -39,7 +39,7 @@ public class ChatServiceImpl implements ChatService {
 	private static final int size = 30;
 
 	@Override
-	public void addChatRoom(ChatRoomRequestDto chatRoomRequestDto) {
+	public Long addChatRoom(ChatRoomRequestDto chatRoomRequestDto) {
 		Goods goods = goodsRepository.findById(chatRoomRequestDto.getGoodsId())
 			.orElseThrow(() -> new CustomException(ErrorCode.GOOD_NOT_FOUND));
 		Users requester = usersRepository.findById(chatRoomRequestDto.getRequesterId())
@@ -49,7 +49,7 @@ public class ChatServiceImpl implements ChatService {
 
 		ChatRooms chatRooms = ChatRooms.builder().goods(goods).owner(owner).requester(requester).build();
 
-		chatRoomsRepository.save(chatRooms);
+		return chatRoomsRepository.save(chatRooms).getId();
 	}
 
 	@Override

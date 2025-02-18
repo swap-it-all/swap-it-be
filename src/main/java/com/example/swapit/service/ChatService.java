@@ -10,7 +10,7 @@ import com.example.swapit.domain.dto.ChatStompRequestDto;
 import com.example.swapit.domain.dto.ChatStompResponseDto;
 
 public interface ChatService {
-	void addChatRoom(ChatRoomRequestDto chatRoomRequestDto);
+	Long addChatRoom(ChatRoomRequestDto chatRoomRequestDto);
 
 	List<ChatRoomResponseDto> getChatRoomList();
 
