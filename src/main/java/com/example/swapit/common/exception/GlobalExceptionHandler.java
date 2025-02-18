@@ -5,6 +5,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.server.ServerErrorException;
 
 import com.example.swapit.common.api.ErrorResponse;
 
@@ -47,5 +48,17 @@ public class GlobalExceptionHandler {
 				e.getStatusCode(),
 				e.getErrorCode().name(),
 				e.getMessage()));
+	}
+
+	@ExceptionHandler(ServerErrorException.class)
+	public ResponseEntity<ErrorResponse> handleServerException(ServerErrorException e) {
+		log.error("[서버 에러 발생] : {}", e.getMessage());
+		return ResponseEntity
+			.status(e.getStatusCode())
+			.body(new ErrorResponse(
+				e.getStatusCode().value(),
+				ErrorCode.SERVER_ERROR.name(),
+				ErrorCode.SERVER_ERROR.getMessage()
+			));
 	}
 }
