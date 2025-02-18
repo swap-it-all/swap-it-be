@@ -16,7 +16,9 @@ import com.example.swapit.domain.Users;
 import com.example.swapit.repository.UsersRepository;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class JwtHandshakeInterceptor implements HandshakeInterceptor {
@@ -28,16 +30,19 @@ public class JwtHandshakeInterceptor implements HandshakeInterceptor {
 	public boolean beforeHandshake(ServerHttpRequest request, ServerHttpResponse response, WebSocketHandler wsHandler,
 		Map<String, Object> attributes) throws Exception {
 		HttpHeaders headers = request.getHeaders();
-		String token = headers.getFirst(HttpHeaders.AUTHORIZATION);
+		String token = headers.getFirst(HttpHeaders.AUTHORIZATION).replace("Bearer ", "");
 
 		if (jwtProvider.validateToken(token)) {
 			String email = jwtProvider.getEmailFromToken(token);
-
 			Users user = usersRepository.findByEmail(email)
 				.orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+			log.info("[웹소켓 HANDSHAKE 시도] 유저 ID : {} ({})", user.getUsersId(), user.getNickname());
 
-			// 웹소켓 세션에 유저 정보 저장
-			attributes.put("userId", user.getUsersId());
+			// // 웹소켓 세션에 유저 정보 저장
+			// attributes.put("userId", user.getUsersId());
+
+			// principal 설정
+			attributes.put("principal", new StompPrincipal(user.getUsersId().toString()));
 
 			return true; // 핸드셰이크 성공
 		}
@@ -49,6 +54,5 @@ public class JwtHandshakeInterceptor implements HandshakeInterceptor {
 	@Override
 	public void afterHandshake(ServerHttpRequest request, ServerHttpResponse response, WebSocketHandler wsHandler,
 		Exception exception) {
-
 	}
 }
