@@ -10,6 +10,6 @@ public class ChatRoomRequestDto {
 	@NotNull(message = "goodsId는 필수 입력 값입니다.")
 	private Long goodsId;
 
-	@NotNull(message = "goodsId는 필수 입력 값입니다.")
+	@NotNull(message = "requesterId는 필수 입력 값입니다.")
 	private Long requesterId;
 }
