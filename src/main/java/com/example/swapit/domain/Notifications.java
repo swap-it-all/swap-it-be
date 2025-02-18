@@ -1,9 +1,6 @@
 package com.example.swapit.domain;
 
-import java.time.LocalDateTime;
-
 import org.hibernate.annotations.SQLRestriction;
-import org.springframework.data.annotation.CreatedDate;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -51,8 +48,4 @@ public class Notifications extends BaseEntity {
 	@Builder.Default
 	@Column(name = "is_read", nullable = false)
 	private boolean isRead = false;
-
-	@CreatedDate
-	@Column(name = "created_at", nullable = false, updatable = false)
-	private LocalDateTime createdAt;
 }
