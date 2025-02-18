@@ -14,7 +14,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
-	private final StompHandler stompHandler; // jwt 인증
+	private final StompHandler stompHandler;
 
 	@Override
 	public void configureMessageBroker(MessageBrokerRegistry registry) {
@@ -24,10 +24,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
 	@Override
 	public void registerStompEndpoints(StompEndpointRegistry registry) {
-		registry.addEndpoint("/connection")
-			.setAllowedOriginPatterns("*")
-			.withSockJS();
-		registry.addEndpoint("/connection")
+		registry.addEndpoint("/ws")
 			.setAllowedOriginPatterns("*");
 	}
 
