@@ -11,6 +11,22 @@ public class NotificationEvent extends ApplicationEvent {
 	private final String message;
 	private final String url;
 
+	public NotificationEvent(Object source, Long userId, NotificationType type) {
+		super(source);
+		this.userId = userId;
+		this.type = type;
+		this.message = type.getMessage();
+		this.url = type.getUrl();
+	}
+
+	public NotificationEvent(Object source, Long userId, NotificationType type, Object... urlParams) {
+		super(source);
+		this.userId = userId;
+		this.type = type;
+		this.message = type.getMessage();
+		this.url = type.getUrl(urlParams);
+	}
+
 	public NotificationEvent(Object source, Long userId, NotificationType type, String message,
 		String url) {
 		super(source);
