@@ -23,6 +23,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 @EntityListeners(AuditingEntityListener.class)
 @Table(name = "chatrooms")
 public class ChatRooms {
