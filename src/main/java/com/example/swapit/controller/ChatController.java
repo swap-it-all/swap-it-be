@@ -17,6 +17,7 @@ import com.example.swapit.domain.dto.ChatRoomResponseDto;
 import com.example.swapit.domain.dto.GoodsDto;
 import com.example.swapit.service.ChatService;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -25,7 +26,7 @@ public class ChatController {
 	private final ChatService chatService;
 
 	@PostMapping("/api/user/chatroom")
-	public ApiResponse<Long> addChatRoom(@RequestBody ChatRoomRequestDto chatRoomRequestDto) {
+	public ApiResponse<Long> addChatRoom(@Valid @RequestBody ChatRoomRequestDto chatRoomRequestDto) {
 		return ApiResponse.success(chatService.addChatRoom(chatRoomRequestDto));
 	}
 
