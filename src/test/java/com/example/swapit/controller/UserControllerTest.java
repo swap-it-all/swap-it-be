@@ -18,7 +18,9 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.example.swapit.domain.dto.UserNicknameDto;
 import com.example.swapit.service.UsersService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @ExtendWith(MockitoExtension.class)
 class UserControllerTest {
@@ -30,6 +32,8 @@ class UserControllerTest {
 
 	@Mock
 	private UsersService usersService;
+
+	private final ObjectMapper objectMapper = new ObjectMapper();
 
 	@BeforeEach
 	void setUp() {
@@ -53,5 +57,24 @@ class UserControllerTest {
 
 		// THEN: Service 메서드 호출 검증
 		verify(usersService, times(1)).updateProfileImage(any(MultipartFile.class));
+	}
+
+	@Test
+	@DisplayName("유저 닉네임 업데이트 성공")
+	void updateNicknameSuccess() throws Exception {
+		// given
+		UserNicknameDto dto = new UserNicknameDto("닉네임");
+
+		doNothing().when(usersService).updateNickname(any(UserNicknameDto.class));
+
+		// when
+		mockMvc.perform(patch("/api/user/auth/profile/nickname")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(dto)))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.success").value(true));
+
+		// then
+		verify(usersService, times(1)).updateNickname(any(UserNicknameDto.class));
 	}
 }

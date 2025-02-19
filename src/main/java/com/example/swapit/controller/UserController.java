@@ -16,6 +16,7 @@ import com.example.swapit.domain.dto.UserNicknameDto;
 import com.example.swapit.domain.dto.UserResponseDTO;
 import com.example.swapit.service.UsersService;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -47,7 +48,7 @@ public class UserController {
 	}
 
 	@PatchMapping("/api/user/auth/profile/nickname")
-	public ApiResponse<Void> updateProfileNickname(@RequestBody UserNicknameDto dto) {
+	public ApiResponse<Void> updateProfileNickname(@Valid @RequestBody UserNicknameDto dto) {
 		usersService.updateNickname(dto);
 		return ApiResponse.success();
 	}
