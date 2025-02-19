@@ -50,6 +50,9 @@ public enum ErrorCode {
 	DUPLICATE_TRADE_REQUEST(HttpStatus.BAD_REQUEST, "이미 해당 물건에 스왑 요청한 내역이 있습니다."),
 	MAXIMUM_TRADE_REQUEST(HttpStatus.BAD_REQUEST, "가능한 스왑 요청 횟수를 초과하였습니다."),
 
+	// chat error
+	CHATROOMS_NOT_FOUND(HttpStatus.NOT_FOUND, "채팅방을 찾을 수 없습니다."),
+
 	// notifications error
 	NOTIFICATION_NOT_FOUND(HttpStatus.NOT_FOUND, "알림 내역을 찾을 수 없습니다.");
 
