@@ -126,10 +126,10 @@ public class ChatServiceImpl implements ChatService {
 	}
 
 	@Override
-	public ChatStompResponseDto saveChat(Long chatroomId, ChatStompRequestDto chatDto, String email) {
+	public ChatStompResponseDto saveChat(Long chatroomId, ChatStompRequestDto chatDto, Long userId) {
 		ChatRooms chatRooms = chatRoomsRepository.findById(chatroomId)
 			.orElseThrow(() -> new CustomException(ErrorCode.CHATROOMS_NOT_FOUND));
-		Users users = usersRepository.findByEmail(email)
+		Users users = usersRepository.findById(userId)
 			.orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 		Chats chats = Chats.builder()
 			.chatRooms(chatRooms)

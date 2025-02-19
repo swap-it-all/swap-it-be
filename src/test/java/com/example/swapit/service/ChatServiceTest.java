@@ -220,6 +220,7 @@ class ChatServiceTest {
 	void saveChatSuccessTest() {
 		// given
 		Long chatroomId = 1L;
+		Long userId = 100L;
 		String email = "test@example.com";
 
 		ChatStompRequestDto chatDto = new ChatStompRequestDto(ChatType.TALK, "Hello, this is a test chat", 123L);
@@ -228,7 +229,7 @@ class ChatServiceTest {
 			.id(chatroomId)
 			.build();
 		Users user = Users.builder()
-			.usersId(100L)
+			.usersId(userId)
 			.email(email)
 			.build();
 
@@ -246,7 +247,7 @@ class ChatServiceTest {
 		when(chatRepository.save(any(Chats.class))).thenReturn(savedChat);
 
 		// when
-		ChatStompResponseDto response = chatService.saveChat(chatroomId, chatDto, email);
+		ChatStompResponseDto response = chatService.saveChat(chatroomId, chatDto, userId);
 
 		// then
 		assertNotNull(response);

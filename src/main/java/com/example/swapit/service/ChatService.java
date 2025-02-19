@@ -17,7 +17,7 @@ public interface ChatService {
 
 	ChatListDto getChatList(Long chatroomId, Long cursorId, LocalDateTime createdAt);
 
-	ChatStompResponseDto saveChat(Long chatroomId, ChatStompRequestDto chatDto, String email);
+	ChatStompResponseDto saveChat(Long chatroomId, ChatStompRequestDto chatDto, Long userId);
 
 	GoodsDto getChatRoomGoods(Long chatroomId);
 }

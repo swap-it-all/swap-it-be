@@ -1,14 +1,17 @@
 package com.example.swapit.config.websocket;
 
 import java.security.Principal;
+import java.util.HashMap;
 import java.util.Map;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
+import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
+import org.springframework.messaging.support.MessageBuilder;
 
 import com.example.swapit.common.exception.CustomException;
 import com.example.swapit.common.exception.ErrorCode;
@@ -46,8 +49,16 @@ public class StompHandler implements ChannelInterceptor {
 					.orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 				setSessionFromPrincipal(accessor, user.getUsersId());
 			}
-			case SUBSCRIBE, SEND -> {
+			case SUBSCRIBE -> setPrincipalFromSession(accessor);
+			case SEND -> {
 				setPrincipalFromSession(accessor);
+				log.debug("[{}] Principal 설정 후 User: {}", accessor.getCommand(), accessor.getUser());
+
+				MessageHeaders headers = accessor.getMessageHeaders();
+				Map<String, Object> newHeaders = new HashMap<>(headers);
+				newHeaders.put("simpUser", accessor.getUser());
+
+				return MessageBuilder.createMessage(message.getPayload(), new MessageHeaders(newHeaders));
 			}
 		}
 
@@ -70,6 +81,7 @@ public class StompHandler implements ChannelInterceptor {
 		}
 
 		accessor.setUser(principal); // STOMP 메시지에 Principal 설정
+		accessor.getSessionAttributes().put("simpUser", principal);
 		log.info("[CONNECT] Principal 설정 완료: userId = {}", userId);
 	}
 
@@ -87,6 +99,7 @@ public class StompHandler implements ChannelInterceptor {
 		}
 
 		accessor.setUser(principal);
+		accessor.getSessionAttributes().put("simpUser", principal);
 		log.info("[{}] Principal 유지 : 유저 id = {}, 세션 id = {}", accessor.getCommand(), principal.getName(),
 			accessor.getSessionId());
 	}
