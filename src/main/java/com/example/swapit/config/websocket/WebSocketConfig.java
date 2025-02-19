@@ -41,7 +41,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 	@Override
 	public void registerStompEndpoints(StompEndpointRegistry registry) {
 		registry.addEndpoint("/ws")
-			// .addInterceptors(jwtHandshakeInterceptor) // jwt 인증 인터셉터 추가
+			// .addInterceptors(jwtHandshakeInterceptor) // todo: 앱 연결 후, handshake interceptor로 변환
 			.setAllowedOrigins("*"); // cors
 	}
 
