@@ -62,25 +62,28 @@ public class ChatServiceImpl implements ChatService {
 		Long loggedInUserId = currentUserService.getCurrentUser().getUsersId();
 		List<ChatRooms> chatRooms = chatRoomsRepository.findByUsersId(loggedInUserId);
 
-		return chatRooms.stream().map(chatRoom -> {
-			Long counterpartId =
-				chatRoom.getOwner().getUsersId().equals(loggedInUserId) ? chatRoom.getRequester().getUsersId() :
-					chatRoom.getOwner().getUsersId();
+		return chatRooms.stream()
+			.filter(chatRoom -> chatRepository.countByChatRoomsId(chatRoom.getId()) > 0)
+			.map(chatRoom -> {
+				Long counterpartId =
+					chatRoom.getOwner().getUsersId().equals(loggedInUserId) ? chatRoom.getRequester().getUsersId() :
+						chatRoom.getOwner().getUsersId();
 
-			Users counterpart = usersRepository.findById(counterpartId)
-				.orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+				Users counterpart = usersRepository.findById(counterpartId)
+					.orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
-			String recentChat = chatRepository.findTopByChatRoomsIdOrderByCreatedAtDesc(chatRoom.getId()).getContent();
-			LocalDateTime createdAt = chatRoom.getCreatedAt();
+				String recentChat = chatRepository.findTopByChatRoomsIdOrderByCreatedAtDesc(chatRoom.getId())
+					.getContent();
+				LocalDateTime createdAt = chatRoom.getCreatedAt();
 
-			return ChatRoomResponseDto.builder()
-				.usersId(counterpartId)
-				.profileImageUrl(counterpart.getProfileImageUrl())
-				.nickname(counterpart.getNickname())
-				.recentChat(recentChat)
-				.createdAt(createdAt)
-				.build();
-		}).toList();
+				return ChatRoomResponseDto.builder()
+					.usersId(counterpartId)
+					.profileImageUrl(counterpart.getProfileImageUrl())
+					.nickname(counterpart.getNickname())
+					.recentChat(recentChat)
+					.createdAt(createdAt)
+					.build();
+			}).toList();
 	}
 
 	@Override

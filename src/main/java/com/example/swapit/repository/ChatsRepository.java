@@ -21,4 +21,5 @@ public interface ChatsRepository extends JpaRepository<Chats, Long> {
 		@Param("cursorId") Long cursorId,
 		@Param("createdAt") LocalDateTime createdAt);
 
+	long countByChatRoomsId(Long chatroomId);
 }
