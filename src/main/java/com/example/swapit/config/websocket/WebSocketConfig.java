@@ -18,7 +18,6 @@ import lombok.RequiredArgsConstructor;
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
 	private final StompHandler stompHandler; // jwt 인증
-	private final JwtHandshakeInterceptor jwtHandshakeInterceptor;
 
 	@Bean
 	public TaskScheduler taskScheduler() {
