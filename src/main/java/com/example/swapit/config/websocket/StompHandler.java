@@ -1,25 +1,20 @@
 package com.example.swapit.config.websocket;
 
-import java.util.HashMap;
+import java.security.Principal;
 import java.util.Map;
-
-import java.security.Principal;
-
-import java.security.Principal;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
-import org.springframework.messaging.MessageHeaders;
-import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
-import org.springframework.messaging.support.MessageBuilder;
 
 import com.example.swapit.common.exception.CustomException;
 import com.example.swapit.common.exception.ErrorCode;
 import com.example.swapit.config.security.jwt.JwtProvider;
+import com.example.swapit.domain.Users;
+import com.example.swapit.repository.UsersRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,55 +25,69 @@ import lombok.extern.slf4j.Slf4j;
 public class StompHandler implements ChannelInterceptor {
 
 	private final JwtProvider jwtProvider;
+	private final UsersRepository usersRepository;
 
 	@Override
 	public Message<?> preSend(Message<?> message, MessageChannel channel) {
 		StompHeaderAccessor accessor = StompHeaderAccessor.wrap(message);
 
-		String token = accessor.getFirstNativeHeader(HttpHeaders.AUTHORIZATION);
-		log.info("액세스 토큰 : {}", token);
-
-		if (StompCommand.CONNECT.equals(accessor.getCommand()) ||
-			StompCommand.SEND.equals(accessor.getCommand())) {
-			validateToken2(accessor);
-		} else if (accessor.getCommand() == StompCommand.SUBSCRIBE) {
-		String destination = accessor.getDestination();
-		String sessionId = accessor.getSessionId();
-
-		// handshake에서 가져온 principal 저장
-		Principal principal = (Principal)accessor.getSessionAttributes().get("principal");
-		accessor.setUser(principal);
-
-		if (principal == null) {
-			log.error("[SUBSCRIBE 오류] Principal이 null입니다! 세션 id: {}, 구독 채널: {}", sessionId, destination);
-		} else {
-			log.info("[SUBSCRIBE] 유저 id : {}, 세션 id : {}, 구독 채널 : {}", principal.getName(), sessionId, destination);
+		// HEARTBEAT 메시지는 별도로 처리
+		if (accessor.getCommand() == null && "HEARTBEAT".equals(accessor.getMessageType().name())) {
+			return message; // 그냥 메시지를 반환하여 계속 정상 처리되도록 함
 		}
-	}
 
-		MessageHeaders headers = accessor.getMessageHeaders();
-		Map<String, Object> newHeaders = new HashMap<>(headers);
-		newHeaders.put("simpUser", accessor.getUser());
+		String token = accessor.getFirstNativeHeader(HttpHeaders.AUTHORIZATION);
 
-		return MessageBuilder.createMessage(message.getPayload(), new MessageHeaders(newHeaders));
+		switch (accessor.getCommand()) {
+			case CONNECT -> {
+				String onlyToken = token.replace("Bearer ", "");
+				validateToken(onlyToken);
+				Users user = usersRepository.findByEmail(jwtProvider.getEmailFromToken(onlyToken))
+					.orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+				setSessionFromPrincipal(accessor, user.getUsersId());
+			}
+			case SUBSCRIBE, SEND -> {
+				setPrincipalFromSession(accessor);
+			}
+		}
+
+		return message;
 	}
 
 	private void validateToken(String token) {
-		token = token.replace("Bearer ", "");
 		if (!jwtProvider.validateToken(token)) {
-			throw new CustomException(ErrorCode.VALIDATION_FAIL);
-	}
-
-	private void validateToken2(StompHeaderAccessor accessor) {
-		String token = accessor.getFirstNativeHeader(HttpHeaders.AUTHORIZATION);
-		boolean validated = jwtProvider.validateToken(token);
-
-		if (!validated) {
+			log.error("[CONNECT 오류] JWT 검증 실패");
 			throw new CustomException(ErrorCode.VALIDATION_FAIL);
 		}
+	}
 
-		String email = jwtProvider.getEmailFromToken(token);
-		StompPrincipal stompPrincipal = new StompPrincipal(email);
-		accessor.setUser(stompPrincipal);
+	private void setSessionFromPrincipal(StompHeaderAccessor accessor, Long userId) {
+		Principal principal = new StompPrincipal(userId.toString()); // Principal 생성
+		// Principal을 세션에 저장
+		Map<String, Object> sessionAttributes = accessor.getSessionAttributes();
+		if (sessionAttributes != null) {
+			sessionAttributes.put("principal", principal);
+		}
+
+		accessor.setUser(principal); // STOMP 메시지에 Principal 설정
+		log.info("[CONNECT] Principal 설정 완료: userId = {}", userId);
+	}
+
+	private void setPrincipalFromSession(StompHeaderAccessor accessor) {
+		Map<String, Object> sessionAttributes = accessor.getSessionAttributes();
+		if (sessionAttributes == null || !sessionAttributes.containsKey("principal")) {
+			log.error("[{} 오류] Principal 이 없습니다! 세션 ID: {}", accessor.getCommand(), accessor.getSessionId());
+			throw new CustomException(ErrorCode.WEBSOCKET_UNAUTHORIZED_ACCESS);
+		}
+
+		Principal principal = (Principal)sessionAttributes.get("principal");
+		if (principal == null) {
+			log.error("[{} 오류] Principal null 입니다! 세션 ID: {}", accessor.getCommand(), accessor.getSessionId());
+			throw new CustomException(ErrorCode.WEBSOCKET_UNAUTHORIZED_ACCESS);
+		}
+
+		accessor.setUser(principal);
+		log.info("[{}] Principal 유지 : 유저 id = {}, 세션 id = {}", accessor.getCommand(), principal.getName(),
+			accessor.getSessionId());
 	}
 }
