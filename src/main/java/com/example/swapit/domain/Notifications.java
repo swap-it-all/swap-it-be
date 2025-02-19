@@ -1,6 +1,9 @@
 package com.example.swapit.domain;
 
+import java.time.LocalDateTime;
+
 import org.hibernate.annotations.SQLRestriction;
+import org.springframework.data.annotation.CreatedDate;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -24,7 +27,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @SQLRestriction("is_read = false")
 @Table(name = "notifications")
-public class Notifications extends BaseEntity {
+public class Notifications {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -48,4 +51,12 @@ public class Notifications extends BaseEntity {
 	@Builder.Default
 	@Column(name = "is_read", nullable = false)
 	private boolean isRead = false;
+
+	@CreatedDate // 생성 시 자동으로 값 설정
+	@Column(nullable = false, updatable = false)
+	private LocalDateTime createdAt;
+
+	public void updateToRead() {
+		this.isRead = true;
+	}
 }
