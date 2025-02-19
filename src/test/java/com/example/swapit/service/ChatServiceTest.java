@@ -13,6 +13,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import com.example.swapit.domain.Categories;
 import com.example.swapit.domain.ChatRooms;
@@ -133,8 +134,12 @@ class ChatServiceTest {
 			.owner(owner)
 			.build();
 
+		ReflectionTestUtils.setField(chatRoom, "id", 1L);
+
 		List<ChatRooms> chatRoomsList = List.of(chatRoom);
 		when(chatRoomsRepository.findByUsersId(1L)).thenReturn(chatRoomsList);
+
+		when(chatRepository.countByChatRoomsId(any())).thenReturn(1L);
 
 		Chats latestChat = Chats.builder()
 			.content("Hello")
