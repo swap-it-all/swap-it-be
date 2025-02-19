@@ -72,6 +72,11 @@ public class TradesServiceImpl implements TradesService {
 
 		// 같은 물건의 다른 거래 요청을 모두 REJECTED로 변경
 		tradesRepository.rejectOtherTrades(trades.getTargetGoods(), tradesId);
+
+		// 알림 발생
+		notificationEventPublisher.publishNotification(
+			trades.getOwner().getUsersId(), NotificationType.ACCEPTED, trades.getTargetGoods().getId()
+		);
 	}
 
 	@Override
@@ -86,5 +91,10 @@ public class TradesServiceImpl implements TradesService {
 		}
 
 		trades.setStatus(TradeStatus.REJECTED);
+
+		// 알림 발생
+		notificationEventPublisher.publishNotification(
+			trades.getOwner().getUsersId(), NotificationType.REJECTED, trades.getTargetGoods().getId()
+		);
 	}
 }
