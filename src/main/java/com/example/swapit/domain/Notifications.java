@@ -35,14 +35,21 @@ public class Notifications extends BaseEntity {
 	@JoinColumn(name = "users_id", nullable = false)
 	private Users user;
 
-	@Column(nullable = false, columnDefinition = "VARCHAR(255)")
-	private String message;
-
-	@Builder.Default
-	@Column(nullable = false)
-	private boolean isRead = false;
-
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false)
 	private NotificationType type;
+
+	@Column(nullable = false, columnDefinition = "VARCHAR(255)")
+	private String message;
+
+	@Column(nullable = false)
+	private String url;
+
+	@Builder.Default
+	@Column(name = "is_read", nullable = false)
+	private boolean isRead = false;
+
+	public void updateToRead() {
+		this.isRead = true;
+	}
 }

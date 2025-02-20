@@ -14,6 +14,7 @@ public enum ErrorCode {
 	SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "서버 내에 문제가 발생했습니다."),
 	JSON_TYPE_ERROR(HttpStatus.BAD_REQUEST, "JSON 타입이 맞지 않습니다."),
 	VALIDATION_FAIL(HttpStatus.BAD_REQUEST, "입력 형식이 올바르지 않습니다."),
+	WEBSOCKET_UNAUTHORIZED_ACCESS(HttpStatus.FORBIDDEN, "웹소켓 권한이 없습니다."),
 
 	// user error
 	USER_NOT_FOUND(HttpStatus.NOT_FOUND, "회원을 찾을 수 없습니다."),
@@ -51,7 +52,10 @@ public enum ErrorCode {
 	MAXIMUM_TRADE_REQUEST(HttpStatus.BAD_REQUEST, "가능한 스왑 요청 횟수를 초과하였습니다."),
 
 	// chat error
-	CHATROOMS_NOT_FOUND(HttpStatus.NOT_FOUND, "채팅방을 찾을 수 없습니다.");
+	CHATROOMS_NOT_FOUND(HttpStatus.NOT_FOUND, "채팅방을 찾을 수 없습니다."),
+
+	// notifications error
+	NOTIFICATION_NOT_FOUND(HttpStatus.NOT_FOUND, "알림 내역을 찾을 수 없습니다.");
 
 	private final HttpStatus httpStatus;
 	private final String message;

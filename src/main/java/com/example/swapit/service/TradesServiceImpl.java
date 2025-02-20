@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import com.example.swapit.common.exception.CustomException;
 import com.example.swapit.common.exception.ErrorCode;
 import com.example.swapit.domain.Goods;
+import com.example.swapit.domain.NotificationType;
 import com.example.swapit.domain.TradeStatus;
 import com.example.swapit.domain.Trades;
 import com.example.swapit.domain.dto.TradesRequestDto;
@@ -22,6 +23,7 @@ public class TradesServiceImpl implements TradesService {
 	private final TradesRepository tradesRepository;
 	private final GoodsRepository goodsRepository;
 	private final CurrentUserService currentUserService;
+	private final NotificationEventPublisher notificationEventPublisher;
 	public static final int MAX_REQUEST_COUNT = 10;
 
 	@Override
@@ -39,6 +41,10 @@ public class TradesServiceImpl implements TradesService {
 
 		try {
 			tradesRepository.save(new Trades(requestedGoods, targetGoods));
+
+			// 알림 발생
+			notificationEventPublisher.publishNotification(
+				targetGoods.getUser().getUsersId(), NotificationType.REQUESTED);
 		} catch (DataIntegrityViolationException ex) {
 			throw new CustomException(ErrorCode.DUPLICATE_TRADE_REQUEST);
 		}
@@ -66,6 +72,11 @@ public class TradesServiceImpl implements TradesService {
 
 		// 같은 물건의 다른 거래 요청을 모두 REJECTED로 변경
 		tradesRepository.rejectOtherTrades(trades.getTargetGoods(), tradesId);
+
+		// 알림 발생
+		notificationEventPublisher.publishNotification(
+			trades.getOwner().getUsersId(), NotificationType.ACCEPTED, trades.getTargetGoods().getId()
+		);
 	}
 
 	@Override
@@ -80,5 +91,10 @@ public class TradesServiceImpl implements TradesService {
 		}
 
 		trades.setStatus(TradeStatus.REJECTED);
+
+		// 알림 발생
+		notificationEventPublisher.publishNotification(
+			trades.getOwner().getUsersId(), NotificationType.REJECTED, trades.getTargetGoods().getId()
+		);
 	}
 }

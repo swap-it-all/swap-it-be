@@ -40,6 +40,9 @@ public class TradesServiceTest {
 	@Mock
 	private CurrentUserServiceImpl currentUserService;
 
+	@Mock
+	private NotificationEventPublisher notificationEventPublisher;
+
 	private TradesRequestDto dto;
 
 	@Test

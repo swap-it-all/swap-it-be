@@ -60,6 +60,9 @@ class ChatServiceTest {
 	@Mock
 	private AwsS3Service awsS3Service;
 
+	@Mock
+	private NotificationEventPublisher notificationEventPublisher;
+
 	@InjectMocks
 	private ChatServiceImpl chatService;
 
@@ -225,24 +228,26 @@ class ChatServiceTest {
 	void saveChatSuccessTest() {
 		// given
 		Long chatroomId = 1L;
+		Long userId = 100L;
 		String email = "test@example.com";
 
 		ChatStompRequestDto chatDto = new ChatStompRequestDto(ChatType.TALK, "Hello, this is a test chat", 123L);
 
+		Users sender = Users.builder().usersId(100L).build();
+		Users receiver = Users.builder().usersId(101L).build();
+
 		ChatRooms chatRoom = ChatRooms.builder()
 			.id(chatroomId)
-			.build();
-		Users user = Users.builder()
-			.usersId(100L)
-			.email(email)
+			.requester(sender)
+			.owner(receiver)
 			.build();
 
 		when(chatRoomsRepository.findById(chatroomId)).thenReturn(Optional.of(chatRoom));
-		when(usersRepository.findByEmail(email)).thenReturn(Optional.of(user));
+		when(usersRepository.findById(userId)).thenReturn(Optional.of(sender));
 
 		Chats savedChat = Chats.builder()
 			.chatRooms(chatRoom)
-			.sender(user)
+			.sender(sender)
 			.chatType(chatDto.getChatType())
 			.content(chatDto.getContent())
 			.goodsId(chatDto.getGoodsId())
@@ -251,7 +256,7 @@ class ChatServiceTest {
 		when(chatRepository.save(any(Chats.class))).thenReturn(savedChat);
 
 		// when
-		ChatStompResponseDto response = chatService.saveChat(chatroomId, chatDto, email);
+		ChatStompResponseDto response = chatService.saveChat(chatroomId, chatDto, userId);
 
 		// then
 		assertNotNull(response);

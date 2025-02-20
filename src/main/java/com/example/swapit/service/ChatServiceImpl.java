@@ -12,6 +12,7 @@ import com.example.swapit.domain.ChatType;
 import com.example.swapit.domain.Chats;
 import com.example.swapit.domain.Goods;
 import com.example.swapit.domain.GoodsImages;
+import com.example.swapit.domain.NotificationType;
 import com.example.swapit.domain.Users;
 import com.example.swapit.domain.dto.ChatDto;
 import com.example.swapit.domain.dto.ChatListDto;
@@ -39,6 +40,7 @@ public class ChatServiceImpl implements ChatService {
 	private final ChatRoomsRepository chatRoomsRepository;
 	private final ChatsRepository chatRepository;
 	private final GoodsImagesRepository goodsImagesRepository;
+	private final NotificationEventPublisher notificationEventPublisher;
 	private final AwsS3Service awsS3Service;
 
 	private static final int size = 30;
@@ -129,10 +131,10 @@ public class ChatServiceImpl implements ChatService {
 	}
 
 	@Override
-	public ChatStompResponseDto saveChat(Long chatroomId, ChatStompRequestDto chatDto, String email) {
+	public ChatStompResponseDto saveChat(Long chatroomId, ChatStompRequestDto chatDto, Long userId) {
 		ChatRooms chatRooms = chatRoomsRepository.findById(chatroomId)
 			.orElseThrow(() -> new CustomException(ErrorCode.CHATROOMS_NOT_FOUND));
-		Users users = usersRepository.findByEmail(email)
+		Users users = usersRepository.findById(userId)
 			.orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 		Chats chats = Chats.builder()
 			.chatRooms(chatRooms)
@@ -143,6 +145,13 @@ public class ChatServiceImpl implements ChatService {
 			.build();
 
 		chatRepository.save(chats);
+
+		// 알림 발행
+		Long receiverId =
+			(chatRooms.getRequester().getUsersId().equals(userId)) ? userId : chatRooms.getOwner().getUsersId();
+		notificationEventPublisher.publishNotification(
+			receiverId, NotificationType.CHAT, chatRooms.getId()
+		);
 		return new ChatStompResponseDto(chats);
 	}
 

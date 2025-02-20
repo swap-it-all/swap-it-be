@@ -8,10 +8,10 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public class StompPrincipal implements Principal {
-	private final String email;
+	private final String id;
 
 	@Override
 	public String getName() {
-		return email;
+		return id;
 	}
 }

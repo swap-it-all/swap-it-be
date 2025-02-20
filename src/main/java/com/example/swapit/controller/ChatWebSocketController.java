@@ -16,7 +16,9 @@ import com.example.swapit.domain.dto.ChatStompResponseDto;
 import com.example.swapit.service.ChatService;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 public class ChatWebSocketController {
@@ -27,8 +29,15 @@ public class ChatWebSocketController {
 	@SendTo("/topic/chat/{chatroomId}")
 	public ChatStompResponseDto chat(@DestinationVariable Long chatroomId, ChatStompRequestDto message,
 		Principal principal) {
+		if (principal == null) {
+			log.error("[ERROR] WebSocket 메시지 처리 실패: Principal이 null입니다.");
+			throw new CustomException(ErrorCode.UNAUTHORIZED_ACCESS);
+		}
+
 		if (principal instanceof StompPrincipal stompPrincipal) {
-			return chatService.saveChat(chatroomId, message, stompPrincipal.getEmail());
+			log.info("[MESSAGE] Principal 설정 완료: userId = {}", stompPrincipal.getName());
+			Long userId = Long.parseLong(stompPrincipal.getName());
+			return chatService.saveChat(chatroomId, message, userId);
 		} else {
 			throw new CustomException(ErrorCode.UNAUTHORIZED_ACCESS);
 		}

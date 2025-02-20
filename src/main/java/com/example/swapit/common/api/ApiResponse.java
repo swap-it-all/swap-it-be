@@ -1,5 +1,7 @@
 package com.example.swapit.common.api;
 
+import static java.util.Collections.*;
+
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import lombok.AccessLevel;
@@ -15,11 +17,11 @@ public class ApiResponse<T> {
 	private final T results;
 
 	public static <T> ApiResponse<T> success() {
-		return new ApiResponse<>(true, "요청에 성공하였습니다.", null);
+		return new ApiResponse<>(true, "요청에 성공하였습니다.", (T)emptyMap());
 	}
 
 	public static <T> ApiResponse<T> success(String message) {
-		return new ApiResponse<>(true, message, null);
+		return new ApiResponse<>(true, message, (T)emptyMap());
 	}
 
 	public static <T> ApiResponse<T> success(T results) {
@@ -31,6 +33,6 @@ public class ApiResponse<T> {
 	}
 
 	public static <T> ApiResponse<T> fail(String message) {
-		return new ApiResponse<>(false, message, null);
+		return new ApiResponse<>(false, message, (T)emptyMap());
 	}
 }

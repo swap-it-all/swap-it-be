@@ -54,7 +54,6 @@ public class TradesControllerTest {
 		verify(tradesService, times(1)).requestTrade(dto);
 		assertTrue(response.isSuccess());
 		assertEquals("요청에 성공하였습니다.", response.getMessage());
-		assertNull(response.getResults());
 	}
 
 	@Test
@@ -89,7 +88,6 @@ public class TradesControllerTest {
 		verify(tradesService, times(1)).cancelTrade(tradesId);
 		assertTrue(response.isSuccess());
 		assertEquals("요청에 성공하였습니다.", response.getMessage());
-		assertNull(response.getResults());
 	}
 
 	@Test

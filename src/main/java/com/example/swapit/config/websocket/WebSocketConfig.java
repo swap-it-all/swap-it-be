@@ -1,8 +1,11 @@
 package com.example.swapit.config.websocket;
 
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.ChannelRegistration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
+import org.springframework.scheduling.TaskScheduler;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
@@ -14,18 +17,31 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
-	private final StompHandler stompHandler;
+	private final StompHandler stompHandler; // jwt 인증
+
+	@Bean
+	public TaskScheduler taskScheduler() {
+		ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
+		scheduler.setPoolSize(10);
+		scheduler.setThreadNamePrefix("TaskScheduler-");
+		scheduler.initialize();
+		return scheduler;
+	}
 
 	@Override
 	public void configureMessageBroker(MessageBrokerRegistry registry) {
-		registry.setApplicationDestinationPrefixes("/app");       //클라이언트에서 보낸 메세지를 받을 prefix
-		registry.enableSimpleBroker("/topic");    //해당 주소를 구독하고 있는 클라이언트들에게 메세지 전달
+		registry.enableSimpleBroker("/topic", "/queue", "/user") // 일반 구독 채널
+			.setHeartbeatValue(new long[] {30000, 60000}) // 30초, 60초 간격으로 하트비트 전송
+			.setTaskScheduler(taskScheduler());
+		registry.setApplicationDestinationPrefixes("/app"); // 클라이언트가 보낼 prefix
+		registry.setUserDestinationPrefix("/user"); // 특정 사용자에게 보낼 때 사용하는 prefix
 	}
 
 	@Override
 	public void registerStompEndpoints(StompEndpointRegistry registry) {
 		registry.addEndpoint("/ws")
-			.setAllowedOriginPatterns("*");
+			// .addInterceptors(jwtHandshakeInterceptor) // todo: 앱 연결 후, handshake interceptor로 변환
+			.setAllowedOrigins("*"); // cors
 	}
 
 	@Override
