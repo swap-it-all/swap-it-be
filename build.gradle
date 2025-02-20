@@ -139,10 +139,13 @@ bootJar {
     dependsOn(':openapi3')
 }
 
+def localServerUrl = System.getenv("LOCAL_SERVER_URL")
+def serverUrl = System.getenv("SERVER_URL")
+
 openapi3 {
     servers = [
-            { url = "http://3.36.159.6:8080" },
-            { url = "http://localhost:8080" }
+            { url = serverUrl },
+            { url = localServerUrl }
     ]
     title = "SwapIt API 문서"
     description = "Spring REST Docs with SwaggerUI."
