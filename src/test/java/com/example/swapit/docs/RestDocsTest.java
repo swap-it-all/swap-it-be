@@ -10,7 +10,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 @ExtendWith(RestDocumentationExtension.class)
-public abstract class RestDocsSupport {
+public abstract class RestDocsTest {
 
 	protected MockMvc mockMvc;
 

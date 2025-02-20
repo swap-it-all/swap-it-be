@@ -151,10 +151,6 @@ ext {
     snippetsDir = file('build/generated-snippets')
 }
 
-bootJar {
-    dependsOn(':openapi3')
-}
-
 def localServerUrl = project.ext.LOCAL_SERVER_URL
 def serverUrl = project.ext.SERVER_URL
 
@@ -163,10 +159,67 @@ openapi3 {
             { url = localServerUrl },
             { url = serverUrl }
     ]
-    title = "SwapIt API 문서"
+    title = "Swap It API 문서"
     description = "Spring REST Docs with SwaggerUI."
     version = "0.0.1"
     outputFileNamePrefix = 'open-api-3.0.1'
     format = 'json'
     outputDirectory = 'build/resources/main/static/docs'
+}
+
+tasks.whenTaskAdded { task ->
+    if (task.name == 'openapi3') {
+        task.dependsOn(test)
+    }
+    if (task.name == 'addSecurityToOpenApi') {
+        task.dependsOn('openapi3')
+    }
+}
+
+tasks.register('addSecurityToOpenApi') {
+    doLast {
+        def swaggerUIFile = file("${openapi3.outputDirectory}/${openapi3.outputFileNamePrefix}.${openapi3.format}")
+
+        if (swaggerUIFile.exists()) {
+            try {
+                def jsonText = swaggerUIFile.text
+
+                def jsonSlurper = new groovy.json.JsonSlurper()
+                def jsonContent = jsonSlurper.parseText(jsonText)
+
+                if (!jsonContent.containsKey('components')) {
+                    jsonContent.put('components', [:])
+                } else {
+                    println "Using existing 'components' object"
+                }
+
+                def components = jsonContent.components
+                components.put('securitySchemes', [
+                        'APIKey': [
+                                'type': 'apiKey',
+                                'name': 'Authorization',
+                                'in'  : 'header'
+                        ]
+                ])
+
+                jsonContent.put('security', [['APIKey': []]])
+
+                def jsonBuilder = new groovy.json.JsonBuilder(jsonContent)
+                def updatedJson = jsonBuilder.toPrettyString()
+                swaggerUIFile.text = updatedJson
+            } catch (Exception e) {
+                e.printStackTrace()
+            }
+        } else {
+            println "ERROR: OpenAPI file not found at ${swaggerUIFile.absolutePath}"
+        }
+    }
+}
+
+tasks.withType(GenerateSwaggerUI) {
+    dependsOn 'addSecurityToOpenApi'
+}
+
+bootJar {
+    dependsOn tasks.withType(GenerateSwaggerUI)
 }
