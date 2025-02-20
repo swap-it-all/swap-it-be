@@ -7,3 +7,5 @@ spring:
       - prd   # 로컬에서는 dev로 변경해서 사용.
     include:
       - jwt
+      - s3
+      - mail

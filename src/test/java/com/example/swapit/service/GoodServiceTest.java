@@ -21,6 +21,7 @@ import com.example.swapit.domain.Users;
 import com.example.swapit.domain.dto.GoodsDetailDto;
 import com.example.swapit.domain.dto.GoodsRequestDto;
 import com.example.swapit.repository.CategoriesRepository;
+import com.example.swapit.repository.GoodsImagesRepository;
 import com.example.swapit.repository.GoodsRepository;
 
 @ExtendWith(MockitoExtension.class)
@@ -28,6 +29,9 @@ class GoodServiceTest {
 
 	@Mock
 	private GoodsRepository goodsRepository;
+
+	@Mock
+	private GoodsImagesRepository goodsImagesRepository;
 
 	@Mock
 	private CategoriesRepository categoriesRepository;
@@ -88,8 +92,7 @@ class GoodServiceTest {
 	void insertGood() {
 		// given
 		GoodsRequestDto requestDto = new GoodsRequestDto(
-			"아이폰 14 Pro", 1_300_000L, "NEW", 1L, "용산역 1번 출구", "채팅 주세요!",
-			null);
+			"아이폰 14 Pro", 1_300_000L, "NEW", 1L, "용산역 1번 출구", "채팅 주세요!");
 		when(currentUserService.getCurrentUser()).thenReturn(testUser);
 		when(categoriesRepository.findById(1L)).thenReturn(Optional.of(testCategory));
 
@@ -114,8 +117,7 @@ class GoodServiceTest {
 	@DisplayName("물건 내용 수정 테스트")
 	void updateGood() {
 		// given
-		GoodsRequestDto requestDto = new GoodsRequestDto("아이폰 14 Pro", 1_300_000L, "NEW", 1L, "용산역 1번 출구", "채팅 주세요!",
-			null);
+		GoodsRequestDto requestDto = new GoodsRequestDto("아이폰 14 Pro", 1_300_000L, "NEW", 1L, "용산역 1번 출구", "채팅 주세요!");
 		when(currentUserService.getCurrentUser()).thenReturn(testUser);
 		when(categoriesRepository.findById(1L)).thenReturn(Optional.of(testCategory));
 		when(goodsRepository.findById(1L)).thenReturn(Optional.of(testGood));

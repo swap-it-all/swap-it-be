@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.example.swapit.common.api.ApiResponse;
 import com.example.swapit.common.exception.CustomException;
@@ -32,6 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class GoodsController {
 
+	private static final int MAX_FILES = 10;
 	private final GoodsService goodsService;
 
 	/**
@@ -86,9 +88,8 @@ public class GoodsController {
 	}
 
 	@PostMapping("/user/goods/register")
-	public ApiResponse<Void> insertGood(@Valid @RequestBody GoodsRequestDto goodsRequestDto) {
-		goodsService.insertGood(goodsRequestDto);
-		return ApiResponse.success();
+	public ApiResponse<Long> insertGood(@Valid @RequestBody GoodsRequestDto goodsRequestDto) {
+		return ApiResponse.success(goodsService.insertGood(goodsRequestDto));
 	}
 
 	@PutMapping("/user/goods/{goodsId}")
@@ -103,6 +104,30 @@ public class GoodsController {
 	@DeleteMapping("/user/goods/{goodsId}")
 	public ApiResponse<Void> deleteGood(@PathVariable Long goodsId) {
 		goodsService.deleteGood(goodsId);
+		return ApiResponse.success();
+	}
+
+	// 물건 사진 API
+
+	@PostMapping("/user/goods/{goodsId}/images")
+	public ApiResponse<Void> uploadImages(
+		@PathVariable Long goodsId,
+		@RequestParam List<MultipartFile> images
+	) {
+		// 최대 이미지 개수를 초과하는지 검증
+		if (images.size() > MAX_FILES) {
+			throw new CustomException(ErrorCode.IMAGE_COUNT_EXCEEDED);
+		}
+		goodsService.uploadGoodImages(goodsId, images);
+		return ApiResponse.success();
+	}
+
+	@DeleteMapping("/user/goods/{goodsId}/images/{imagesId}")
+	public ApiResponse<Void> deleteImage(
+		@PathVariable Long goodsId,
+		@PathVariable Long imagesId
+	) {
+		goodsService.deleteGoodImage(goodsId, imagesId);
 		return ApiResponse.success();
 	}
 }

@@ -7,6 +7,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -14,7 +15,7 @@ import lombok.NoArgsConstructor;
 
 @Getter
 @Builder
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Entity
 public class GoodsImages {
@@ -28,6 +29,9 @@ public class GoodsImages {
 	@JoinColumn(name = "goods_id", nullable = false)
 	private Goods good;
 
-	@Column(columnDefinition = "TEXT", nullable = false)
-	private String imageUrl; // S3 경로 저장
+	@Column(name = "s3_key", columnDefinition = "VARCHAR(512)", nullable = false)
+	private String s3Key;
+
+	@Column(columnDefinition = "VARCHAR(50)", nullable = false)
+	private String contentType;
 }
