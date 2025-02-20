@@ -32,17 +32,16 @@ public class UserControllerDocsTest extends RestDocsSupport {
 	@Test
 	@DisplayName("구글 로그인 성공 테스트")
 	void googleLoginSuccess() throws Exception {
-		// Given: REST Docs 생성을 위한 모의 데이터
+		// Given
 		String token = "Bearer valid_token";
 		TokenDTO tokenDTO = Mockito.mock(TokenDTO.class);
 		when(tokenDTO.getAccessToken()).thenReturn("test_access_token");
 		when(tokenDTO.getRefreshToken()).thenReturn("test_refresh_token");
 		when(tokenDTO.getKey()).thenReturn("example@google.com");
 
-		// authService.googleLogin() 호출 시, 모의 객체 반환
 		doReturn(tokenDTO).when(authService).googleLogin(any());
 
-		// When & Then: REST Docs 문서를 생성하는 테스트 실행
+		// When & Then
 		mockMvc.perform(get("/api/all/auth/login/google")
 				.header("Authorization", token)
 				.contentType(MediaType.APPLICATION_JSON))
