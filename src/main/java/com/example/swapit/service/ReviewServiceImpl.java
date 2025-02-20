@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import com.example.swapit.common.exception.CustomException;
 import com.example.swapit.common.exception.ErrorCode;
 import com.example.swapit.domain.Reviews;
+import com.example.swapit.domain.TradeStatus;
 import com.example.swapit.domain.Trades;
 import com.example.swapit.domain.Users;
 import com.example.swapit.domain.dto.ReviewDto;
@@ -29,6 +30,11 @@ public class ReviewServiceImpl implements ReviewService {
 		Users writer = currentUserService.getCurrentUser();
 		Trades trade = tradesRepository.findById(reviewRequestDto.getTradesId())
 			.orElseThrow(() -> new CustomException(ErrorCode.TRADES_NOT_FOUND));
+
+		// 해당 거래가 COMPLETED 되었는지 검증.
+		if (!trade.getStatus().equals(TradeStatus.COMPLETED)) {
+			throw new CustomException(ErrorCode.REVIEW_TRADE_NOT_COMPLETED);
+		}
 
 		// 리뷰 대상자 설정
 		Users reviewee;
