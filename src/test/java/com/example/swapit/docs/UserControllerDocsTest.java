@@ -1,8 +1,8 @@
 package com.example.swapit.docs;
 
+import static com.epages.restdocs.apispec.MockMvcRestDocumentationWrapper.*;
+import static com.epages.restdocs.apispec.ResourceDocumentation.*;
 import static org.mockito.Mockito.*;
-import static org.springframework.restdocs.headers.HeaderDocumentation.*;
-import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.*;
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.*;
 import static org.springframework.restdocs.payload.PayloadDocumentation.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -14,6 +14,8 @@ import org.mockito.Mockito;
 import org.springframework.http.MediaType;
 import org.springframework.restdocs.payload.JsonFieldType;
 
+import com.epages.restdocs.apispec.ResourceSnippetParameters;
+import com.epages.restdocs.apispec.Schema;
 import com.example.swapit.controller.AuthController;
 import com.example.swapit.domain.dto.TokenDTO;
 import com.example.swapit.service.AuthServiceImpl;
@@ -48,15 +50,21 @@ public class UserControllerDocsTest extends RestDocsSupport {
 			.andDo(document("google-login",
 				preprocessRequest(prettyPrint()),
 				preprocessResponse(prettyPrint()),
-				requestHeaders(
-					headerWithName("Authorization").description("Bearer 형식의 액세스 토큰")
-				),
-				responseFields(
-					fieldWithPath("success").type(JsonFieldType.BOOLEAN).description("요청 성공 여부"),
-					fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지"),
-					fieldWithPath("results.accessToken").type(JsonFieldType.STRING).description("발급된 액세스 토큰"),
-					fieldWithPath("results.refreshToken").type(JsonFieldType.STRING).description("발급된 리프레시 토큰"),
-					fieldWithPath("results.key").type(JsonFieldType.STRING).description("사용자 이메일")
+				resource(ResourceSnippetParameters.builder()
+					.tag("Google Login")
+					.description("구글 로그인을 수행하여 액세스 토큰, 리프레시 토큰, 사용자 이메일 정보를 반환하는 API")
+					.requestHeaders(
+						headerWithName("Authorization").description("Bearer 형식의 액세스 토큰")
+					)
+					.responseFields(
+						fieldWithPath("success").type(JsonFieldType.BOOLEAN).description("요청 성공 여부"),
+						fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지"),
+						fieldWithPath("results.accessToken").type(JsonFieldType.STRING).description("발급된 액세스 토큰"),
+						fieldWithPath("results.refreshToken").type(JsonFieldType.STRING).description("발급된 리프레시 토큰"),
+						fieldWithPath("results.key").type(JsonFieldType.STRING).description("사용자 이메일")
+					)
+					.responseSchema(Schema.schema("TokenDTO"))
+					.build()
 				)
 			));
 	}

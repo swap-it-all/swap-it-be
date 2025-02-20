@@ -9,3 +9,4 @@ spring:
       - jwt
       - s3
       - mail
+      - doc

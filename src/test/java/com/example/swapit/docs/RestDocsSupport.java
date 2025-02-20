@@ -9,13 +9,10 @@ import org.springframework.restdocs.RestDocumentationExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 @ExtendWith(RestDocumentationExtension.class)
 public abstract class RestDocsSupport {
 
 	protected MockMvc mockMvc;
-	protected ObjectMapper objectMapper = new ObjectMapper();
 
 	@BeforeEach
 	void setUp(RestDocumentationContextProvider provider) {
