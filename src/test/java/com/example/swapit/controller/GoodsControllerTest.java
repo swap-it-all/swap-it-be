@@ -13,7 +13,6 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
 
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -50,10 +49,6 @@ class GoodsControllerTest {
 	@BeforeEach
 	void setUp() {
 		mockMvc = MockMvcBuilders.standaloneSetup(goodsController).build();
-	}
-
-	@AfterEach
-	void tearDown() {
 	}
 
 	@Test
