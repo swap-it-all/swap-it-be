@@ -13,6 +13,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.DataIntegrityViolationException;
 
 import com.example.swapit.common.exception.CustomException;
 import com.example.swapit.common.exception.ErrorCode;
@@ -83,7 +84,6 @@ class ReviewServiceTest {
 		// given
 		when(currentUserService.getCurrentUser()).thenReturn(writer);
 		when(tradesRepository.findById(1L)).thenReturn(Optional.of(completedTrade));
-		when(reviewRepository.existsByTradeAndWriter(completedTrade, writer)).thenReturn(false);
 
 		// when
 		reviewService.createReview(reviewRequestDto);
@@ -125,7 +125,9 @@ class ReviewServiceTest {
 		// given
 		when(currentUserService.getCurrentUser()).thenReturn(writer);
 		when(tradesRepository.findById(1L)).thenReturn(Optional.of(completedTrade));
-		when(reviewRepository.existsByTradeAndWriter(completedTrade, writer)).thenReturn(true);
+
+		// 중복 리뷰 가정
+		doThrow(DataIntegrityViolationException.class).when(reviewRepository).save(any(Reviews.class));
 
 		// when & then
 		assertThatThrownBy(() -> reviewService.createReview(reviewRequestDto))

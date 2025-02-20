@@ -2,6 +2,7 @@ package com.example.swapit.service;
 
 import java.util.List;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import com.example.swapit.common.exception.CustomException;
@@ -17,7 +18,9 @@ import com.example.swapit.repository.ReviewRepository;
 import com.example.swapit.repository.TradesRepository;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ReviewServiceImpl implements ReviewService {
@@ -47,12 +50,6 @@ public class ReviewServiceImpl implements ReviewService {
 			throw new CustomException(ErrorCode.REVIEW_UNAUTHORIZED_ACCESS);
 		}
 
-		// 중복 리뷰 확인
-		boolean existingReview = reviewRepository.existsByTradeAndWriter(trade, writer);
-		if (existingReview) {
-			throw new CustomException(ErrorCode.REVIEW_DUPLICATE);
-		}
-
 		// 리뷰 저장
 		Reviews review = Reviews.builder()
 			.writer(writer)
@@ -62,7 +59,14 @@ public class ReviewServiceImpl implements ReviewService {
 			.rating(reviewRequestDto.getRating())
 			.build();
 
-		reviewRepository.save(review);
+		try {
+			reviewRepository.save(review);
+		} catch (DataIntegrityViolationException e) {
+			log.error("[리뷰 에러] {}, writer ID : {}, trade ID :  {}", ErrorCode.REVIEW_DUPLICATE.getMessage(),
+				writer.getUsersId(), trade.getId());
+			throw new CustomException(ErrorCode.REVIEW_DUPLICATE);
+		}
+
 	}
 
 	@Override
