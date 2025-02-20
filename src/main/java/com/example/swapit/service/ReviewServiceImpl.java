@@ -11,6 +11,7 @@ import com.example.swapit.domain.TradeStatus;
 import com.example.swapit.domain.Trades;
 import com.example.swapit.domain.Users;
 import com.example.swapit.domain.dto.ReviewDto;
+import com.example.swapit.domain.dto.ReviewListDto;
 import com.example.swapit.domain.dto.ReviewRequestDto;
 import com.example.swapit.repository.ReviewRepository;
 import com.example.swapit.repository.TradesRepository;
@@ -65,12 +66,13 @@ public class ReviewServiceImpl implements ReviewService {
 	}
 
 	@Override
-	public List<ReviewDto> getMyReviews() {
+	public ReviewListDto getMyReviews() {
 		Users reviewee = currentUserService.getCurrentUser();
-		List<Reviews> reviews = reviewRepository.findAllByRevieweeOrderByCreatedAtDesc(reviewee);
-
-		return reviews.stream()
+		List<ReviewDto> reviewDtos = reviewRepository.findAllByRevieweeOrderByCreatedAtDesc(reviewee)
+			.stream()
 			.map(ReviewDto::of)
 			.toList();
+
+		return new ReviewListDto(reviewDtos.size(), reviewDtos);
 	}
 }

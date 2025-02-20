@@ -5,6 +5,7 @@ import static org.mockito.BDDMockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -19,6 +20,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import com.example.swapit.domain.dto.ReviewDto;
+import com.example.swapit.domain.dto.ReviewListDto;
 import com.example.swapit.domain.dto.ReviewRequestDto;
 import com.example.swapit.service.ReviewService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -75,18 +77,20 @@ class ReviewControllerTest {
 	void getMyReviews_Success() throws Exception {
 		// Given
 		List<ReviewDto> reviewList = List.of(
-			new ReviewDto(1L, "writer1", "image", 5.0, "거래자가 친절했어요!"),
-			new ReviewDto(2L, "writer2", "image", 4.5, "좋은 거래였습니다!")
+			new ReviewDto(1L, "writer1", "image", 5.0, "거래자가 친절했어요!", LocalDateTime.now()),
+			new ReviewDto(2L, "writer2", "image", 4.5, "좋은 거래였습니다!", LocalDateTime.now())
 		);
+		ReviewListDto reviewListDto = new ReviewListDto(reviewList.size(), reviewList);
 
-		when(reviewService.getMyReviews()).thenReturn(reviewList);
+		when(reviewService.getMyReviews()).thenReturn(reviewListDto);
 
 		// When & Then
-		mockMvc.perform(get("/api/user/reviews"))
+		mockMvc.perform(get("/api/user/reviews/my"))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.success").value(true))
-			.andExpect(jsonPath("$.results.length()").value(2))
-			.andExpect(jsonPath("$.results[0].content").value("거래자가 친절했어요!"))
-			.andExpect(jsonPath("$.results[1].rating").value(4.5));
+			.andExpect(jsonPath("$.results.reviewCount").value(2))
+			.andExpect(jsonPath("$.results.reviewList.length()").value(2))
+			.andExpect(jsonPath("$.results.reviewList[0].content").value("거래자가 친절했어요!"))
+			.andExpect(jsonPath("$.results.reviewList[1].rating").value(4.5));
 	}
 }

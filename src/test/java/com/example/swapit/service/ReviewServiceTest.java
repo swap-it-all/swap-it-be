@@ -20,7 +20,7 @@ import com.example.swapit.domain.Reviews;
 import com.example.swapit.domain.TradeStatus;
 import com.example.swapit.domain.Trades;
 import com.example.swapit.domain.Users;
-import com.example.swapit.domain.dto.ReviewDto;
+import com.example.swapit.domain.dto.ReviewListDto;
 import com.example.swapit.domain.dto.ReviewRequestDto;
 import com.example.swapit.repository.ReviewRepository;
 import com.example.swapit.repository.TradesRepository;
@@ -137,14 +137,24 @@ class ReviewServiceTest {
 	@DisplayName("리뷰 조회 테스트")
 	void getMyReviews_Success() {
 		// given
+		Reviews review2 = Reviews.builder()
+			.writer(writer)
+			.reviewee(owner)
+			.trade(completedTrade)
+			.content("정말 친절한 거래자였어요.")
+			.rating(5.0)
+			.build();
+
 		when(currentUserService.getCurrentUser()).thenReturn(owner);
-		when(reviewRepository.findAllByRevieweeOrderByCreatedAtDesc(owner)).thenReturn(List.of(review));
+		when(reviewRepository.findAllByRevieweeOrderByCreatedAtDesc(owner)).thenReturn(List.of(review, review2));
 
 		// when
-		List<ReviewDto> reviews = reviewService.getMyReviews();
+		ReviewListDto reviewListDto = reviewService.getMyReviews();
 
 		// then
-		assertThat(reviews).isNotEmpty();
-		assertThat(reviews.get(0).getContent()).isEqualTo("좋은 거래였습니다!");
+		assertThat(reviewListDto).isNotNull();
+		assertThat(reviewListDto.getReviewCount()).isEqualTo(2);
+		assertThat(reviewListDto.getReviewList()).hasSize(2);
+		assertThat(reviewListDto.getReviewList().get(0).getContent()).isEqualTo("좋은 거래였습니다!");
 	}
 }
