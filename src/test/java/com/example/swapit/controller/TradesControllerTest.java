@@ -13,6 +13,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.annotation.Import;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -20,10 +22,12 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import com.example.swapit.common.api.ApiResponse;
 import com.example.swapit.common.exception.CustomException;
 import com.example.swapit.common.exception.ErrorCode;
+import com.example.swapit.common.exception.GlobalExceptionHandler;
 import com.example.swapit.domain.dto.TradesRequestDto;
 import com.example.swapit.service.TradesService;
 
 @ExtendWith(MockitoExtension.class)
+@Import(GlobalExceptionHandler.class)
 public class TradesControllerTest {
 
 	private MockMvc mockMvc;
@@ -36,7 +40,9 @@ public class TradesControllerTest {
 
 	@BeforeEach
 	void setUp() {
-		mockMvc = MockMvcBuilders.standaloneSetup(tradesController).build();
+		mockMvc = MockMvcBuilders.standaloneSetup(tradesController)
+			.setControllerAdvice(new GlobalExceptionHandler())
+			.build();
 	}
 
 	@Test
@@ -148,9 +154,9 @@ public class TradesControllerTest {
 		doNothing().when(tradesService).completeTrade(tradeId);
 
 		// When & Then
-		mockMvc.perform(patch("/api/trades/complete/{tradesId}", tradeId))
+		mockMvc.perform(patch("/api/user/swap/complete/{tradesId}", tradeId))
 			.andExpect(status().isOk())
-			.andExpect(jsonPath("$.status").value("SUCCESS"));  // ApiResponse.success() 검증
+			.andExpect(jsonPath("$.success").value(true));
 
 		verify(tradesService, times(1)).completeTrade(tradeId);
 	}
@@ -160,12 +166,15 @@ public class TradesControllerTest {
 	void completeTrade_Fail_TradeNotFound() throws Exception {
 		// Given
 		Long tradeId = 2L;
-		doThrow(new CustomException(ErrorCode.TRADES_NOT_FOUND)).when(tradesService).completeTrade(tradeId);
+		CustomException exception = new CustomException(ErrorCode.TRADES_NOT_FOUND);
+		doThrow(exception).when(tradesService).completeTrade(tradeId);
 
 		// When & Then
-		mockMvc.perform(patch("/api/trades/complete/{tradesId}", tradeId))
+		mockMvc.perform(patch("/api/user/swap/complete/{tradesId}", tradeId)
+				.contentType(MediaType.APPLICATION_JSON))
 			.andExpect(status().isNotFound())
-			.andExpect(jsonPath("$.status").value("ERROR"))
+			.andExpect(jsonPath("$.status").value(HttpStatus.NOT_FOUND.value()))
+			.andExpect(jsonPath("$.errorCode").value(ErrorCode.TRADES_NOT_FOUND.name()))
 			.andExpect(jsonPath("$.message").value(ErrorCode.TRADES_NOT_FOUND.getMessage()));
 
 		verify(tradesService, times(1)).completeTrade(tradeId);
@@ -179,9 +188,10 @@ public class TradesControllerTest {
 		doThrow(new CustomException(ErrorCode.TRADE_UNAUTHORIZED)).when(tradesService).completeTrade(tradeId);
 
 		// When & Then
-		mockMvc.perform(patch("/api/trades/complete/{tradesId}", tradeId))
+		mockMvc.perform(patch("/api/user/swap/complete/{tradesId}", tradeId))
 			.andExpect(status().isForbidden())
-			.andExpect(jsonPath("$.status").value("ERROR"))
+			.andExpect(jsonPath("$.status").value(HttpStatus.FORBIDDEN.value()))
+			.andExpect(jsonPath("$.errorCode").value(ErrorCode.TRADE_UNAUTHORIZED.name()))
 			.andExpect(jsonPath("$.message").value(ErrorCode.TRADE_UNAUTHORIZED.getMessage()));
 
 		verify(tradesService, times(1)).completeTrade(tradeId);
