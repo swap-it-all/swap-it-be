@@ -24,15 +24,17 @@ public class SecurityConfig {
 	@Bean
 	public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 		http.csrf(AbstractHttpConfigurer::disable)
-			.authorizeHttpRequests(auth -> auth
-				.requestMatchers("/api/user/auth/refresh", "/api/user/auth/logout", "/ws/**")
-				.permitAll()
-				.requestMatchers("/api/all/**")
-				.permitAll() // 누구나 접근 가능
-				.requestMatchers("/api/user/**")
-				.hasRole("USER") // USER만 접근 가능
-				.anyRequest()
-				.authenticated() // 그 외 요청은 인증 필요
+			.authorizeHttpRequests(
+				auth -> auth.requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/docs/**")
+					.permitAll()
+					.requestMatchers("/api/user/auth/refresh", "/api/user/auth/logout", "/ws/**")
+					.permitAll()
+					.requestMatchers("/api/all/**")
+					.permitAll() // 누구나 접근 가능
+					.requestMatchers("/api/user/**")
+					.hasRole("USER") // USER만 접근 가능
+					.anyRequest()
+					.authenticated() // 그 외 요청은 인증 필요
 			)
 			.addFilterBefore(new JwtAuthenticationFilter(jwtProvider, userDetailsService),
 				UsernamePasswordAuthenticationFilter.class)

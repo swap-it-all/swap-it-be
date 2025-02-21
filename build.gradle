@@ -10,6 +10,8 @@ plugins {
     id 'io.spring.dependency-management' version '1.1.7'
     id "org.sonarqube" version "5.1.0.4882"
     id 'jacoco'
+    id 'com.epages.restdocs-api-spec' version '0.17.1'
+    id 'org.hidetake.swagger.generator' version '2.18.2'
 }
 
 group = 'com.example'
@@ -33,7 +35,6 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
     implementation 'org.projectlombok:lombok'
-    implementation 'me.paulschwarz:spring-dotenv:4.0.0'
     annotationProcessor 'org.projectlombok:lombok'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
@@ -63,6 +64,30 @@ dependencies {
 
     // mail
     implementation 'org.springframework.boot:spring-boot-starter-mail'
+
+    // restdocs
+    testImplementation 'org.springframework.restdocs:spring-restdocs-mockmvc'
+    testImplementation 'com.epages:restdocs-api-spec-mockmvc:0.17.1'
+
+    // swagger-ui
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.0'
+}
+
+// .env 파일 읽기
+def loadEnvProperties() {
+    def envFile = file('.env')
+    def props = new Properties()
+    if (envFile.exists()) {
+        envFile.withReader('UTF-8') { reader ->
+            props.load(reader)
+        }
+    }
+    return props
+}
+
+def envProps = loadEnvProperties()
+envProps.each { key, value ->
+    project.ext."$key" = value
 }
 
 //-- Query DSL generated path --//
@@ -100,7 +125,7 @@ def loadPropertiesFile(filePath) {
     return props
 }
 
-def sonarToken = System.getenv("SONARQUBETOKEN")
+def sonarToken = project.ext.SONARQUBETOKEN
 
 sonarqube {
     properties {
@@ -114,4 +139,87 @@ sonarqube {
         property 'sonar.exclusions', '**/test/**, **/resources/**, **/*Application.java, **/generated/**, **/config/**, **/common/**'
         property 'sonar.coverage.jacoco.xmlReportPaths', layout.buildDirectory.dir("reports/jacoco/test/jacocoTestReport.xml").get().asFile
     }
+}
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+}
+
+ext {
+    snippetsDir = file('build/generated-snippets')
+}
+
+def localServerUrl = project.ext.LOCAL_SERVER_URL
+def serverUrl = project.ext.SERVER_URL
+
+openapi3 {
+    servers = [
+            { url = localServerUrl },
+            { url = serverUrl }
+    ]
+    title = "Swap It API 문서"
+    description = "Spring REST Docs with SwaggerUI."
+    version = "0.0.1"
+    outputFileNamePrefix = 'open-api-3.0.1'
+    format = 'json'
+    outputDirectory = 'build/resources/main/static/docs'
+}
+
+tasks.whenTaskAdded { task ->
+    if (task.name == 'openapi3') {
+        task.dependsOn(test)
+    }
+    if (task.name == 'addSecurityToOpenApi') {
+        task.dependsOn('openapi3')
+    }
+}
+
+tasks.register('addSecurityToOpenApi') {
+    doLast {
+        def swaggerUIFile = file("${openapi3.outputDirectory}/${openapi3.outputFileNamePrefix}.${openapi3.format}")
+
+        if (swaggerUIFile.exists()) {
+            try {
+                def jsonText = swaggerUIFile.text
+
+                def jsonSlurper = new groovy.json.JsonSlurper()
+                def jsonContent = jsonSlurper.parseText(jsonText)
+
+                if (!jsonContent.containsKey('components')) {
+                    jsonContent.put('components', [:])
+                } else {
+                    println "Using existing 'components' object"
+                }
+
+                def components = jsonContent.components
+                components.put('securitySchemes', [
+                        'APIKey': [
+                                'type': 'apiKey',
+                                'name': 'Authorization',
+                                'in'  : 'header'
+                        ]
+                ])
+
+                jsonContent.put('security', [['APIKey': []]])
+
+                def jsonBuilder = new groovy.json.JsonBuilder(jsonContent)
+                def updatedJson = jsonBuilder.toPrettyString()
+                swaggerUIFile.text = updatedJson
+            } catch (Exception e) {
+                e.printStackTrace()
+            }
+        } else {
+            println "ERROR: OpenAPI file not found at ${swaggerUIFile.absolutePath}"
+        }
+    }
+}
+
+tasks.withType(GenerateSwaggerUI) {
+    dependsOn 'addSecurityToOpenApi'
+}
+
+bootJar {
+    dependsOn tasks.withType(GenerateSwaggerUI)
 }
