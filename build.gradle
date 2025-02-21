@@ -125,7 +125,10 @@ def loadPropertiesFile(filePath) {
     return props
 }
 
-def sonarToken = project.ext.SONARQUBETOKEN
+// 로컬에서만 사용. 커밋할 때 주석처리하고, 로컬에서 실행할 때는 아래 System.getenv를 주석처리
+//def sonarToken = project.ext.SONARQUBETOKEN
+
+def sonarToken = System.getenv("SONARQUBETOKEN")
 
 sonarqube {
     properties {
@@ -151,14 +154,14 @@ ext {
     snippetsDir = file('build/generated-snippets')
 }
 
-def localServerUrl = project.ext.LOCAL_SERVER_URL
-def serverUrl = project.ext.SERVER_URL
+// 로컬에서만 사용. 커밋할 때 주석처리하고, 로컬에서 실행할 때는 아래 System.getenv를 주석처리
+//def localServerUrl = project.ext.LOCAL_SERVER_URL
+//def serverUrl = project.ext.SERVER_URL
+
+def serverUrl = System.getenv("SERVER_URL")
 
 openapi3 {
-    servers = [
-            { url = localServerUrl },
-            { url = serverUrl }
-    ]
+    server = serverUrl
     title = "Swap It API 문서"
     description = "Spring REST Docs with SwaggerUI."
     version = "0.0.1"
