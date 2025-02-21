@@ -9,6 +9,7 @@ import com.example.swapit.domain.Goods;
 import com.example.swapit.domain.NotificationType;
 import com.example.swapit.domain.TradeStatus;
 import com.example.swapit.domain.Trades;
+import com.example.swapit.domain.Users;
 import com.example.swapit.domain.dto.TradesRequestDto;
 import com.example.swapit.repository.GoodsRepository;
 import com.example.swapit.repository.TradesRepository;
@@ -96,5 +97,21 @@ public class TradesServiceImpl implements TradesService {
 		notificationEventPublisher.publishNotification(
 			trades.getOwner().getUsersId(), NotificationType.REJECTED, trades.getTargetGoods().getId()
 		);
+	}
+
+	@Override
+	public void completeTrade(Long tradesId) {
+		Trades trade = tradesRepository.findById(tradesId)
+			.orElseThrow(() -> new CustomException(ErrorCode.TRADES_NOT_FOUND));
+
+		Users user = currentUserService.getCurrentUser();
+		Long userId = user.getUsersId();
+
+		// 거래 관계자인지 확인
+		if (!userId.equals(trade.getOwner().getUsersId()) && !userId.equals(trade.getRequester().getUsersId())) {
+			throw new CustomException(ErrorCode.TRADE_UNAUTHORIZED);
+		}
+
+		trade.setStatus(TradeStatus.COMPLETED);
 	}
 }
