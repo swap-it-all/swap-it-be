@@ -373,4 +373,58 @@ public class TradesServiceTest {
 		// 예외 메시지 검증
 		assertEquals(ErrorCode.TRADE_UNAUTHORIZED, exception.getErrorCode());
 	}
+
+	@Test
+	@DisplayName("거래 완료 성공 - 요청자가 거래를 완료할 수 있음")
+	void completeTrade_Success_Requester() {
+		// Given
+		Long tradeId = 1L;
+		Users owner = Users.builder().usersId(100L).nickname("owner").build();
+		Users requester = Users.builder().usersId(200L).nickname("requester").build();
+		Goods targetGoods = Goods.builder().user(owner).title("targetGood").build();
+		Goods requestedGood = Goods.builder().user(requester).build();
+		Trades trade = new Trades(requestedGood, targetGoods);
+		when(tradesRepository.findById(tradeId)).thenReturn(Optional.of(trade));
+		when(currentUserService.getCurrentUser()).thenReturn(requester);
+
+		// When
+		tradesService.completeTrade(tradeId);
+
+		// Then
+		assertEquals(TradeStatus.COMPLETED, trade.getStatus());
+		verify(tradesRepository, times(1)).findById(tradeId);
+	}
+
+	@Test
+	@DisplayName("거래 완료 실패 - 거래를 찾을 수 없음")
+	void completeTrade_Fail_TradeNotFound() {
+		// Given
+		Long tradeId = 3L;
+		when(tradesRepository.findById(tradeId)).thenReturn(Optional.empty());
+
+		// When & Then
+		CustomException exception = assertThrows(CustomException.class, () -> tradesService.completeTrade(tradeId));
+		assertEquals(ErrorCode.TRADES_NOT_FOUND, exception.getErrorCode());
+		verify(tradesRepository, times(1)).findById(tradeId);
+	}
+
+	@Test
+	@DisplayName("거래 완료 실패 - 거래 관계자가 아님")
+	void completeTrade_Fail_UnauthorizedUser() {
+		// Given
+		Long tradeId = 1L;
+		Users owner = Users.builder().usersId(100L).nickname("owner").build();
+		Users requester = Users.builder().usersId(200L).nickname("requester").build();
+		Goods targetGoods = Goods.builder().user(owner).title("targetGood").build();
+		Goods requestedGood = Goods.builder().user(requester).build();
+		Trades trade = new Trades(requestedGood, targetGoods);
+		Users otherUser = Users.builder().usersId(300L).nickname("otherUser").build();
+		when(tradesRepository.findById(tradeId)).thenReturn(Optional.of(trade));
+		when(currentUserService.getCurrentUser()).thenReturn(otherUser);
+
+		// When & Then
+		CustomException exception = assertThrows(CustomException.class, () -> tradesService.completeTrade(tradeId));
+		assertEquals(ErrorCode.TRADE_UNAUTHORIZED, exception.getErrorCode());
+		verify(tradesRepository, times(1)).findById(tradeId);
+	}
 }

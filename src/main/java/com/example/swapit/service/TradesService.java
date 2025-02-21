@@ -10,4 +10,6 @@ public interface TradesService {
 	void acceptTrade(Long tradesId);
 
 	void rejectTrade(Long tradesId);
+
+	void completeTrade(Long tradesId);
 }

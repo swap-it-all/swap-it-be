@@ -16,32 +16,38 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api/user/swap")
 @RequiredArgsConstructor
 public class TradesController {
 	private final TradesService tradesService;
 
-	@PostMapping("/user/swap/request")
+	@PostMapping("/request")
 	public ApiResponse<Void> requestTrade(@RequestBody @Valid TradesRequestDto tradesRequestDto) {
 		tradesService.requestTrade(tradesRequestDto);
 		return ApiResponse.success();
 	}
 
-	@DeleteMapping("/user/swap/cancel/{tradesId}")
+	@DeleteMapping("/cancel/{tradesId}")
 	public ApiResponse<Void> cancelTrade(@PathVariable Long tradesId) {
 		tradesService.cancelTrade(tradesId);
 		return ApiResponse.success();
 	}
 
-	@PatchMapping("/user/swap/accept/{tradesId}")
+	@PatchMapping("/accept/{tradesId}")
 	public ApiResponse<Void> acceptTrade(@PathVariable Long tradesId) {
 		tradesService.acceptTrade(tradesId);
 		return ApiResponse.success();
 	}
 
-	@PatchMapping("/user/swap/reject/{tradesId}")
+	@PatchMapping("/reject/{tradesId}")
 	public ApiResponse<Void> rejectTrade(@PathVariable Long tradesId) {
 		tradesService.rejectTrade(tradesId);
+		return ApiResponse.success();
+	}
+
+	@PatchMapping("/complete/{tradesId}")
+	public ApiResponse<Void> completeTrade(@PathVariable Long tradesId) {
+		tradesService.completeTrade(tradesId);
 		return ApiResponse.success();
 	}
 }
