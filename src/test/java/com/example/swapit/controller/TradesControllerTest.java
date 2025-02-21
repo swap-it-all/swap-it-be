@@ -3,6 +3,7 @@ package com.example.swapit.controller;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -14,7 +15,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import com.example.swapit.common.api.ApiResponse;
@@ -115,7 +115,7 @@ public class TradesControllerTest {
 		doNothing().when(tradesService).acceptTrade(tradeId);
 
 		// When & Then
-		mockMvc.perform(MockMvcRequestBuilders.patch("/api/user/swap/accept/{tradesId}", tradeId)
+		mockMvc.perform(patch("/api/user/swap/accept/{tradesId}", tradeId)
 				.contentType(MediaType.APPLICATION_JSON))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.success").value(true));
@@ -132,11 +132,58 @@ public class TradesControllerTest {
 		doNothing().when(tradesService).rejectTrade(tradeId);
 
 		// When & Then
-		mockMvc.perform(MockMvcRequestBuilders.patch("/api/user/swap/reject/{tradesId}", tradeId)
+		mockMvc.perform(patch("/api/user/swap/reject/{tradesId}", tradeId)
 				.contentType(MediaType.APPLICATION_JSON))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.success").value(true));
 
 		verify(tradesService, times(1)).rejectTrade(tradeId);
+	}
+
+	@Test
+	@DisplayName("거래 완료 성공 - 200 OK")
+	void completeTrade_Success() throws Exception {
+		// Given
+		Long tradeId = 1L;
+		doNothing().when(tradesService).completeTrade(tradeId);
+
+		// When & Then
+		mockMvc.perform(patch("/api/trades/complete/{tradesId}", tradeId))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.status").value("SUCCESS"));  // ApiResponse.success() 검증
+
+		verify(tradesService, times(1)).completeTrade(tradeId);
+	}
+
+	@Test
+	@DisplayName("거래 완료 실패 - 거래를 찾을 수 없음 (404 NOT FOUND)")
+	void completeTrade_Fail_TradeNotFound() throws Exception {
+		// Given
+		Long tradeId = 2L;
+		doThrow(new CustomException(ErrorCode.TRADES_NOT_FOUND)).when(tradesService).completeTrade(tradeId);
+
+		// When & Then
+		mockMvc.perform(patch("/api/trades/complete/{tradesId}", tradeId))
+			.andExpect(status().isNotFound())
+			.andExpect(jsonPath("$.status").value("ERROR"))
+			.andExpect(jsonPath("$.message").value(ErrorCode.TRADES_NOT_FOUND.getMessage()));
+
+		verify(tradesService, times(1)).completeTrade(tradeId);
+	}
+
+	@Test
+	@DisplayName("거래 완료 실패 - 거래 관계자가 아님 (403 FORBIDDEN)")
+	void completeTrade_Fail_Unauthorized() throws Exception {
+		// Given
+		Long tradeId = 3L;
+		doThrow(new CustomException(ErrorCode.TRADE_UNAUTHORIZED)).when(tradesService).completeTrade(tradeId);
+
+		// When & Then
+		mockMvc.perform(patch("/api/trades/complete/{tradesId}", tradeId))
+			.andExpect(status().isForbidden())
+			.andExpect(jsonPath("$.status").value("ERROR"))
+			.andExpect(jsonPath("$.message").value(ErrorCode.TRADE_UNAUTHORIZED.getMessage()));
+
+		verify(tradesService, times(1)).completeTrade(tradeId);
 	}
 }
