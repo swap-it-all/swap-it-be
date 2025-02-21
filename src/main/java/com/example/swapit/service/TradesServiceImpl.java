@@ -100,6 +100,7 @@ public class TradesServiceImpl implements TradesService {
 	}
 
 	@Override
+	@Transactional
 	public void completeTrade(Long tradesId) {
 		Trades trade = tradesRepository.findById(tradesId)
 			.orElseThrow(() -> new CustomException(ErrorCode.TRADES_NOT_FOUND));
