@@ -6,7 +6,9 @@ import com.example.swapit.domain.dto.UserNicknameDto;
 import com.example.swapit.domain.dto.UserPageDto;
 
 public interface UsersService {
-	UserPageDto getUserMyPage(Long userId);
+	UserPageDto getMyPage();
+
+	UserPageDto getAnotherUserPage(Long userId);
 
 	void updateProfileImage(MultipartFile file);
 

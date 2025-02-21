@@ -33,12 +33,8 @@ public class UsersServiceImpl implements UsersService {
 
 	@Override
 	@Transactional(readOnly = true)
-	public UserPageDto getUserMyPage(Long userId) {
-		Users user = usersRepository.findById(userId)
-			.orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
-
-		Users me = currentUserService.getCurrentUser();
-		boolean isMyPage = (user.getUsersId().equals(me.getUsersId()));
+	public UserPageDto getMyPage() {
+		Users user = currentUserService.getCurrentUser();
 
 		long totalUsersGoodsCount = goodsRepository.countByUser(user);
 		long completedSwapCount = tradesRepository.countByCompletedTradesByUser(user);
@@ -49,9 +45,27 @@ public class UsersServiceImpl implements UsersService {
 			.toList();
 
 		return new UserPageDto(
-			user.getUsersId(), user.getNickname(),
-			(isMyPage ? user.getEmail() : null),
-			user.getProfileImageUrl(), totalUsersGoodsCount, completedSwapCount, averageRating, reviews
+			user.getUsersId(), user.getNickname(), user.getEmail(), user.getProfileImageUrl(),
+			totalUsersGoodsCount, completedSwapCount, averageRating, reviews
+		);
+	}
+
+	@Override
+	public UserPageDto getAnotherUserPage(Long userId) {
+		Users user = usersRepository.findById(userId)
+			.orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+
+		long totalUsersGoodsCount = goodsRepository.countByUser(user);
+		long completedSwapCount = tradesRepository.countByCompletedTradesByUser(user);
+		double averageRating = reviewRepository.averageRatingByReviewee(user);
+		List<ReviewDto> reviews = reviewRepository.findTop3ByRevieweeOrderByCreatedAtDesc(user)
+			.stream()
+			.map(ReviewDto::of)
+			.toList();
+
+		return new UserPageDto(
+			user.getUsersId(), user.getNickname(), null, user.getProfileImageUrl(),
+			totalUsersGoodsCount, completedSwapCount, averageRating, reviews
 		);
 	}
 
