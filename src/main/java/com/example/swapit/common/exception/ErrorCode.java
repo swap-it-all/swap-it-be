@@ -55,7 +55,12 @@ public enum ErrorCode {
 	CHATROOMS_NOT_FOUND(HttpStatus.NOT_FOUND, "채팅방을 찾을 수 없습니다."),
 
 	// notifications error
-	NOTIFICATION_NOT_FOUND(HttpStatus.NOT_FOUND, "알림 내역을 찾을 수 없습니다.");
+	NOTIFICATION_NOT_FOUND(HttpStatus.NOT_FOUND, "알림 내역을 찾을 수 없습니다."),
+
+	// review error
+	REVIEW_UNAUTHORIZED_ACCESS(HttpStatus.FORBIDDEN, "이 거래에 대한 리뷰를 작성할 권한이 없습니다."),
+	REVIEW_TRADE_NOT_COMPLETED(HttpStatus.CONFLICT, "거래가 완료되지 않아 리뷰를 작성할 수 없습니다."),
+	REVIEW_DUPLICATE(HttpStatus.CONFLICT, "이미 이 거래에 대한 리뷰를 작성했습니다.");
 
 	private final HttpStatus httpStatus;
 	private final String message;
