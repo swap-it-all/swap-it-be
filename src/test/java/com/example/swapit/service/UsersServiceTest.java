@@ -63,9 +63,8 @@ class UsersServiceTest {
 
 	@Test
 	@DisplayName("마이페이지 조회 성공")
-	void getUserMyPageSameCurrentUser_Success() {
+	void getMyPage_Success() {
 		// given
-		when(usersRepository.findById(1L)).thenReturn(Optional.of(user));
 		when(currentUserService.getCurrentUser()).thenReturn(user);
 		when(goodsRepository.countByUser(user)).thenReturn(5L); // 상품 5개
 		when(tradesRepository.countByCompletedTradesByUser(user)).thenReturn(3L); // 거래 완료 3개
@@ -73,7 +72,7 @@ class UsersServiceTest {
 		when(reviewRepository.findTop3ByRevieweeOrderByCreatedAtDesc(user)).thenReturn(List.of());
 
 		// when
-		UserPageDto result = usersService.getUserMyPage(1L);
+		UserPageDto result = usersService.getMyPage();
 
 		// then
 		assertNotNull(result);
@@ -87,18 +86,17 @@ class UsersServiceTest {
 
 	@Test
 	@DisplayName("다른 회원 유저페이지 조회 성공")
-	void getUserMyPageDifferentCurrentUser_Success() {
+	void getAnotherUserPage_Success() {
 		// given
 		Users currentUser = Users.builder().usersId(2L).build();
 		when(usersRepository.findById(1L)).thenReturn(Optional.of(user));
-		when(currentUserService.getCurrentUser()).thenReturn(currentUser);
 		when(goodsRepository.countByUser(user)).thenReturn(5L); // 상품 5개
 		when(tradesRepository.countByCompletedTradesByUser(user)).thenReturn(3L); // 거래 완료 3개
 		when(reviewRepository.averageRatingByReviewee(user)).thenReturn(4.5); // 평균 평점 4.5
 		when(reviewRepository.findTop3ByRevieweeOrderByCreatedAtDesc(user)).thenReturn(List.of());
 
 		// when
-		UserPageDto result = usersService.getUserMyPage(1L);
+		UserPageDto result = usersService.getAnotherUserPage(1L);
 
 		// then
 		assertNotNull(result);
@@ -117,7 +115,7 @@ class UsersServiceTest {
 		when(usersRepository.findById(99L)).thenReturn(Optional.empty());
 
 		// When & Then
-		assertThrows(CustomException.class, () -> usersService.getUserMyPage(99L));
+		assertThrows(CustomException.class, () -> usersService.getAnotherUserPage(99L));
 	}
 
 	@Test
