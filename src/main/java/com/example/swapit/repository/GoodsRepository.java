@@ -10,4 +10,6 @@ import com.example.swapit.domain.Users;
 public interface GoodsRepository extends JpaRepository<Goods, Long>, CustomGoodsRepository {
 
 	List<Goods> findByUserOrderByCreatedAtDesc(Users user);
+
+	long countByUser(Users user);
 }
