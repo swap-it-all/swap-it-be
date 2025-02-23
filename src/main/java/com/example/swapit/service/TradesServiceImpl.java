@@ -1,16 +1,27 @@
 package com.example.swapit.service;
 
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import com.example.swapit.common.exception.CustomException;
 import com.example.swapit.common.exception.ErrorCode;
 import com.example.swapit.domain.Goods;
+import com.example.swapit.domain.GoodsImages;
 import com.example.swapit.domain.NotificationType;
 import com.example.swapit.domain.TradeStatus;
 import com.example.swapit.domain.Trades;
 import com.example.swapit.domain.Users;
 import com.example.swapit.domain.dto.TradesRequestDto;
+import com.example.swapit.domain.dto.trade.MyGoodsDto;
+import com.example.swapit.domain.dto.trade.MyRequestDto;
+import com.example.swapit.domain.dto.trade.ReceivedRequestDto;
+import com.example.swapit.domain.dto.trade.RequestGoodsImageDto;
+import com.example.swapit.domain.dto.trade.TradeCountProjection;
+import com.example.swapit.repository.GoodsImagesRepository;
 import com.example.swapit.repository.GoodsRepository;
 import com.example.swapit.repository.TradesRepository;
 
@@ -23,11 +34,14 @@ public class TradesServiceImpl implements TradesService {
 
 	private final TradesRepository tradesRepository;
 	private final GoodsRepository goodsRepository;
+	private final GoodsImagesRepository goodsImagesRepository;
 	private final CurrentUserService currentUserService;
+	private final AwsS3Service awsS3Service;
 	private final NotificationEventPublisher notificationEventPublisher;
 	public static final int MAX_REQUEST_COUNT = 10;
 
 	@Override
+	@Transactional
 	public void requestTrade(TradesRequestDto tradesRequestDto) {
 		Goods requestedGoods = goodsRepository.findById(tradesRequestDto.getRequestedGoodsId())
 			.orElseThrow(() -> new CustomException(ErrorCode.GOOD_NOT_FOUND));
@@ -52,6 +66,7 @@ public class TradesServiceImpl implements TradesService {
 	}
 
 	@Override
+	@Transactional
 	public void cancelTrade(Long tradesId) {
 		Trades trades = tradesRepository.findById(tradesId)
 			.orElseThrow(() -> new CustomException(ErrorCode.TRADES_NOT_FOUND));
@@ -114,5 +129,76 @@ public class TradesServiceImpl implements TradesService {
 		}
 
 		trade.setStatus(TradeStatus.COMPLETED);
+	}
+
+	@Override
+	public List<MyGoodsDto> getMyGoods() {
+		List<Goods> goodsList = goodsRepository.findByUserOrderByCreatedAtDesc(currentUserService.getCurrentUser());
+		List<Long> goodsIds = goodsList.stream().map(Goods::getId).toList();
+
+		List<TradeCountProjection> tradeCounts = tradesRepository.findTradeCountByGoodsIds(goodsIds);
+		Map<Long, Long> tradeCountMap = tradeCounts.stream()
+			.collect(Collectors.toMap(TradeCountProjection::getGoodsId, TradeCountProjection::getTradeCount));
+
+		return goodsList.stream()
+			.map(goods -> new MyGoodsDto(
+				goods.getId(),
+				goods.getTitle(),
+				goods.getPrice(),
+				goods.getCategory().getName(),
+				goods.getPlaceName(),
+				getFirstImageUrl(goods),
+				goods.getViewCount(),
+				tradeCountMap.getOrDefault(goods.getId(), 0L),
+				goods.getCreatedAt()
+			))
+			.toList();
+	}
+
+	@Override
+	public List<ReceivedRequestDto> getGoodsRequests(Long goodsId) {
+		List<Goods> goodsList = tradesRepository.findGoodsRequests(goodsId);
+
+		return goodsList.stream()
+			.map(goods -> new ReceivedRequestDto(
+				goods.getId(),
+				goods.getTitle(),
+				goods.getPrice(),
+				goods.getCategory().getName(),
+				goods.getPlaceName(),
+				getFirstImageUrl(goods),
+				goods.getCreatedAt()
+			))
+			.toList();
+	}
+
+	@Override
+	public List<MyRequestDto> getMyRequests() {
+		List<RequestGoodsImageDto> dtoList = tradesRepository.findMyRequests(
+			currentUserService.getCurrentUser().getUsersId());
+
+		return dtoList.stream()
+			.map(dto -> {
+				String requestedGoodsPhotoUrl = getFirstImageUrl(dto.getRequestedGoods());
+				String myGoodsPhotoUrl = getFirstImageUrl(dto.getMyGoods());
+
+				return new MyRequestDto(
+					dto.getRequestedGoods().getId(),
+					dto.getRequestedGoods().getTitle(),
+					dto.getRequestedGoods().getPrice(),
+					dto.getRequestedGoods().getCategory().getName(),
+					dto.getRequestedGoods().getPlaceName(),
+					myGoodsPhotoUrl,
+					requestedGoodsPhotoUrl
+				);
+			})
+			.toList();
+	}
+
+	private String getFirstImageUrl(Goods goods) {
+		return goodsImagesRepository.findFirstByGoodOrderByIdAsc(goods)
+			.map(GoodsImages::getS3Key)
+			.map(awsS3Service::generatePreSignedImageUrl)
+			.orElse(null);
 	}
 }

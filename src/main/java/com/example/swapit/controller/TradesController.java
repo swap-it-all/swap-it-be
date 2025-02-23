@@ -1,6 +1,7 @@
 package com.example.swapit.controller;
 
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -10,6 +11,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.swapit.common.api.ApiResponse;
 import com.example.swapit.domain.dto.TradesRequestDto;
+import com.example.swapit.domain.dto.trade.MyGoodsDto;
+import com.example.swapit.domain.dto.trade.MyRequestDto;
+import com.example.swapit.domain.dto.trade.ReceivedRequestDto;
+import com.example.swapit.domain.dto.trade.TradesGoodsListResponseDto;
 import com.example.swapit.service.TradesService;
 
 import jakarta.validation.Valid;
@@ -49,5 +54,20 @@ public class TradesController {
 	public ApiResponse<Void> completeTrade(@PathVariable Long tradesId) {
 		tradesService.completeTrade(tradesId);
 		return ApiResponse.success();
+	}
+
+	@GetMapping("/my-goods")
+	public ApiResponse<TradesGoodsListResponseDto<MyGoodsDto>> getMyGoods() {
+		return ApiResponse.success(new TradesGoodsListResponseDto<>(tradesService.getMyGoods()));
+	}
+
+	@GetMapping("/my-goods/{goodsId}/requests")
+	public ApiResponse<TradesGoodsListResponseDto<ReceivedRequestDto>> getGoodsRequests(@PathVariable Long goodsId) {
+		return ApiResponse.success(new TradesGoodsListResponseDto<>(tradesService.getGoodsRequests(goodsId)));
+	}
+
+	@GetMapping("/my-requests")
+	public ApiResponse<TradesGoodsListResponseDto<MyRequestDto>> getMyRequests() {
+		return ApiResponse.success(new TradesGoodsListResponseDto<>(tradesService.getMyRequests()));
 	}
 }
