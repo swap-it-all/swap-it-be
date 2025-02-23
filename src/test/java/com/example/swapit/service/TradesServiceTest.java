@@ -14,14 +14,23 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import com.example.swapit.common.exception.CustomException;
 import com.example.swapit.common.exception.ErrorCode;
+import com.example.swapit.domain.Categories;
 import com.example.swapit.domain.Goods;
+import com.example.swapit.domain.GoodsImages;
 import com.example.swapit.domain.TradeStatus;
 import com.example.swapit.domain.Trades;
 import com.example.swapit.domain.Users;
 import com.example.swapit.domain.dto.TradesRequestDto;
+import com.example.swapit.domain.dto.trade.MyGoodsDto;
+import com.example.swapit.domain.dto.trade.MyRequestDto;
+import com.example.swapit.domain.dto.trade.ReceivedRequestDto;
+import com.example.swapit.domain.dto.trade.RequestGoodsImageDto;
+import com.example.swapit.domain.dto.trade.TradeCountProjection;
+import com.example.swapit.repository.GoodsImagesRepository;
 import com.example.swapit.repository.GoodsRepository;
 import com.example.swapit.repository.TradesRepository;
 
@@ -38,7 +47,13 @@ public class TradesServiceTest {
 	private GoodsRepository goodsRepository;
 
 	@Mock
+	private GoodsImagesRepository goodsImagesRepository;
+
+	@Mock
 	private CurrentUserServiceImpl currentUserService;
+
+	@Mock
+	private AwsS3Service awsS3Service;
 
 	@Mock
 	private NotificationEventPublisher notificationEventPublisher;
@@ -426,5 +441,138 @@ public class TradesServiceTest {
 		CustomException exception = assertThrows(CustomException.class, () -> tradesService.completeTrade(tradeId));
 		assertEquals(ErrorCode.TRADE_UNAUTHORIZED, exception.getErrorCode());
 		verify(tradesRepository, times(1)).findById(tradeId);
+	}
+
+	@Test
+	@DisplayName("스왑 목록의 내 물건 조회 성공")
+	void testGetMyGoods() {
+		// given
+		Users user = Users.builder()
+			.usersId(1L).build();
+		when(currentUserService.getCurrentUser()).thenReturn(user);
+
+		Categories categories = Categories.builder().name("MISC").build();
+
+		Goods goods = Goods.builder()
+			.user(user)
+			.title("Item")
+			.price(10000L)
+			.category(categories)
+			.build();
+
+		ReflectionTestUtils.setField(goods, "id", 100L);
+
+		List<Goods> goodsList = List.of(goods);
+		when(goodsRepository.findByUserOrderByCreatedAtDesc(user)).thenReturn(goodsList);
+
+		TradeCountProjection projection = new TradeCountProjection() {
+			@Override
+			public Long getGoodsId() {
+				return 100L;
+			}
+
+			@Override
+			public Long getTradeCount() {
+				return 5L;
+			}
+		};
+		when(tradesRepository.findTradeCountByGoodsIds(anyList())).thenReturn(List.of(projection));
+
+		GoodsImages goodsImages = GoodsImages.builder().s3Key("s3Key123").build();
+		when(goodsImagesRepository.findFirstByGoodOrderByIdAsc(goods)).thenReturn(Optional.of(goodsImages));
+		when(awsS3Service.generatePreSignedImageUrl("s3Key123")).thenReturn("http://image.url/123");
+
+		// when
+		List<MyGoodsDto> result = tradesService.getMyGoods();
+
+		// then
+		assertEquals(1, result.size());
+		MyGoodsDto dto = result.get(0);
+		assertEquals("Item", dto.getTitle());
+		assertEquals(10000L, dto.getPrice());
+		assertEquals("MISC", dto.getCategory());
+		assertEquals("http://image.url/123", dto.getPhotoUrl());
+		assertEquals(5L, dto.getRequestCount());
+	}
+
+	@Test
+	@DisplayName("내 물건에 요청한 물건 조회 성공")
+	void testGetGoodsRequests() {
+		// given
+		Long goodsId = 200L;
+		Categories categories = Categories.builder().name("MISC").build();
+		Goods goods = Goods.builder()
+			.title("Item")
+			.category(categories)
+			.price(10000L).build();
+
+		ReflectionTestUtils.setField(goods, "id", 200L);
+
+		List<Goods> goodsList = List.of(goods);
+		when(tradesRepository.findGoodsRequests(goodsId)).thenReturn(goodsList);
+
+		GoodsImages goodsImages = GoodsImages.builder()
+			.s3Key("s3Key200").build();
+		when(goodsImagesRepository.findFirstByGoodOrderByIdAsc(goods)).thenReturn(Optional.of(goodsImages));
+		when(awsS3Service.generatePreSignedImageUrl("s3Key200")).thenReturn("http://image.url/200");
+
+		// when
+		List<ReceivedRequestDto> result = tradesService.getGoodsRequests(goodsId);
+
+		// then
+		assertEquals(1, result.size());
+		ReceivedRequestDto dto = result.get(0);
+		assertEquals(200L, dto.getGoodsId());
+		assertEquals("Item", dto.getTitle());
+		assertEquals(10000L, dto.getPrice());
+		assertEquals("MISC", dto.getCategory());
+		assertEquals("http://image.url/200", dto.getPhotoUrl());
+	}
+
+	@Test
+	@DisplayName("내가 요청한 물건 조회 성공")
+	void testGetMyRequests() {
+		// given
+		Categories categories1 = Categories.builder().name("MISC").build();
+		Goods requestedGoods = Goods.builder()
+			.title("Requested Item")
+			.category(categories1)
+			.price(3000L).build();
+
+		Categories categories2 = Categories.builder().name("MISC").build();
+		Goods myGoods = Goods.builder()
+			.title("My Item")
+			.category(categories2)
+			.price(4000L).build();
+
+		RequestGoodsImageDto requestDto = new RequestGoodsImageDto(requestedGoods, myGoods);
+
+		List<RequestGoodsImageDto> dtoList = List.of(requestDto);
+		when(tradesRepository.findMyRequests(anyLong())).thenReturn(dtoList);
+		Users dummyUser = Users.builder().usersId(1L).build();
+		when(currentUserService.getCurrentUser()).thenReturn(dummyUser);
+
+		GoodsImages requestedGoodsImage = GoodsImages.builder().s3Key("s3Key300").build();
+		when(goodsImagesRepository.findFirstByGoodOrderByIdAsc(requestedGoods))
+			.thenReturn(Optional.of(requestedGoodsImage));
+		when(awsS3Service.generatePreSignedImageUrl("s3Key300"))
+			.thenReturn("http://image.url/300");
+
+		GoodsImages myGoodsImage = GoodsImages.builder().s3Key("s3Key400").build();
+		when(goodsImagesRepository.findFirstByGoodOrderByIdAsc(myGoods))
+			.thenReturn(Optional.of(myGoodsImage));
+		when(awsS3Service.generatePreSignedImageUrl("s3Key400"))
+			.thenReturn("http://image.url/400");
+
+		// when
+		List<MyRequestDto> result = tradesService.getMyRequests();
+
+		// then
+		assertEquals(1, result.size());
+		MyRequestDto dto = result.get(0);
+		assertEquals("Requested Item", dto.getTitle());
+		assertEquals(3000L, dto.getPrice());
+		assertEquals("http://image.url/400", dto.getMyGoodsPhotoUrl());
+		assertEquals("http://image.url/300", dto.getRequestedGoodsPhotoUrl());
 	}
 }

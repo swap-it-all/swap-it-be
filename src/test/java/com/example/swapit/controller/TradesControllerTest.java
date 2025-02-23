@@ -6,6 +6,10 @@ import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -24,6 +28,9 @@ import com.example.swapit.common.exception.CustomException;
 import com.example.swapit.common.exception.ErrorCode;
 import com.example.swapit.common.exception.GlobalExceptionHandler;
 import com.example.swapit.domain.dto.TradesRequestDto;
+import com.example.swapit.domain.dto.trade.MyGoodsDto;
+import com.example.swapit.domain.dto.trade.MyRequestDto;
+import com.example.swapit.domain.dto.trade.ReceivedRequestDto;
 import com.example.swapit.service.TradesService;
 
 @ExtendWith(MockitoExtension.class)
@@ -195,5 +202,86 @@ public class TradesControllerTest {
 			.andExpect(jsonPath("$.message").value(ErrorCode.TRADE_UNAUTHORIZED.getMessage()));
 
 		verify(tradesService, times(1)).completeTrade(tradeId);
+	}
+
+	@Test
+	@DisplayName("스왑 목록의 내 물건 목록 조회 성공")
+	void testGetMyGoods() throws Exception {
+		// given
+		List<MyGoodsDto> goodsList = new ArrayList<>();
+		MyGoodsDto dummyGoods = new MyGoodsDto(
+			1L,
+			"스타벅스 텀블러",
+			35000L,
+			"MISC",
+			"경기도 안산시",
+			"http://example.com/image.jpg",
+			100L,
+			5L,
+			LocalDateTime.now()
+		);
+		goodsList.add(dummyGoods);
+		when(tradesService.getMyGoods()).thenReturn(goodsList);
+
+		// when & then
+		mockMvc.perform(get("/api/user/swap/my-goods"))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.success").value(true))
+			.andExpect(jsonPath("$.results.goodsList").isArray())
+			.andExpect(jsonPath("$.results.goodsList[0].goodsId").value(1L))
+			.andExpect(jsonPath("$.results.goodsList[0].title").value("스타벅스 텀블러"));
+	}
+
+	@Test
+	@DisplayName("내 물건에 스왑 요청 받은 물건 목록 조회 성공")
+	void testGetGoodsRequests() throws Exception {
+		// given
+		Long goodsId = 1L;
+		List<ReceivedRequestDto> requestList = new ArrayList<>();
+		ReceivedRequestDto dummyRequest = new ReceivedRequestDto(
+			1L,
+			"스타벅스 머그컵",
+			15000L,
+			"MISC",
+			"경기도 안산시",
+			"http://example.com/request-image.jpg",
+			LocalDateTime.now()
+		);
+		requestList.add(dummyRequest);
+		when(tradesService.getGoodsRequests(goodsId)).thenReturn(requestList);
+
+		// when & then
+		mockMvc.perform(get("/api/user/swap/my-goods/{goodsId}/requests", goodsId))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.success").value(true))
+			.andExpect(jsonPath("$.results.goodsList").isArray())
+			.andExpect(jsonPath("$.results.goodsList[0].goodsId").value(1L))
+			.andExpect(jsonPath("$.results.goodsList[0].title").value("스타벅스 머그컵"));
+	}
+
+	@Test
+	@DisplayName("내가 보낸 스왑 요청 목록 조회 성공")
+	void testGetMyRequests() throws Exception {
+		// given
+		List<MyRequestDto> requestList = new ArrayList<>();
+		MyRequestDto dummyMyRequest = new MyRequestDto(
+			1L,
+			"스타벅스 머그컵",
+			15000L,
+			"MISC",
+			"경기도 안산시",
+			"http://example.com/mygoods-image.jpg",
+			"http://example.com/requestedgoods-image.jpg"
+		);
+		requestList.add(dummyMyRequest);
+		when(tradesService.getMyRequests()).thenReturn(requestList);
+
+		// when & then
+		mockMvc.perform(get("/api/user/swap/my-requests"))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.success").value(true))
+			.andExpect(jsonPath("$.results.goodsList").isArray())
+			.andExpect(jsonPath("$.results.goodsList[0].goodsId").value(1L))
+			.andExpect(jsonPath("$.results.goodsList[0].title").value("스타벅스 머그컵"));
 	}
 }
