@@ -1,11 +1,6 @@
 pipeline {
     agent any
     stages {
-        stage('GitHub Repository Clone') {
-            steps {
-                git branch: 'develop', credentialsId: 'github-token', url: 'https://github.com/swap-it-all/swap-it-be'
-            }
-        }
         stage('SwapIt Service Gradle Project Test') {
             steps {
                 sh './gradlew clean test -Dspring.profiles.active=test'
