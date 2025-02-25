@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 @Configuration
@@ -17,8 +18,6 @@ public class RedisConfig {
 	@Value("${cloud.aws.redis.port}")
 	private int redisPort;
 
-	private static final StringRedisSerializer STRING_SERIALIZER = new StringRedisSerializer();
-
 	@Bean
 	public RedisConnectionFactory redisConnectionFactory() {
 		return new LettuceConnectionFactory(redisHost, redisPort);
@@ -29,8 +28,13 @@ public class RedisConfig {
 		RedisTemplate<String, Object> template = new RedisTemplate<>();
 		template.setConnectionFactory(redisConnectionFactory());
 
-		template.setKeySerializer(STRING_SERIALIZER);
-		template.setValueSerializer(STRING_SERIALIZER);
+		// JSON 직렬화 설정
+		GenericJackson2JsonRedisSerializer serializer = new GenericJackson2JsonRedisSerializer();
+
+		template.setKeySerializer(new StringRedisSerializer()); // key를 읽기 쉽게 함.
+		template.setValueSerializer(serializer); // 객체를 json으로 저장
+		template.setHashKeySerializer(new StringRedisSerializer()); // hash 내부 키를 읽기 쉽게 함.
+		template.setHashValueSerializer(serializer); // hash 내부 값을 json으로 저장
 
 		return template;
 	}
