@@ -3,7 +3,7 @@ pipeline {
     stages {
         stage('GitHub Repository Clone') {
             steps {
-                git branch: 'feature/test-jenkins', credentialsId: 'github-token', url: 'https://github.com/swap-it-all/swap-it-be'
+                git branch: 'develop', credentialsId: 'github-token', url: 'https://github.com/swap-it-all/swap-it-be'
             }
         }
         stage('SwapIt Service Gradle Project Test') {
