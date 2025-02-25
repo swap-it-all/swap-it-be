@@ -15,6 +15,7 @@ import org.springframework.http.MediaType;
 import org.springframework.restdocs.payload.JsonFieldType;
 
 import com.epages.restdocs.apispec.ResourceSnippetParameters;
+import com.epages.restdocs.apispec.Schema;
 import com.example.swapit.controller.AuthController;
 import com.example.swapit.domain.dto.TokenDTO;
 import com.example.swapit.service.AuthServiceImpl;
@@ -58,6 +59,7 @@ public class AuthControllerDocsTest extends RestDocsTest {
 						fieldWithPath("results.refreshToken").type(JsonFieldType.STRING).description("발급된 리프레시 토큰"),
 						fieldWithPath("results.key").type(JsonFieldType.STRING).description("사용자 이메일")
 					)
+					.responseSchema(Schema.schema("ApiResponse<TokenDto>"))
 					.build()
 				)
 			));
@@ -93,6 +95,7 @@ public class AuthControllerDocsTest extends RestDocsTest {
 						fieldWithPath("results.refreshToken").type(JsonFieldType.STRING).description("발급된 리프레시 토큰"),
 						fieldWithPath("results.key").type(JsonFieldType.STRING).description("사용자 이메일")
 					)
+					.responseSchema(Schema.schema("ApiResponse<TokenDto>"))
 					.build()
 				)
 			));
@@ -128,6 +131,7 @@ public class AuthControllerDocsTest extends RestDocsTest {
 						fieldWithPath("results.refreshToken").type(JsonFieldType.STRING).description("발급된 리프레시 토큰"),
 						fieldWithPath("results.key").type(JsonFieldType.STRING).description("사용자 이메일")
 					)
+					.responseSchema(Schema.schema("ApiResponse<TokenDto>"))
 					.build()
 				)
 			));
@@ -151,6 +155,7 @@ public class AuthControllerDocsTest extends RestDocsTest {
 				resource(ResourceSnippetParameters.builder()
 					.tag("Auth")
 					.description("리프레시 토큰을 헤더로 받아 로그아웃하는 API")
+					.responseSchema(Schema.schema("ApiResponse"))
 					.build()
 				)
 			));
