@@ -15,3 +15,10 @@ spring:
     redis:
       host: ${REDIS_HOST}
       port: 6379
+      ssl:
+        enabled: true
+      timeout: 5000 #5초
+      lettuce:
+        pool:
+          max-active: 10  # 최대 연결 개수 (최대 10개의 연결을 동시에 사용할 수 있음)
+          max-wait: 2000  # 연결 요청이 많을 때, 최대 2초(2000ms) 동안 대기
