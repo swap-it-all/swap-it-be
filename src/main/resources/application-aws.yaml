@@ -5,12 +5,13 @@ cloud:
     stack:
       auto: false
 
-    redis:
-      host: ${REDIS_HOST}
-      port: 6379
-
 spring:
   servlet:
     multipart:
       max-file-size: 5MB # default 1MB
       max-request-size: 10MB
+
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: 6379
