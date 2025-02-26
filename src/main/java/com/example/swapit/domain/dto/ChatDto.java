@@ -2,7 +2,6 @@ package com.example.swapit.domain.dto;
 
 import java.time.LocalDateTime;
 
-import com.example.swapit.domain.ChatRooms;
 import com.example.swapit.domain.ChatType;
 
 import lombok.AllArgsConstructor;
@@ -14,7 +13,6 @@ import lombok.Getter;
 @AllArgsConstructor
 public class ChatDto {
 	private Long chatsId;
-	private ChatRooms chatRooms;
 	private ChatType chatType;
 	private String content;
 	private RequesterGoodsDto requesterGoods;

@@ -93,15 +93,15 @@ class ChatControllerTest {
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.success").value(true))
 			.andExpect(jsonPath("$.message").value("요청에 성공하였습니다."))
-			.andExpect(jsonPath("$.results", hasSize(2)))
-			.andExpect(jsonPath("$.results[0].usersId").value(1))
-			.andExpect(jsonPath("$.results[0].profileImageUrl").value("http://example.com/image.jpg"))
-			.andExpect(jsonPath("$.results[0].nickname").value("testUser"))
-			.andExpect(jsonPath("$.results[0].recentChat").value("안녕하세요!"))
-			.andExpect(jsonPath("$.results[1].usersId").value(2))
-			.andExpect(jsonPath("$.results[1].profileImageUrl").value("http://example.com/image1.jpg"))
-			.andExpect(jsonPath("$.results[1].nickname").value("testUser2"))
-			.andExpect(jsonPath("$.results[1].recentChat").value("안녕하세요!!"));
+			.andExpect(jsonPath("$.results.chatRoomList", hasSize(2)))
+			.andExpect(jsonPath("$.results.chatRoomList[0].usersId").value(1))
+			.andExpect(jsonPath("$.results.chatRoomList[0].profileImageUrl").value("http://example.com/image.jpg"))
+			.andExpect(jsonPath("$.results.chatRoomList[0].nickname").value("testUser"))
+			.andExpect(jsonPath("$.results.chatRoomList[0].recentChat").value("안녕하세요!"))
+			.andExpect(jsonPath("$.results.chatRoomList[1].usersId").value(2))
+			.andExpect(jsonPath("$.results.chatRoomList[1].profileImageUrl").value("http://example.com/image1.jpg"))
+			.andExpect(jsonPath("$.results.chatRoomList[1].nickname").value("testUser2"))
+			.andExpect(jsonPath("$.results.chatRoomList[1].recentChat").value("안녕하세요!!"));
 	}
 
 	@Test
