@@ -13,9 +13,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
+import org.testcontainers.containers.MySQLContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
-import com.example.swapit.common.exception.CustomException;
-import com.example.swapit.common.exception.ErrorCode;
 import com.example.swapit.config.QueryDslConfig;
 import com.example.swapit.domain.Categories;
 import com.example.swapit.domain.Goods;
@@ -28,7 +32,23 @@ import jakarta.persistence.PersistenceContext;
 @DataJpaTest
 @Import(QueryDslConfig.class)
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
+@ActiveProfiles("test")
+@Testcontainers
 class GoodsRepositoryTest {
+
+	@Container
+	private static final MySQLContainer<?> mysqlContainer = new MySQLContainer<>("mysql:8.0")
+		.withDatabaseName("test_db")
+		.withUsername("root")
+		.withPassword("root");
+
+	@DynamicPropertySource
+	static void overrideProperties(DynamicPropertyRegistry registry) {
+		registry.add("spring.datasource.url", mysqlContainer::getJdbcUrl);
+		registry.add("spring.datasource.username", mysqlContainer::getUsername);
+		registry.add("spring.datasource.password", mysqlContainer::getPassword);
+		registry.add("spring.jpa.hibernate.ddl-auto", () -> "create-drop");
+	}
 
 	@Autowired
 	private GoodsRepository goodsRepository;
@@ -57,10 +77,11 @@ class GoodsRepositoryTest {
 			.role("ROLE_USER")
 			.build();
 
-		category = categoriesRepository.findById(1L)
-			.orElseThrow(() -> new CustomException(ErrorCode.CATEGORY_NOT_FOUND));
-		category2 = categoriesRepository.findById(2L)
-			.orElseThrow(() -> new CustomException(ErrorCode.CATEGORY_NOT_FOUND));
+		category = categoriesRepository.save(
+			Categories.builder().name("MISC").build());
+
+		category2 = categoriesRepository.save(
+			Categories.builder().name("MISC").build());
 
 		usersRepository.save(testUser);
 		categoriesRepository.save(category);
