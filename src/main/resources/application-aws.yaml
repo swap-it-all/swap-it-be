@@ -5,6 +5,10 @@ cloud:
     stack:
       auto: false
 
+    redis:
+      host: ${REDIS_HOST}
+      port: 6379
+
 spring:
   servlet:
     multipart:
