@@ -16,13 +16,12 @@ public class UserProfileDto {
 	private String profileImageUrl;
 	private Double userRating;
 
-	public static UserProfileDto of(Users user) {
-		// todo : 평균 평점 필드 생성 후, 변경 필요.
+	public static UserProfileDto of(Users user, Double averageRating) {
 		return UserProfileDto.builder()
 			.userId(user.getUsersId())
 			.nickname(user.getNickname())
 			.profileImageUrl(user.getProfileImageUrl())
-			.userRating(0.0)
+			.userRating(averageRating)
 			.build();
 	}
 }
