@@ -6,7 +6,6 @@ import static org.mockito.BDDMockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -23,9 +22,9 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import com.example.swapit.domain.ChatType;
 import com.example.swapit.domain.dto.ChatDto;
 import com.example.swapit.domain.dto.ChatListDto;
+import com.example.swapit.domain.dto.ChatRoomGoodsDto;
 import com.example.swapit.domain.dto.ChatRoomRequestDto;
 import com.example.swapit.domain.dto.ChatRoomResponseDto;
-import com.example.swapit.domain.dto.GoodsDto;
 import com.example.swapit.service.ChatService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -142,8 +141,8 @@ class ChatControllerTest {
 	@DisplayName("채팅방 물건 조회 성공")
 	void getChatRoomGoods() throws Exception {
 		// given
-		GoodsDto dto = new GoodsDto(
-			1L, "아이폰 15", 2500L, "NEW", null, null, 10L, LocalDateTime.now());
+		ChatRoomGoodsDto dto = new ChatRoomGoodsDto(
+			1L, "아이폰 15", "ELECTRONICS", 2500L, null);
 
 		given(chatService.getChatRoomGoods(any())).willReturn(dto);
 
