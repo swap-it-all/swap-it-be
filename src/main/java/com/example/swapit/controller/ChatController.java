@@ -1,7 +1,6 @@
 package com.example.swapit.controller;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -12,9 +11,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.swapit.common.api.ApiResponse;
 import com.example.swapit.domain.dto.ChatListDto;
+import com.example.swapit.domain.dto.ChatRoomGoodsDto;
+import com.example.swapit.domain.dto.ChatRoomListResponseDto;
 import com.example.swapit.domain.dto.ChatRoomRequestDto;
-import com.example.swapit.domain.dto.ChatRoomResponseDto;
-import com.example.swapit.domain.dto.GoodsDto;
 import com.example.swapit.service.ChatService;
 
 import jakarta.validation.Valid;
@@ -31,8 +30,8 @@ public class ChatController {
 	}
 
 	@GetMapping("/api/user/chatroom")
-	public ApiResponse<List<ChatRoomResponseDto>> getChatRooms() {
-		return ApiResponse.success(chatService.getChatRoomList());
+	public ApiResponse<ChatRoomListResponseDto> getChatRooms() {
+		return ApiResponse.success(new ChatRoomListResponseDto(chatService.getChatRoomList()));
 	}
 
 	@GetMapping("/api/user/chatroom/{chatroomId}")
@@ -44,7 +43,7 @@ public class ChatController {
 	}
 
 	@GetMapping("/api/user/chatroom/{chatroomId}/goods")
-	public ApiResponse<GoodsDto> getChatRoomGoods(@PathVariable Long chatroomId) {
+	public ApiResponse<ChatRoomGoodsDto> getChatRoomGoods(@PathVariable Long chatroomId) {
 		return ApiResponse.success(chatService.getChatRoomGoods(chatroomId));
 	}
 }

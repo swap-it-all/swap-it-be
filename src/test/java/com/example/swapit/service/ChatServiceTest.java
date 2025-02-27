@@ -25,11 +25,11 @@ import com.example.swapit.domain.GoodsQuality;
 import com.example.swapit.domain.Users;
 import com.example.swapit.domain.dto.ChatDto;
 import com.example.swapit.domain.dto.ChatListDto;
+import com.example.swapit.domain.dto.ChatRoomGoodsDto;
 import com.example.swapit.domain.dto.ChatRoomRequestDto;
 import com.example.swapit.domain.dto.ChatRoomResponseDto;
 import com.example.swapit.domain.dto.ChatStompRequestDto;
 import com.example.swapit.domain.dto.ChatStompResponseDto;
-import com.example.swapit.domain.dto.GoodsDto;
 import com.example.swapit.repository.ChatRoomsRepository;
 import com.example.swapit.repository.ChatsRepository;
 import com.example.swapit.repository.GoodsImagesRepository;
@@ -300,7 +300,7 @@ class ChatServiceTest {
 			.thenReturn(expectedImageUrl);
 
 		// when
-		GoodsDto result = chatService.getChatRoomGoods(chatroomId);
+		ChatRoomGoodsDto result = chatService.getChatRoomGoods(chatroomId);
 
 		// then
 		assertNotNull(result);
@@ -308,7 +308,5 @@ class ChatServiceTest {
 		assertEquals(goods.getPrice(), result.getPrice());
 		assertEquals(category.getName(), result.getCategory());
 		assertEquals(expectedImageUrl, result.getImageUrl());
-		assertEquals(goods.getPlaceName(), result.getPlaceName());
-		assertEquals(goods.getCreatedAt(), result.getCreatedAt());
 	}
 }

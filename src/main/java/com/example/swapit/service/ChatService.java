@@ -4,11 +4,11 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import com.example.swapit.domain.dto.ChatListDto;
+import com.example.swapit.domain.dto.ChatRoomGoodsDto;
 import com.example.swapit.domain.dto.ChatRoomRequestDto;
 import com.example.swapit.domain.dto.ChatRoomResponseDto;
 import com.example.swapit.domain.dto.ChatStompRequestDto;
 import com.example.swapit.domain.dto.ChatStompResponseDto;
-import com.example.swapit.domain.dto.GoodsDto;
 
 public interface ChatService {
 	Long addChatRoom(ChatRoomRequestDto chatRoomRequestDto);
@@ -19,5 +19,5 @@ public interface ChatService {
 
 	ChatStompResponseDto saveChat(Long chatroomId, ChatStompRequestDto chatDto, Long userId);
 
-	GoodsDto getChatRoomGoods(Long chatroomId);
+	ChatRoomGoodsDto getChatRoomGoods(Long chatroomId);
 }
