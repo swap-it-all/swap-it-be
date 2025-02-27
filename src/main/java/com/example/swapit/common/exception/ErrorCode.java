@@ -22,6 +22,7 @@ public enum ErrorCode {
 
 	// fcm error
 	FCM_TOKEN_INVALID(HttpStatus.BAD_REQUEST, "FCM 토큰이 잘못되었습니다."),
+	FIREBASE_MESSAGE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "FCM 푸시 알림 전송에 실패하였습니다."),
 
 	// goods error
 	GOOD_NOT_FOUND(HttpStatus.NOT_FOUND, "물건을 찾을 수 없습니다."),
