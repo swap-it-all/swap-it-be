@@ -1,6 +1,7 @@
 package com.example.swapit.domain;
 
 import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -25,6 +26,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @Entity
 @SQLDelete(sql = "UPDATE trades SET is_deleted = true WHERE trades_id = ?")
+@SQLRestriction("is_deleted = false")
 @Table(name = "trades",
 	uniqueConstraints = @UniqueConstraint(columnNames = {"target_goods_id, requester_id"})
 )
