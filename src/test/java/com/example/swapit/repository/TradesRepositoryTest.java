@@ -108,6 +108,7 @@ class TradesRepositoryTest {
 			.quality(GoodsQuality.GOOD)
 			.category(category)
 			.content("requestGood")
+			.placeName("place")
 			.build();
 		Goods requestGood2 = Goods.builder()
 			.user(requester2)
@@ -116,6 +117,7 @@ class TradesRepositoryTest {
 			.quality(GoodsQuality.GOOD)
 			.category(category)
 			.content("requestGood2")
+			.placeName("place")
 			.build();
 		Goods requestGood3 = Goods.builder()
 			.user(requester3)
@@ -124,6 +126,7 @@ class TradesRepositoryTest {
 			.quality(GoodsQuality.GOOD)
 			.category(category)
 			.content("requestGood3")
+			.placeName("place")
 			.build();
 		Goods targetGood = Goods.builder()
 			.user(owner)
@@ -132,6 +135,7 @@ class TradesRepositoryTest {
 			.quality(GoodsQuality.GOOD)
 			.category(category)
 			.content("targetGood")
+			.placeName("place")
 			.build();
 		goodsRepository.saveAll(List.of(requestGood, requestGood2, requestGood3, targetGood));
 

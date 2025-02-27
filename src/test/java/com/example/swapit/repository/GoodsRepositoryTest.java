@@ -90,22 +90,22 @@ class GoodsRepositoryTest {
 		// Goods 저장
 		goodsRepository.saveAll(List.of(
 			// 전자기기 : ELECTRONICS : 5개
-			Goods.builder().user(testUser).title("아이폰 14").price(1000L).quality(GoodsQuality.NEW)
+			Goods.builder().user(testUser).title("아이폰 14").price(1000L).quality(GoodsQuality.NEW).placeName("place")
 				.category(category).content("싸게 드려요! 교환주세요!").build(),
-			Goods.builder().user(testUser).title("아이폰 15").price(1000L).quality(GoodsQuality.NEW)
+			Goods.builder().user(testUser).title("아이폰 15").price(1000L).quality(GoodsQuality.NEW).placeName("place")
 				.category(category).content("싸게 드려요! 교환주세요!").build(),
-			Goods.builder().user(testUser).title("아이폰 16").price(1000L).quality(GoodsQuality.NEW)
+			Goods.builder().user(testUser).title("아이폰 16").price(1000L).quality(GoodsQuality.NEW).placeName("place")
 				.category(category).content("싸게 드려요! 교환주세요!").build(),
 			Goods.builder().user(testUser).title("아이폰 16 Pro").price(10_000L).quality(GoodsQuality.NEW)
-				.category(category).content("싸게 드려요! 교환주세요!").build(),
-			Goods.builder().user(testUser).title("갤럭시 S25").price(1000L).quality(GoodsQuality.NEW)
+				.placeName("place").category(category).content("싸게 드려요! 교환주세요!").build(),
+			Goods.builder().user(testUser).title("갤럭시 S25").price(1000L).quality(GoodsQuality.NEW).placeName("place")
 				.category(category).content("싸게 드려요! 교환주세요!").build(),
 			// 가전제품 : APPLIANCES : 3개
-			Goods.builder().user(testUser).title("전자레인지").price(1000L).quality(GoodsQuality.NEW)
+			Goods.builder().user(testUser).title("전자레인지").price(1000L).quality(GoodsQuality.NEW).placeName("place")
 				.category(category2).content("싸게 드려요! 교환주세요!").build(),
-			Goods.builder().user(testUser).title("오븐").price(1000L).quality(GoodsQuality.NEW)
+			Goods.builder().user(testUser).title("오븐").price(1000L).quality(GoodsQuality.NEW).placeName("place")
 				.category(category2).content("싸게 드려요! 교환주세요!").build(),
-			Goods.builder().user(testUser).title("세탁기").price(1000L).quality(GoodsQuality.NEW)
+			Goods.builder().user(testUser).title("세탁기").price(1000L).quality(GoodsQuality.NEW).placeName("place")
 				.category(category2).content("싸게 드려요! 교환주세요!").build()
 		));
 

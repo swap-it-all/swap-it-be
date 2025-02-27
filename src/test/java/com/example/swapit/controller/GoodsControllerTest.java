@@ -88,7 +88,7 @@ class GoodsControllerTest {
 		// given
 		GoodsDetailDto mockGoodsDetail = new GoodsDetailDto(
 			1L,
-			new UserProfileDto(1L, "testUser", 4.8),
+			new UserProfileDto(1L, "testUser", "profileImage", 4.8),
 			"전자기기",
 			"아이폰 15",
 			1200L,
