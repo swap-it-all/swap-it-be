@@ -74,7 +74,7 @@ dependencies {
 
     // test container
     testImplementation 'org.testcontainers:junit-jupiter:1.18.0'
-    testImplementation 'org.testcontainers:mysql:1.18.0'
+    testImplementation 'org.testcontainers:mysql:1.17.1'
 }
 
 // .env 파일 읽기
@@ -174,8 +174,20 @@ openapi3 {
     outputDirectory = 'build/resources/main/static/docs'
 }
 
+task cleanDocsFolder(type: Delete) {
+    delete "${openapi3.outputDirectory}"
+}
+
+task cleanSnippetsFolder(type: Delete) {
+    delete "build/generated-snippets"
+}
+
 tasks.whenTaskAdded { task ->
+    if (task.name == 'test') {
+        task.dependsOn(cleanSnippetsFolder)
+    }
     if (task.name == 'openapi3') {
+        task.dependsOn(cleanDocsFolder)
         task.dependsOn(test)
     }
     if (task.name == 'addSecurityToOpenApi') {
