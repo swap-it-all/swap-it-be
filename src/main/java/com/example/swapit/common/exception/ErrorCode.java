@@ -20,6 +20,9 @@ public enum ErrorCode {
 	USER_NOT_FOUND(HttpStatus.NOT_FOUND, "회원을 찾을 수 없습니다."),
 	UNAUTHORIZED_ACCESS(HttpStatus.FORBIDDEN, "권한이 없습니다."),
 
+	// fcm error
+	FCM_TOKEN_INVALID(HttpStatus.BAD_REQUEST, "FCM 토큰이 잘못되었습니다."),
+
 	// goods error
 	GOOD_NOT_FOUND(HttpStatus.NOT_FOUND, "물건을 찾을 수 없습니다."),
 	MISSING_CURSOR_CREATEDAT(HttpStatus.BAD_REQUEST, "최신순에는 createdAt 필드값 입력이 필수입니다."),
