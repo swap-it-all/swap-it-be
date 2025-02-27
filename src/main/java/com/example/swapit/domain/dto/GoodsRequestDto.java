@@ -24,15 +24,16 @@ public class GoodsRequestDto {
 	@Positive(message = "가격은 0보다 커야 합니다.")
 	private Long price;
 
-	@NotBlank(message = "상품 상태(quality)는 필수 입력 값입니다.")
+	@NotBlank(message = "상품 상태는 필수 입력 값입니다.")
 	private String quality;
 
 	@NotNull(message = "카테고리는 필수 입력 값입니다.")
 	private Long categoryId;
 
+	@NotBlank(message = "거래 희망 장소는 필수 입력 값입니다.")
 	private String placeName;
 
-	@NotBlank(message = "상품 설명(content)은 필수 입력 값입니다.")
+	@NotBlank(message = "상품 설명은 필수 입력 값입니다.")
 	private String content;
 
 	public Goods toEntity(Users user, Categories category) {
