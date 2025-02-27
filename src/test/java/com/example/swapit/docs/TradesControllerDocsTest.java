@@ -46,13 +46,12 @@ public class TradesControllerDocsTest extends RestDocsTest {
 		doNothing().when(tradesService).requestTrade(any(TradesRequestDto.class));
 
 		ObjectMapper objectMapper = new ObjectMapper();
-		String requestBody = objectMapper.writeValueAsString(dto);
 
 		// When & Then
 		mockMvc.perform(post("/api/user/swap/request")
 				.header("Authorization", token)
 				.contentType(MediaType.APPLICATION_JSON)
-				.content(requestBody))
+				.content(objectMapper.writeValueAsString(dto)))
 			.andExpect(status().isOk())
 			.andDo(document("swap-request",
 				preprocessRequest(prettyPrint()),
@@ -109,6 +108,102 @@ public class TradesControllerDocsTest extends RestDocsTest {
 	}
 
 	@Test
+	@DisplayName("거래 수락 성공")
+	void acceptTradeSuccess() throws Exception {
+		// Given
+		Long tradeId = 1L;
+		doNothing().when(tradesService).acceptTrade(tradeId);
+
+		// When & Then
+		mockMvc.perform(patch("/api/user/swap/accept/{tradesId}", tradeId)
+				.header("Authorization", "Bearer valid_token")
+				.contentType(MediaType.APPLICATION_JSON))
+			.andExpect(status().isOk())
+			.andDo(document("accept-swap",
+				preprocessRequest(prettyPrint()),
+				preprocessResponse(prettyPrint()),
+				resource(ResourceSnippetParameters.builder()
+					.tag("Swap")
+					.description("스왑 요청을 수락하는 API")
+					.pathParameters(
+						parameterWithName("tradesId").description("수락할 스왑 ID")
+					)
+					.responseFields(
+						fieldWithPath("success").type(JsonFieldType.BOOLEAN).description("요청 성공 여부"),
+						fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지"),
+						fieldWithPath("results").type(JsonFieldType.OBJECT).description("응답 결과 데이터").optional()
+					)
+					.responseSchema(Schema.schema("ApiResponse"))
+					.build()
+				)
+			));
+	}
+
+	@Test
+	@DisplayName("거래 거절 성공")
+	void rejectTradeSuccess() throws Exception {
+		// Given
+		Long tradeId = 1L;
+		doNothing().when(tradesService).acceptTrade(tradeId);
+
+		// When & Then
+		mockMvc.perform(patch("/api/user/swap/reject/{tradesId}", tradeId)
+				.header("Authorization", "Bearer valid_token")
+				.contentType(MediaType.APPLICATION_JSON))
+			.andExpect(status().isOk())
+			.andDo(document("reject-swap",
+				preprocessRequest(prettyPrint()),
+				preprocessResponse(prettyPrint()),
+				resource(ResourceSnippetParameters.builder()
+					.tag("Swap")
+					.description("스왑 요청을 거절하는 API")
+					.pathParameters(
+						parameterWithName("tradesId").description("거절할 스왑 ID")
+					)
+					.responseFields(
+						fieldWithPath("success").type(JsonFieldType.BOOLEAN).description("요청 성공 여부"),
+						fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지"),
+						fieldWithPath("results").type(JsonFieldType.OBJECT).description("응답 결과 데이터").optional()
+					)
+					.responseSchema(Schema.schema("ApiResponse"))
+					.build()
+				)
+			));
+	}
+
+	@Test
+	@DisplayName("거래 완료 성공")
+	void completeTradeSuccess() throws Exception {
+		// Given
+		Long tradeId = 1L;
+		doNothing().when(tradesService).acceptTrade(tradeId);
+
+		// When & Then
+		mockMvc.perform(patch("/api/user/swap/complete/{tradesId}", tradeId)
+				.header("Authorization", "Bearer valid_token")
+				.contentType(MediaType.APPLICATION_JSON))
+			.andExpect(status().isOk())
+			.andDo(document("complete-swap",
+				preprocessRequest(prettyPrint()),
+				preprocessResponse(prettyPrint()),
+				resource(ResourceSnippetParameters.builder()
+					.tag("Swap")
+					.description("스왑을 완료하는 API")
+					.pathParameters(
+						parameterWithName("tradesId").description("완료할 스왑 ID")
+					)
+					.responseFields(
+						fieldWithPath("success").type(JsonFieldType.BOOLEAN).description("요청 성공 여부"),
+						fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지"),
+						fieldWithPath("results").type(JsonFieldType.OBJECT).description("응답 결과 데이터").optional()
+					)
+					.responseSchema(Schema.schema("ApiResponse"))
+					.build()
+				)
+			));
+	}
+
+	@Test
 	@DisplayName("스왑 목록의 내 물건 목록 조회 성공")
 	void getSwapMyGoods() throws Exception {
 		// given
@@ -136,7 +231,7 @@ public class TradesControllerDocsTest extends RestDocsTest {
 			.andExpect(jsonPath("$.results.goodsList").isArray())
 			.andDo(document("get-swap-my-goods",
 				preprocessRequest(prettyPrint()),
-				preprocessResponse(prettyPrint()),
+				preprocessResponse(new CustomDatePreprocessor()),
 				resource(ResourceSnippetParameters.builder()
 					.tag("Swap")
 					.description("스왑 목록에서 내 물건 목록을 조회하는 API")
@@ -155,7 +250,7 @@ public class TradesControllerDocsTest extends RestDocsTest {
 						fieldWithPath("results.goodsList[].viewCount").type(JsonFieldType.NUMBER).description("조회수"),
 						fieldWithPath("results.goodsList[].requestCount").type(JsonFieldType.NUMBER)
 							.description("스왑 요청 수"),
-						fieldWithPath("results.goodsList[].createdAt").type(JsonFieldType.ARRAY).description("등록 시간")
+						fieldWithPath("results.goodsList[].createdAt").type(JsonFieldType.STRING).description("등록 시간")
 					)
 					.responseSchema(Schema.schema("ApiResponse<TradesGoodsListResponseDto<MyGoodsDto>>"))
 					.build()
@@ -190,7 +285,7 @@ public class TradesControllerDocsTest extends RestDocsTest {
 			.andExpect(jsonPath("$.results.goodsList").isArray())
 			.andDo(document("get-swap-my-goods-request",
 				preprocessRequest(prettyPrint()),
-				preprocessResponse(prettyPrint()),
+				preprocessResponse(new CustomDatePreprocessor()),
 				resource(ResourceSnippetParameters.builder()
 					.tag("Swap")
 					.description("내 물건에 스왑 요청 받은 물건 목록을 조회하는 API")
@@ -206,7 +301,7 @@ public class TradesControllerDocsTest extends RestDocsTest {
 						fieldWithPath("results.goodsList[].placeName").type(JsonFieldType.STRING).description("물건 위치"),
 						fieldWithPath("results.goodsList[].photoUrl").type(JsonFieldType.STRING)
 							.description("물건 이미지 URL"),
-						fieldWithPath("results.goodsList[].createdAt").type(JsonFieldType.ARRAY).description("등록 시간")
+						fieldWithPath("results.goodsList[].createdAt").type(JsonFieldType.STRING).description("등록 시간")
 					)
 					.responseSchema(Schema.schema("ApiResponse<TradesGoodsListResponseDto<ReceivedRequestDto>>"))
 					.build()
