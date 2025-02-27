@@ -13,6 +13,7 @@ import lombok.Getter;
 public class UserProfileDto {
 	private Long userId;
 	private String nickname;
+	private String profileImageUrl;
 	private Double userRating;
 
 	public static UserProfileDto of(Users user) {
@@ -20,6 +21,7 @@ public class UserProfileDto {
 		return UserProfileDto.builder()
 			.userId(user.getUsersId())
 			.nickname(user.getNickname())
+			.profileImageUrl(user.getProfileImageUrl())
 			.userRating(0.0)
 			.build();
 	}
