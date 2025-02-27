@@ -41,29 +41,17 @@ public class CustomDatePreprocessor implements OperationPreprocessor {
 		// results 노드가 존재하면 처리
 		JsonNode resultsNode = rootNode.get("results");
 		if (resultsNode != null) {
-			// 처리할 배열 필드 이름들을 리스트로 정의
-			List<String> listFieldNames = Arrays.asList("goodsList", "chatRoomList", "chatList");
-			for (String fieldName : listFieldNames) {
-				JsonNode arrayNode = resultsNode.get(fieldName);
-				if (arrayNode != null && arrayNode.isArray()) {
-					for (JsonNode itemNode : arrayNode) {
-						JsonNode createdAtNode = itemNode.get("createdAt");
-						if (createdAtNode != null && createdAtNode.isArray() && createdAtNode.size() == 7) {
-							int year = createdAtNode.get(0).asInt();
-							int month = createdAtNode.get(1).asInt();
-							int day = createdAtNode.get(2).asInt();
-							int hour = createdAtNode.get(3).asInt();
-							int minute = createdAtNode.get(4).asInt();
-							int second = createdAtNode.get(5).asInt();
-							int nano = createdAtNode.get(6).asInt();
-
-							// ISO-8601 형식의 문자열로 변환
-							String isoDate = String.format("%04d-%02d-%02dT%02d:%02d:%02d.%09d",
-								year, month, day, hour, minute, second, nano);
-
-							// 기존 createdAt 배열 대신 ISO 문자열로 교체
-							((ObjectNode)itemNode).put("createdAt", isoDate);
+			// 처리할 필드 이름들을 리스트로 정의
+			List<String> fieldNames = Arrays.asList("goodsList", "chatRoomList", "chatList");
+			for (String fieldName : fieldNames) {
+				JsonNode node = resultsNode.get(fieldName);
+				if (node != null) {
+					if (node.isArray()) {
+						for (JsonNode itemNode : node) {
+							processCreatedAtField(itemNode);
 						}
+					} else if (node.isObject()) {
+						processCreatedAtField(node);
 					}
 				}
 			}
@@ -85,5 +73,24 @@ public class CustomDatePreprocessor implements OperationPreprocessor {
 			response.getHeaders(),        // 기존 헤더
 			newContentBytes
 		);
+	}
+
+	// createdAt 필드를 처리하는 메서드
+	private void processCreatedAtField(JsonNode itemNode) {
+		JsonNode createdAtNode = itemNode.get("createdAt");
+		if (createdAtNode != null && createdAtNode.isArray() && createdAtNode.size() == 7) {
+			int year = createdAtNode.get(0).asInt();
+			int month = createdAtNode.get(1).asInt();
+			int day = createdAtNode.get(2).asInt();
+			int hour = createdAtNode.get(3).asInt();
+			int minute = createdAtNode.get(4).asInt();
+			int second = createdAtNode.get(5).asInt();
+			int nano = createdAtNode.get(6).asInt();
+
+			// ISO-8601 형식의 문자열로 변환
+			String isoDate = String.format("%04d-%02d-%02dT%02d:%02d:%02d.%09d",
+				year, month, day, hour, minute, second, nano);
+			((ObjectNode)itemNode).put("createdAt", isoDate);
+		}
 	}
 }
