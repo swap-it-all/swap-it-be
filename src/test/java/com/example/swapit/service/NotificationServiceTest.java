@@ -54,7 +54,8 @@ class NotificationServiceTest {
 		Notifications mockNotification = Notifications.builder()
 			.id(1L)
 			.user(mockUser)
-			.message("Test Notification")
+			.title("title")
+			.body("Test Notification")
 			.url("/test-url")
 			.isRead(false)
 			.type(NotificationType.REQUESTED)
@@ -71,7 +72,7 @@ class NotificationServiceTest {
 
 		// then
 		assertThat(notifications).hasSize(1);
-		assertThat(notifications.get(0).getMessage()).isEqualTo("Test Notification");
+		assertThat(notifications.get(0).getBody()).isEqualTo("Test Notification");
 		verify(notificationRepository, times(1)).findByUserAndReadNotOrderByCreatedAtDesc(mockUser);
 
 	}
@@ -83,7 +84,8 @@ class NotificationServiceTest {
 		Notifications mockNotification = Notifications.builder()
 			.id(1L)
 			.user(mockUser)
-			.message("Test Notification")
+			.title("title")
+			.body("Test Notification")
 			.url("/test-url")
 			.isRead(false)
 			.build();
