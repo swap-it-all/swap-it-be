@@ -23,6 +23,7 @@ import com.example.swapit.domain.dto.GoodsRequestDto;
 import com.example.swapit.repository.CategoriesRepository;
 import com.example.swapit.repository.GoodsImagesRepository;
 import com.example.swapit.repository.GoodsRepository;
+import com.example.swapit.repository.ReviewRepository;
 
 @ExtendWith(MockitoExtension.class)
 class GoodServiceTest {
@@ -38,6 +39,9 @@ class GoodServiceTest {
 
 	@Mock
 	private CurrentUserService currentUserService;
+
+	@Mock
+	private ReviewRepository reviewRepository;
 
 	@InjectMocks
 	private GoodsServiceImpl goodsService;
@@ -77,6 +81,7 @@ class GoodServiceTest {
 	void getGoodDetail() {
 		// given
 		when(goodsRepository.findById(1L)).thenReturn(Optional.of(testGood));
+		when(reviewRepository.averageRatingByReviewee(testUser)).thenReturn(4.8);
 
 		// when
 		GoodsDetailDto result = goodsService.getGoodDetail(1L);
