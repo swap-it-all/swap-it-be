@@ -13,14 +13,15 @@ import lombok.Getter;
 public class UserProfileDto {
 	private Long userId;
 	private String nickname;
+	private String profileImageUrl;
 	private Double userRating;
 
-	public static UserProfileDto of(Users user) {
-		// todo : 평균 평점 필드 생성 후, 변경 필요.
+	public static UserProfileDto of(Users user, Double averageRating) {
 		return UserProfileDto.builder()
 			.userId(user.getUsersId())
 			.nickname(user.getNickname())
-			.userRating(0.0)
+			.profileImageUrl(user.getProfileImageUrl())
+			.userRating(averageRating)
 			.build();
 	}
 }

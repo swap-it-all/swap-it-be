@@ -28,10 +28,10 @@ public class GoodsDetailDto {
 	private List<GoodsImageDto> images;
 	private LocalDateTime createdAt;
 
-	public static GoodsDetailDto of(Goods good, List<GoodsImageDto> images) {
+	public static GoodsDetailDto of(Goods good, UserProfileDto userProfileDto, List<GoodsImageDto> images) {
 		return GoodsDetailDto.builder()
 			.goodsId(good.getId())
-			.user(UserProfileDto.of(good.getUser()))
+			.user(userProfileDto)
 			.category(good.getCategory().getName())
 			.title(good.getTitle())
 			.price(good.getPrice())

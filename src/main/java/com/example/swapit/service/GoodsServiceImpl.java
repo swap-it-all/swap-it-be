@@ -18,9 +18,11 @@ import com.example.swapit.domain.dto.GoodsDto;
 import com.example.swapit.domain.dto.GoodsImageDto;
 import com.example.swapit.domain.dto.GoodsListDto;
 import com.example.swapit.domain.dto.GoodsRequestDto;
+import com.example.swapit.domain.dto.UserProfileDto;
 import com.example.swapit.repository.CategoriesRepository;
 import com.example.swapit.repository.GoodsImagesRepository;
 import com.example.swapit.repository.GoodsRepository;
+import com.example.swapit.repository.ReviewRepository;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -36,6 +38,7 @@ public class GoodsServiceImpl implements GoodsService {
 	private final CategoriesRepository categoriesRepository;
 	private final CurrentUserService currentUserService;
 	private final GoodsImagesRepository goodsImagesRepository;
+	private final ReviewRepository reviewRepository;
 	private final AwsS3Service awsS3Service;
 
 	private static final int size = 30;
@@ -92,6 +95,10 @@ public class GoodsServiceImpl implements GoodsService {
 		Goods good = goodsRepository.findById(goodsId)
 			.orElseThrow(() -> new CustomException(ErrorCode.GOOD_NOT_FOUND));
 
+		// 유저 프로필 생성
+		Double averageRating = reviewRepository.averageRatingByReviewee(good.getUser());
+		UserProfileDto userProfileDto = UserProfileDto.of(good.getUser(), averageRating);
+
 		// todo :  redis로 ip 제한 걸어서 30초 이내로 다시 요청할 때 변경 가능하도록 하능하게 하면 비기능 향상.
 		// 물건의 viewCount 증가 (새로고침할 때 viewCount가 무한히 증가됨. -> 이 부분은.)
 		good.incrementViewCount();
@@ -102,7 +109,7 @@ public class GoodsServiceImpl implements GoodsService {
 			.map(image -> new GoodsImageDto(image.getId(), awsS3Service.generatePreSignedImageUrl(image.getS3Key())))
 			.toList();
 
-		return GoodsDetailDto.of(good, photos);
+		return GoodsDetailDto.of(good, userProfileDto, photos);
 	}
 
 	@Override
