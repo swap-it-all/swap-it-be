@@ -40,7 +40,10 @@ public class Notifications extends BaseEntity {
 	private NotificationType type;
 
 	@Column(nullable = false, columnDefinition = "VARCHAR(255)")
-	private String message;
+	private String title;
+
+	@Column(nullable = false, columnDefinition = "VARCHAR(255)")
+	private String body;
 
 	@Column(nullable = false)
 	private String url;

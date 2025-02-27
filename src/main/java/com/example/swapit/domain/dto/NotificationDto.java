@@ -15,8 +15,9 @@ import lombok.Getter;
 public class NotificationDto {
 	private final Long notificationsId;
 	private final String type;
+	private final String title;
+	private final String body;
 	private final String url;
-	private final String message;
 	private final LocalDateTime createdAt;
 
 	public static NotificationDto of(Notifications noti) {
@@ -24,7 +25,8 @@ public class NotificationDto {
 			.notificationsId(noti.getId())
 			.type(noti.getType().toString())
 			.url(noti.getUrl())
-			.message(noti.getMessage())
+			.title(noti.getTitle())
+			.body(noti.getBody())
 			.createdAt(noti.getCreatedAt())
 			.build();
 	}
