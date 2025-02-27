@@ -14,3 +14,6 @@ cloud:
   aws:
     credentials:
       instance-profile: true  # IAM Role 사용
+
+firebase:
+  config-env: ${FIREBASE_CONFIG}
