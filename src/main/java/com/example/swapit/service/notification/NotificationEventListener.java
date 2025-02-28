@@ -1,11 +1,14 @@
 package com.example.swapit.service.notification;
 
+import java.util.Optional;
+
 import org.springframework.context.event.EventListener;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
 
 import com.example.swapit.common.exception.CustomException;
 import com.example.swapit.common.exception.ErrorCode;
+import com.example.swapit.domain.FcmToken;
 import com.example.swapit.domain.NotificationEvent;
 import com.example.swapit.domain.Notifications;
 import com.example.swapit.domain.Users;
@@ -52,9 +55,12 @@ public class NotificationEventListener {
 
 		// 앱이 백그라운드 상태일 때, FCM 알림 전송 (웹소켓 실패 or FCM 알림 필요)
 		if (!isWebsocketSent) {
-			fcmTokenRepository.findByUser(user).ifPresent(fcmToken -> {
-				fcmNotificationService.sendFcmNotification(fcmToken.getFcmToken(), noti);
-			});
+			Optional<FcmToken> optionalFcmToken = fcmTokenRepository.findByUser(user);
+			if (optionalFcmToken.isPresent()) {
+				fcmNotificationService.sendFcmNotification(optionalFcmToken.get().getFcmToken(), noti);
+			} else {
+				log.warn("[FCM알림 실패] 사용자 ID {} 에 대한 FCM 토큰이 존재하지 않음.", userId);
+			}
 		}
 	}
 }
