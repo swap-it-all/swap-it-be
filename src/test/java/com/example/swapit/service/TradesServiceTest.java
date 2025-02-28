@@ -24,15 +24,16 @@ import com.example.swapit.domain.GoodsImages;
 import com.example.swapit.domain.TradeStatus;
 import com.example.swapit.domain.Trades;
 import com.example.swapit.domain.Users;
-import com.example.swapit.domain.dto.TradesRequestDto;
 import com.example.swapit.domain.dto.trade.MyGoodsDto;
 import com.example.swapit.domain.dto.trade.MyRequestDto;
 import com.example.swapit.domain.dto.trade.ReceivedRequestDto;
 import com.example.swapit.domain.dto.trade.RequestGoodsImageDto;
 import com.example.swapit.domain.dto.trade.TradeCountProjection;
+import com.example.swapit.domain.dto.trade.TradesRequestDto;
 import com.example.swapit.repository.GoodsImagesRepository;
 import com.example.swapit.repository.GoodsRepository;
 import com.example.swapit.repository.TradesRepository;
+import com.example.swapit.service.notification.NotificationEventPublisher;
 
 @ExtendWith(MockitoExtension.class)
 public class TradesServiceTest {
