@@ -1,4 +1,4 @@
-package com.example.swapit.service;
+package com.example.swapit.service.notification;
 
 import static org.assertj.core.api.AssertionsForInterfaceTypes.*;
 import static org.mockito.BDDMockito.*;
@@ -20,7 +20,7 @@ import com.example.swapit.domain.Notifications;
 import com.example.swapit.domain.Users;
 import com.example.swapit.domain.dto.NotificationDto;
 import com.example.swapit.repository.NotificationRepository;
-import com.example.swapit.service.notification.NotificationServiceImpl;
+import com.example.swapit.service.CurrentUserService;
 
 class NotificationServiceTest {
 

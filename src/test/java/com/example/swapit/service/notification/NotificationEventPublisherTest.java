@@ -1,9 +1,10 @@
-package com.example.swapit.service;
+package com.example.swapit.service.notification;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
@@ -13,7 +14,6 @@ import org.springframework.context.ApplicationEventPublisher;
 
 import com.example.swapit.domain.NotificationEvent;
 import com.example.swapit.domain.NotificationType;
-import com.example.swapit.service.notification.NotificationEventPublisher;
 
 class NotificationEventPublisherTest {
 
@@ -29,6 +29,7 @@ class NotificationEventPublisherTest {
 	}
 
 	@Test
+	@DisplayName("알림발생(기본 url) - 성공")
 	void testPublishNotification_WithBasicUrl() {
 		// given
 		Long userId = 1L;
@@ -48,6 +49,7 @@ class NotificationEventPublisherTest {
 	}
 
 	@Test
+	@DisplayName("알림발생(동적 url) - 성공")
 	void testPublishNotification_WithDynamicUrl() {
 		// given
 		Long userId = 2L;
