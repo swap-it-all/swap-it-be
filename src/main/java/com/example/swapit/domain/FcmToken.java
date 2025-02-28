@@ -24,6 +24,7 @@ public class FcmToken extends BaseEntity {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Column(name = "fcm_tokens_id")
 	private Long id;
 
 	@OneToOne

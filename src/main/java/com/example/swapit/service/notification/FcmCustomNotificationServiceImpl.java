@@ -8,8 +8,10 @@ import org.springframework.stereotype.Service;
 
 import com.example.swapit.domain.Notifications;
 import com.google.firebase.FirebaseApp;
+import com.google.firebase.messaging.AndroidConfig;
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.Message;
+import com.google.firebase.messaging.Notification;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,15 +29,22 @@ public class FcmCustomNotificationServiceImpl implements FcmNotificationService 
 		FirebaseMessaging firebaseMessaging = FirebaseMessaging.getInstance(firebaseApp);
 
 		Map<String, String> data = new HashMap<>();
-		data.put("notificationId", noti.getId().toString());
+		data.put("notificationsId", noti.getId().toString());
 		data.put("type", noti.getType().toString());
-		data.put("title", noti.getTitle());
-		data.put("body", noti.getBody());
 		data.put("deeplink", noti.getDeeplink());
 
 		Message message = Message.builder()
 			.setToken(fcmToken)
+			.setNotification(
+				Notification.builder()
+					.setTitle(noti.getTitle())
+					.setBody(noti.getBody())
+					.build())
 			.putAllData(data)
+			.setAndroidConfig(
+				AndroidConfig.builder()
+					.setPriority(AndroidConfig.Priority.HIGH)
+					.build())
 			.build();
 
 		try {
