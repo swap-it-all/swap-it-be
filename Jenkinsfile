@@ -12,11 +12,14 @@ pipeline {
             }
         }
         stage('SwapIt Service Project Deploy') {
+            when {
+                branch 'develop'
+            }
             steps {
                 sshagent(credentials: ['aws-ssh-key']) {
                     sh '''
                         ssh -o StrictHostKeyChecking=no $AWS_IP_ADDRESS uptime
-                        scp /var/jenkins_home/workspace/swapit-pipeline/build/libs/swapit-0.0.1-SNAPSHOT.jar $AWS_IP_ADDRESS:/home/ubuntu/swap-it-be/build/libs
+                        scp $JENKINS_ROUTE $AWS_IP_ADDRESS:$AWS_ROUTE
                         ssh -T $AWS_IP_ADDRESS "export DB_URL=$DB_URL && \
                         export DB_USERNAME=$DB_USERNAME && \
                         export DB_PASSWORD=$DB_PASSWORD && \
