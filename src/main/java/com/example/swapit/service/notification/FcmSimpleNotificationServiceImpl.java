@@ -1,4 +1,4 @@
-package com.example.swapit.service;
+package com.example.swapit.service.notification;
 
 import org.springframework.stereotype.Service;
 
@@ -13,10 +13,15 @@ import com.google.firebase.messaging.Notification;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * Fcm 알림 메세지 전송 service
+ *  : (title-body)로 구성된 알림 전송됨.
+ */
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class FcmNotificationServiceImpl implements FcmNotificationService {
+public class FcmSimpleNotificationServiceImpl implements FcmNotificationService {
 
 	private final FirebaseApp firebaseApp;
 
@@ -36,7 +41,7 @@ public class FcmNotificationServiceImpl implements FcmNotificationService {
 		try {
 			firebaseMessaging.send(message);
 		} catch (Exception e) {
-			log.error("[FCM알림 전송실패] Firebase Messaging 실패 : {}", e.getMessage());
+			log.error("[FCM알림LOG 전송실패] Firebase Messaging 실패 : {}", e.getMessage());
 			throw new CustomException(ErrorCode.FIREBASE_MESSAGE_ERROR);
 		}
 	}
