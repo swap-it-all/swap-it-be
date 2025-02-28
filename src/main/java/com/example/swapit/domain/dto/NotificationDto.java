@@ -17,14 +17,14 @@ public class NotificationDto {
 	private final String type;
 	private final String title;
 	private final String body;
-	private final String url;
+	private final String deeplink;
 	private final LocalDateTime createdAt;
 
 	public static NotificationDto of(Notifications noti) {
 		return NotificationDto.builder()
 			.notificationsId(noti.getId())
 			.type(noti.getType().toString())
-			.url(noti.getUrl())
+			.deeplink(noti.getDeeplink())
 			.title(noti.getTitle())
 			.body(noti.getBody())
 			.createdAt(noti.getCreatedAt())

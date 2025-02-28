@@ -8,20 +8,20 @@ import lombok.Getter;
 public class NotificationEvent extends ApplicationEvent {
 	private final Long userId;
 	private final NotificationType type;
-	private final String url;
+	private final String deeplink;
 
 	public NotificationEvent(Object source, Long userId, NotificationType type) {
 		super(source);
 		this.userId = userId;
 		this.type = type;
-		this.url = type.getUrl();
+		this.deeplink = type.getDeeplink();
 	}
 
 	public NotificationEvent(Object source, Long userId, NotificationType type, Object... urlParams) {
 		super(source);
 		this.userId = userId;
 		this.type = type;
-		this.url = type.getUrl(urlParams);
+		this.deeplink = type.getDeeplink(urlParams);
 	}
 
 	public Notifications toEntity(Users user) {
@@ -30,7 +30,7 @@ public class NotificationEvent extends ApplicationEvent {
 			.type(type)
 			.title(type.getTitle())
 			.body(type.getBody())
-			.url(url)
+			.deeplink(deeplink)
 			.isRead(false)
 			.build();
 	}
