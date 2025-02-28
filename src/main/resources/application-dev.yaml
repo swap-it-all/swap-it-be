@@ -23,4 +23,4 @@ cloud:
       secret-key: ${AWS_S3_SECRET_KEY}
 
 firebase:
-  config-path: "classpath:firebase-admin.json"
+  config-path: firebase-admin.json
