@@ -3,8 +3,6 @@ package com.example.swapit.service.notification;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -29,14 +27,6 @@ class FcmNotificationServiceTest {
 
 	@InjectMocks
 	private FcmCustomNotificationServiceImpl fcmService;
-
-	@BeforeEach
-	void setUp() {
-	}
-
-	@AfterEach
-	void tearDown() {
-	}
 
 	@Test
 	@DisplayName("FCM알림 전송 - 성공")
