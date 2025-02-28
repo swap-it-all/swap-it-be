@@ -206,6 +206,7 @@ public class TradesServiceTest {
 		Trades trade = Trades.builder()
 			.id(1L)
 			.owner(target)
+			.requester(requester)
 			.targetGoods(targetGood)
 			.requestedGoods(requestedGood)
 			.status(TradeStatus.PENDING)
@@ -233,20 +234,32 @@ public class TradesServiceTest {
 		Users target = Users.builder()
 			.usersId(1L)
 			.build();
+		Users requester1 = Users.builder()
+			.usersId(2L)
+			.build();
+		Users requester2 = Users.builder()
+			.usersId(3L)
+			.build();
+		Users requester3 = Users.builder()
+			.usersId(4L)
+			.build();
 
 		// 1. 거래 리스트 (거래를 요청한 사용자 3명)
 		Trades acceptedTrade = Trades.builder()
 			.id(acceptedTradeId)
 			.owner(target)
+			.requester(requester1)
 			.targetGoods(targetGood)
 			.build();
 
 		Trades otherTrade1 = Trades.builder()
 			.id(2L)
+			.requester(requester2)
 			.targetGoods(targetGood)
 			.build();
 		Trades otherTrade2 = Trades.builder()
 			.id(3L)
+			.requester(requester3)
 			.targetGoods(targetGood)
 			.build();
 
@@ -265,7 +278,6 @@ public class TradesServiceTest {
 				.filter(
 					trade -> trade.getTargetGoods().equals(myTargetGood) && !trade.getId().equals(excludedTradeId))
 				.forEach(trade -> trade.setStatus(TradeStatus.REJECTED));
-
 			return null;
 		}).when(tradesRepository).rejectOtherTrades(targetGood, acceptedTradeId);
 
@@ -341,6 +353,7 @@ public class TradesServiceTest {
 			.owner(target)
 			.targetGoods(targetGood)
 			.requestedGoods(requestedGood)
+			.requester(requester)
 			.status(TradeStatus.PENDING)
 			.build();
 
