@@ -1,4 +1,4 @@
-package com.example.swapit.domain.dto;
+package com.example.swapit.domain.dto.trade;
 
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;

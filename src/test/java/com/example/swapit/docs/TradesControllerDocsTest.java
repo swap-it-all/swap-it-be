@@ -20,10 +20,10 @@ import org.springframework.restdocs.payload.JsonFieldType;
 import com.epages.restdocs.apispec.ResourceSnippetParameters;
 import com.epages.restdocs.apispec.Schema;
 import com.example.swapit.controller.TradesController;
-import com.example.swapit.domain.dto.TradesRequestDto;
 import com.example.swapit.domain.dto.trade.MyGoodsDto;
 import com.example.swapit.domain.dto.trade.MyRequestDto;
 import com.example.swapit.domain.dto.trade.ReceivedRequestDto;
+import com.example.swapit.domain.dto.trade.TradesRequestDto;
 import com.example.swapit.service.TradesServiceImpl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 

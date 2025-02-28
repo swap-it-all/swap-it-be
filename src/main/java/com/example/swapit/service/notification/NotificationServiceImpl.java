@@ -1,4 +1,4 @@
-package com.example.swapit.service;
+package com.example.swapit.service.notification;
 
 import java.util.List;
 
@@ -11,6 +11,7 @@ import com.example.swapit.domain.Notifications;
 import com.example.swapit.domain.Users;
 import com.example.swapit.domain.dto.NotificationDto;
 import com.example.swapit.repository.NotificationRepository;
+import com.example.swapit.service.CurrentUserService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -36,8 +37,7 @@ public class NotificationServiceImpl implements NotificationService {
 	public void notificationRead(Long notificationId) {
 		Notifications noti = notificationRepository.findById(notificationId)
 			.orElseThrow(() -> new CustomException(ErrorCode.NOTIFICATION_NOT_FOUND));
-
-		noti.updateToRead();
+		noti.setRead(true);
 		notificationRepository.save(noti);
 	}
 }

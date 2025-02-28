@@ -1,4 +1,4 @@
-package com.example.swapit.service;
+package com.example.swapit.service.notification;
 
 import org.springframework.context.event.EventListener;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -47,7 +47,7 @@ public class NotificationEventListener {
 			isWebsocketSent = true;
 		} catch (Exception e) {
 			// todo : 이상 없으면 이후에 로그 제거
-			log.info("[알림LOG] 알림 웹소켓 전송 실패 -> FCM으로 전송. {}", e.getMessage());
+			log.info("[WS알림LOG] 알림 웹소켓 전송 실패 -> FCM으로 전송. {}", e.getMessage());
 		}
 
 		// 앱이 백그라운드 상태일 때, FCM 알림 전송 (웹소켓 실패 or FCM 알림 필요)

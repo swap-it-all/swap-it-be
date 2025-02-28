@@ -10,11 +10,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.swapit.common.api.ApiResponse;
-import com.example.swapit.domain.dto.TradesRequestDto;
 import com.example.swapit.domain.dto.trade.MyGoodsDto;
 import com.example.swapit.domain.dto.trade.MyRequestDto;
 import com.example.swapit.domain.dto.trade.ReceivedRequestDto;
 import com.example.swapit.domain.dto.trade.TradesGoodsListResponseDto;
+import com.example.swapit.domain.dto.trade.TradesRequestDto;
 import com.example.swapit.service.TradesService;
 
 import jakarta.validation.Valid;

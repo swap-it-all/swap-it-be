@@ -20,6 +20,7 @@ import com.example.swapit.domain.Notifications;
 import com.example.swapit.domain.Users;
 import com.example.swapit.domain.dto.NotificationDto;
 import com.example.swapit.repository.NotificationRepository;
+import com.example.swapit.service.notification.NotificationServiceImpl;
 
 class NotificationServiceTest {
 
@@ -56,7 +57,7 @@ class NotificationServiceTest {
 			.user(mockUser)
 			.title("title")
 			.body("Test Notification")
-			.url("/test-url")
+			.deeplink("/test-url")
 			.isRead(false)
 			.type(NotificationType.REQUESTED)
 			.build();
@@ -86,7 +87,7 @@ class NotificationServiceTest {
 			.user(mockUser)
 			.title("title")
 			.body("Test Notification")
-			.url("/test-url")
+			.deeplink("/test-url")
 			.isRead(false)
 			.build();
 

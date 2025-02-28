@@ -13,6 +13,7 @@ import org.springframework.context.ApplicationEventPublisher;
 
 import com.example.swapit.domain.NotificationEvent;
 import com.example.swapit.domain.NotificationType;
+import com.example.swapit.service.notification.NotificationEventPublisher;
 
 class NotificationEventPublisherTest {
 

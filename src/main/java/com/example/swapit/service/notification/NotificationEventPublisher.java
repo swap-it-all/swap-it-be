@@ -1,4 +1,4 @@
-package com.example.swapit.service;
+package com.example.swapit.service.notification;
 
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
