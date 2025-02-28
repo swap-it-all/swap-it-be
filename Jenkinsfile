@@ -28,6 +28,7 @@ pipeline {
                         export MAIL_PASSWORD=$MAIL_PASSWORD && \
                         export MAIL_SEND_TO=$MAIL_SEND_TO && \
                         export S3_BUCKET_NAME=$S3_BUCKET_NAME && \
+                        export REDIS_HOST=$REDIS_HOST && \
                         bash ./deploy.sh"
                     '''
                 }
