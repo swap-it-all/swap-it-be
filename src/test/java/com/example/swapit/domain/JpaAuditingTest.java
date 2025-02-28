@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
+import com.example.swapit.config.TestFirebaseConfig;
 import com.example.swapit.repository.CategoriesRepository;
 import com.example.swapit.repository.GoodsRepository;
 import com.example.swapit.repository.UsersRepository;
@@ -14,7 +15,7 @@ import com.example.swapit.testcontainer.BaseIntegrationTest;
 
 import jakarta.transaction.Transactional;
 
-@SpringBootTest
+@SpringBootTest(classes = TestFirebaseConfig.class)
 @Transactional
 @ActiveProfiles("test")
 class JpaAuditingTest extends BaseIntegrationTest {
