@@ -40,20 +40,6 @@ public class AwsS3Config {
 	}
 
 	@Bean
-	@Profile("test")
-	public S3Client testS3Client(
-		@Value("${cloud.aws.credentials.access-key}") String accessKey,
-		@Value("${cloud.aws.credentials.secret-key}") String secretKey
-	) {
-		return S3Client.builder()
-			.region(Region.AP_NORTHEAST_2)
-			.credentialsProvider(StaticCredentialsProvider.create(
-				AwsBasicCredentials.create(accessKey, secretKey)
-			))
-			.build();
-	}
-
-	@Bean
 	@Profile("prd")
 	public S3Presigner prdS3Presigner() {
 		return S3Presigner.builder()
