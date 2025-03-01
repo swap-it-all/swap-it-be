@@ -10,8 +10,16 @@ spring:
       ddl-auto: update    # erd 안정화되면 "validate"로 변경 예정.
     open-in-view: false
 
+  data:
+    redis:
+      host: ${REDIS_HOST}
+
 cloud:
   aws:
+    s3:
+      bucket: ${S3_BUCKET_NAME}
+    stack:
+      auto: false
     credentials:
       instance-profile: true  # IAM Role 사용
 
