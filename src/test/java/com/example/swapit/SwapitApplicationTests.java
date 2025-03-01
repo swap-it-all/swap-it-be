@@ -8,7 +8,7 @@ import com.example.swapit.config.TestConfig;
 import com.example.swapit.testcontainer.BaseIntegrationTest;
 
 @SpringBootTest
-@Import(TestConfig.class)
+@Import({TestConfig.class})
 class SwapitApplicationTests extends BaseIntegrationTest {
 
 	@Test

@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.test.context.ActiveProfiles;
 
 import com.example.swapit.config.TestConfig;
 import com.example.swapit.repository.CategoriesRepository;
@@ -13,8 +14,12 @@ import com.example.swapit.repository.GoodsRepository;
 import com.example.swapit.repository.UsersRepository;
 import com.example.swapit.testcontainer.BaseIntegrationTest;
 
+import jakarta.transaction.Transactional;
+
 @SpringBootTest
-@Import(TestConfig.class)
+@Import({TestConfig.class})
+@Transactional
+@ActiveProfiles("test")
 class JpaAuditingTest extends BaseIntegrationTest {
 
 	@Autowired
