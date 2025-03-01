@@ -5,8 +5,9 @@ import static org.assertj.core.api.Assertions.*;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
+import org.springframework.context.annotation.Import;
 
+import com.example.swapit.config.TestConfig;
 import com.example.swapit.repository.CategoriesRepository;
 import com.example.swapit.repository.GoodsRepository;
 import com.example.swapit.repository.UsersRepository;
@@ -16,7 +17,7 @@ import jakarta.transaction.Transactional;
 
 @SpringBootTest
 @Transactional
-@ActiveProfiles("test")
+@Import(TestConfig.class)
 class JpaAuditingTest extends BaseIntegrationTest {
 
 	@Autowired

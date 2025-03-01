@@ -23,3 +23,8 @@ cloud:
       bucket: test-bucket
     stack:
       auto: false
+
+logging:
+  level:
+    com.example.swapit: debug
+    org.springframework.messaging: debug
