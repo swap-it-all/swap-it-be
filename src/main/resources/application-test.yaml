@@ -23,7 +23,3 @@ cloud:
       bucket: test-bucket
     stack:
       auto: false
-
-logging:
-  level:
-    org.springframework.beans.factory: TRACE
