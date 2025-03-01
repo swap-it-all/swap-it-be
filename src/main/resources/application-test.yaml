@@ -24,7 +24,9 @@ cloud:
     stack:
       auto: false
 
-logging:
-  level:
-    com.example.swapit: debug
-    org.springframework.messaging: debug
+  logging.level:
+    org:
+      springframework=DEBUG
+      springframework.beans.factory=DEBUG
+      springframework.context.annotation=DEBUG
+      springframework.boot=DEBUG
