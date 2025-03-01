@@ -19,17 +19,12 @@ import io.lettuce.core.SocketOptions;
 @Configuration
 public class RedisConfig {
 
-	@Value("${spring.data.redis.host}")
-	private String redisHost;
-
-	@Value("${spring.data.redis.port}")
-	private int redisPort;
-
-	@Value("${spring.data.redis.timeout}")
-	private int redisTimeout;
-
 	@Bean
-	public RedisConnectionFactory redisConnectionFactory() {
+	public RedisConnectionFactory redisConnectionFactory(
+		@Value("${spring.data.redis.host}") String redisHost,
+		@Value("${spring.data.redis.port}") int redisPort,
+		@Value("${spring.data.redis.timeout}") int redisTimeout
+	) {
 		RedisStandaloneConfiguration config = new RedisStandaloneConfiguration(redisHost, redisPort);
 
 		// Lettuce Client 설정 (SSL 및 타임아웃 적용)
@@ -45,9 +40,14 @@ public class RedisConfig {
 	}
 
 	@Bean
-	public RedisTemplate<String, Object> redisTemplate() {
+	public RedisTemplate<String, Object> redisTemplate(
+		@Value("${spring.data.redis.host}") String redisHost,
+		@Value("${spring.data.redis.port}") int redisPort,
+		@Value("${spring.data.redis.timeout}") int redisTimeout
+	) {
 		RedisTemplate<String, Object> template = new RedisTemplate<>();
-		template.setConnectionFactory(redisConnectionFactory());
+		template.setConnectionFactory(redisConnectionFactory(
+			redisHost, redisPort, redisTimeout));
 
 		// JSON 직렬화 설정
 		GenericJackson2JsonRedisSerializer serializer = new GenericJackson2JsonRedisSerializer();
