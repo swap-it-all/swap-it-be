@@ -2,11 +2,13 @@ package com.example.swapit;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 
 import com.example.swapit.config.TestFirebaseConfig;
 import com.example.swapit.testcontainer.BaseIntegrationTest;
 
-@SpringBootTest(classes = {SwapitApplication.class, TestFirebaseConfig.class})
+@SpringBootTest
+@Import(TestFirebaseConfig.class)
 class SwapitApplicationTests extends BaseIntegrationTest {
 
 	@Test

@@ -1,5 +1,6 @@
 package com.example.swapit.testcontainer;
 
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.DynamicPropertyRegistry;
@@ -16,11 +17,18 @@ public abstract class BaseIntegrationTest {
 	protected static final MySQLContainer<?> mysqlContainer = new MySQLContainer<>("mysql:8.0")
 		.withDatabaseName("test_db")
 		.withUsername("root")
-		.withPassword("root");
+		.withPassword("root")
+		.withEnv("wait_timeout", "28800") // mysql 세션 유지 시간 8시간
+		.withEnv("interactive_timeout", "28800");
 
 	@BeforeAll
 	static void beforeAll() {
-		mysqlContainer.start();  // 명시적으로 컨테이너 실행
+		mysqlContainer.start();
+	}
+
+	@AfterAll
+	static void afterAll() {
+		mysqlContainer.stop();
 	}
 
 	@DynamicPropertySource
