@@ -34,8 +34,12 @@ public class ChatRooms {
 	private Long id;
 
 	@ManyToOne
-	@JoinColumn(name = "goods_id", nullable = false)
-	private Goods goods;
+	@JoinColumn(name = "trades_id", nullable = false)
+	private Trades trade;
+
+	@ManyToOne
+	@JoinColumn(name = "target_goods_id", nullable = false)
+	private Goods targetGoods;
 
 	@ManyToOne
 	@JoinColumn(name = "owner_id", nullable = false)
@@ -49,10 +53,10 @@ public class ChatRooms {
 	@Column(name = "created_at", nullable = false, updatable = false)
 	private LocalDateTime createdAt;
 
-	@Builder
-	public ChatRooms(Goods goods, Users owner, Users requester) {
-		this.goods = goods;
-		this.owner = owner;
-		this.requester = requester;
+	public ChatRooms(Trades trade) {
+		this.trade = trade;
+		this.targetGoods = trade.getTargetGoods();
+		this.owner = trade.getOwner();
+		this.requester = trade.getRequester();
 	}
 }
