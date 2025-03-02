@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.swapit.common.api.ApiResponse;
 import com.example.swapit.domain.dto.NotificationDto;
-import com.example.swapit.service.NotificationService;
+import com.example.swapit.service.notification.NotificationService;
 
 import lombok.RequiredArgsConstructor;
 

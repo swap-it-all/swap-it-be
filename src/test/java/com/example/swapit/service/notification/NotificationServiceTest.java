@@ -1,4 +1,4 @@
-package com.example.swapit.service;
+package com.example.swapit.service.notification;
 
 import static org.assertj.core.api.AssertionsForInterfaceTypes.*;
 import static org.mockito.BDDMockito.*;
@@ -20,6 +20,7 @@ import com.example.swapit.domain.Notifications;
 import com.example.swapit.domain.Users;
 import com.example.swapit.domain.dto.NotificationDto;
 import com.example.swapit.repository.NotificationRepository;
+import com.example.swapit.service.CurrentUserService;
 
 class NotificationServiceTest {
 
@@ -54,8 +55,9 @@ class NotificationServiceTest {
 		Notifications mockNotification = Notifications.builder()
 			.id(1L)
 			.user(mockUser)
-			.message("Test Notification")
-			.url("/test-url")
+			.title("title")
+			.body("Test Notification")
+			.deeplink("/test-url")
 			.isRead(false)
 			.type(NotificationType.REQUESTED)
 			.build();
@@ -71,7 +73,7 @@ class NotificationServiceTest {
 
 		// then
 		assertThat(notifications).hasSize(1);
-		assertThat(notifications.get(0).getMessage()).isEqualTo("Test Notification");
+		assertThat(notifications.get(0).getBody()).isEqualTo("Test Notification");
 		verify(notificationRepository, times(1)).findByUserAndReadNotOrderByCreatedAtDesc(mockUser);
 
 	}
@@ -83,8 +85,9 @@ class NotificationServiceTest {
 		Notifications mockNotification = Notifications.builder()
 			.id(1L)
 			.user(mockUser)
-			.message("Test Notification")
-			.url("/test-url")
+			.title("title")
+			.body("Test Notification")
+			.deeplink("/test-url")
 			.isRead(false)
 			.build();
 

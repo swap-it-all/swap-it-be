@@ -16,6 +16,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Builder
@@ -40,16 +41,16 @@ public class Notifications extends BaseEntity {
 	private NotificationType type;
 
 	@Column(nullable = false, columnDefinition = "VARCHAR(255)")
-	private String message;
+	private String title;
+
+	@Column(nullable = false, columnDefinition = "VARCHAR(255)")
+	private String body;
 
 	@Column(nullable = false)
-	private String url;
+	private String deeplink;
 
 	@Builder.Default
+	@Setter
 	@Column(name = "is_read", nullable = false)
 	private boolean isRead = false;
-
-	public void updateToRead() {
-		this.isRead = true;
-	}
 }

@@ -15,15 +15,16 @@ import com.example.swapit.domain.NotificationType;
 import com.example.swapit.domain.TradeStatus;
 import com.example.swapit.domain.Trades;
 import com.example.swapit.domain.Users;
-import com.example.swapit.domain.dto.TradesRequestDto;
 import com.example.swapit.domain.dto.trade.MyGoodsDto;
 import com.example.swapit.domain.dto.trade.MyRequestDto;
 import com.example.swapit.domain.dto.trade.ReceivedRequestDto;
 import com.example.swapit.domain.dto.trade.RequestGoodsImageDto;
 import com.example.swapit.domain.dto.trade.TradeCountProjection;
+import com.example.swapit.domain.dto.trade.TradesRequestDto;
 import com.example.swapit.repository.GoodsImagesRepository;
 import com.example.swapit.repository.GoodsRepository;
 import com.example.swapit.repository.TradesRepository;
+import com.example.swapit.service.notification.NotificationEventPublisher;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -59,7 +60,7 @@ public class TradesServiceImpl implements TradesService {
 
 			// 알림 발생
 			notificationEventPublisher.publishNotification(
-				targetGoods.getUser().getUsersId(), NotificationType.REQUESTED);
+				targetGoods.getUser().getUsersId(), NotificationType.REQUESTED, targetGoods.getId());
 		} catch (DataIntegrityViolationException ex) {
 			throw new CustomException(ErrorCode.DUPLICATE_TRADE_REQUEST);
 		}
@@ -91,7 +92,7 @@ public class TradesServiceImpl implements TradesService {
 
 		// 알림 발생
 		notificationEventPublisher.publishNotification(
-			trades.getOwner().getUsersId(), NotificationType.ACCEPTED, trades.getTargetGoods().getId()
+			trades.getRequester().getUsersId(), NotificationType.ACCEPTED, trades.getTargetGoods().getId()
 		);
 	}
 
@@ -110,7 +111,7 @@ public class TradesServiceImpl implements TradesService {
 
 		// 알림 발생
 		notificationEventPublisher.publishNotification(
-			trades.getOwner().getUsersId(), NotificationType.REJECTED, trades.getTargetGoods().getId()
+			trades.getRequester().getUsersId(), NotificationType.REJECTED, trades.getTargetGoods().getId()
 		);
 	}
 
@@ -128,7 +129,15 @@ public class TradesServiceImpl implements TradesService {
 			throw new CustomException(ErrorCode.TRADE_UNAUTHORIZED);
 		}
 
+		// 거래 완료 처리
 		trade.setStatus(TradeStatus.COMPLETED);
+		tradesRepository.save(trade);
+
+		// 거래 상대방에게 알림 전송
+		Users recipient = (userId.equals(trade.getOwner().getUsersId())) ? trade.getRequester() : trade.getOwner();
+		notificationEventPublisher.publishNotification(
+			recipient.getUsersId(), NotificationType.COMPLETED
+		);
 	}
 
 	@Override

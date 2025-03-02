@@ -27,10 +27,10 @@ import com.example.swapit.common.api.ApiResponse;
 import com.example.swapit.common.exception.CustomException;
 import com.example.swapit.common.exception.ErrorCode;
 import com.example.swapit.common.exception.GlobalExceptionHandler;
-import com.example.swapit.domain.dto.TradesRequestDto;
 import com.example.swapit.domain.dto.trade.MyGoodsDto;
 import com.example.swapit.domain.dto.trade.MyRequestDto;
 import com.example.swapit.domain.dto.trade.ReceivedRequestDto;
+import com.example.swapit.domain.dto.trade.TradesRequestDto;
 import com.example.swapit.service.TradesService;
 
 @ExtendWith(MockitoExtension.class)

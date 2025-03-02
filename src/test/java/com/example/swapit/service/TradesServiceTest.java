@@ -24,15 +24,16 @@ import com.example.swapit.domain.GoodsImages;
 import com.example.swapit.domain.TradeStatus;
 import com.example.swapit.domain.Trades;
 import com.example.swapit.domain.Users;
-import com.example.swapit.domain.dto.TradesRequestDto;
 import com.example.swapit.domain.dto.trade.MyGoodsDto;
 import com.example.swapit.domain.dto.trade.MyRequestDto;
 import com.example.swapit.domain.dto.trade.ReceivedRequestDto;
 import com.example.swapit.domain.dto.trade.RequestGoodsImageDto;
 import com.example.swapit.domain.dto.trade.TradeCountProjection;
+import com.example.swapit.domain.dto.trade.TradesRequestDto;
 import com.example.swapit.repository.GoodsImagesRepository;
 import com.example.swapit.repository.GoodsRepository;
 import com.example.swapit.repository.TradesRepository;
+import com.example.swapit.service.notification.NotificationEventPublisher;
 
 @ExtendWith(MockitoExtension.class)
 public class TradesServiceTest {
@@ -205,6 +206,7 @@ public class TradesServiceTest {
 		Trades trade = Trades.builder()
 			.id(1L)
 			.owner(target)
+			.requester(requester)
 			.targetGoods(targetGood)
 			.requestedGoods(requestedGood)
 			.status(TradeStatus.PENDING)
@@ -232,20 +234,32 @@ public class TradesServiceTest {
 		Users target = Users.builder()
 			.usersId(1L)
 			.build();
+		Users requester1 = Users.builder()
+			.usersId(2L)
+			.build();
+		Users requester2 = Users.builder()
+			.usersId(3L)
+			.build();
+		Users requester3 = Users.builder()
+			.usersId(4L)
+			.build();
 
 		// 1. 거래 리스트 (거래를 요청한 사용자 3명)
 		Trades acceptedTrade = Trades.builder()
 			.id(acceptedTradeId)
 			.owner(target)
+			.requester(requester1)
 			.targetGoods(targetGood)
 			.build();
 
 		Trades otherTrade1 = Trades.builder()
 			.id(2L)
+			.requester(requester2)
 			.targetGoods(targetGood)
 			.build();
 		Trades otherTrade2 = Trades.builder()
 			.id(3L)
+			.requester(requester3)
 			.targetGoods(targetGood)
 			.build();
 
@@ -264,7 +278,6 @@ public class TradesServiceTest {
 				.filter(
 					trade -> trade.getTargetGoods().equals(myTargetGood) && !trade.getId().equals(excludedTradeId))
 				.forEach(trade -> trade.setStatus(TradeStatus.REJECTED));
-
 			return null;
 		}).when(tradesRepository).rejectOtherTrades(targetGood, acceptedTradeId);
 
@@ -340,6 +353,7 @@ public class TradesServiceTest {
 			.owner(target)
 			.targetGoods(targetGood)
 			.requestedGoods(requestedGood)
+			.requester(requester)
 			.status(TradeStatus.PENDING)
 			.build();
 
