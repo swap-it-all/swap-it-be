@@ -24,8 +24,9 @@ import com.example.swapit.controller.ChatController;
 import com.example.swapit.domain.ChatType;
 import com.example.swapit.domain.dto.ChatDto;
 import com.example.swapit.domain.dto.ChatListDto;
+import com.example.swapit.domain.dto.ChatRoomAddRequestFromGoodDto;
+import com.example.swapit.domain.dto.ChatRoomAddRequestFromTradeDto;
 import com.example.swapit.domain.dto.ChatRoomGoodsDto;
-import com.example.swapit.domain.dto.ChatRoomRequestDto;
 import com.example.swapit.domain.dto.ChatRoomResponseDto;
 import com.example.swapit.service.ChatServiceImpl;
 
@@ -39,11 +40,11 @@ public class ChatControllerDocsTest extends RestDocsTest {
 	}
 
 	@Test
-	@DisplayName("채팅방 생성 성공")
+	@DisplayName("물건 기반 채팅방 생성 성")
 	void getChatRoomsSuccess() throws Exception {
 		// Given
-		ChatRoomRequestDto dto = new ChatRoomRequestDto(1L, 1L);
-		doReturn(1L).when(chatService).addChatRoom(any(ChatRoomRequestDto.class));
+		ChatRoomAddRequestFromGoodDto dto = new ChatRoomAddRequestFromGoodDto(1L);
+		doReturn(1L).when(chatService).addChatRoomFromGood(any(ChatRoomAddRequestFromGoodDto.class));
 
 		// When & Then
 		mockMvc.perform(post("/api/user/chatroom")
@@ -56,17 +57,50 @@ public class ChatControllerDocsTest extends RestDocsTest {
 				preprocessResponse(prettyPrint()),
 				resource(ResourceSnippetParameters.builder()
 					.tag("Chat")
-					.description("채팅방을 생성하는 API")
+					.description("물건 기반으로 채팅방을 생성하는 API")
 					.requestFields(
-						fieldWithPath("goodsId").type(JsonFieldType.NUMBER).description("물건 ID"),
-						fieldWithPath("requesterId").type(JsonFieldType.NUMBER).description("채팅 시작 사용자 ID")
+						fieldWithPath("goodsId").type(JsonFieldType.NUMBER).description("물건 ID")
 					)
 					.responseFields(
 						fieldWithPath("success").type(JsonFieldType.BOOLEAN).description("요청 성공 여부"),
 						fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지"),
 						fieldWithPath("results").type(JsonFieldType.NUMBER).description("응답 결과 데이터")
 					)
-					.requestSchema(Schema.schema(" ChatRoomRequestDto"))
+					.requestSchema(Schema.schema(" ChatRoomAddRequestFromGoodDto"))
+					.responseSchema(Schema.schema("ApiResponse<Long>"))
+					.build()
+				)
+			));
+	}
+
+	@Test
+	@DisplayName("거래 기반 채팅방 생성 성공")
+	void addChatRoomWithTrade_Success() throws Exception {
+		// Given
+		ChatRoomAddRequestFromTradeDto dto = new ChatRoomAddRequestFromTradeDto(1L);
+		doReturn(1L).when(chatService).addChatRoomFromSwap(any(ChatRoomAddRequestFromTradeDto.class));
+
+		// When & Then
+		mockMvc.perform(post("/api/user/swap-chatroom")
+				.header("Authorization", "Bearer valid_token")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(dto)))
+			.andExpect(status().isOk())
+			.andDo(document("add-swap-chatroom",
+				preprocessRequest(prettyPrint()),
+				preprocessResponse(prettyPrint()),
+				resource(ResourceSnippetParameters.builder()
+					.tag("Chat")
+					.description("거래 기반으로 채팅방을 생성하는 API")
+					.requestFields(
+						fieldWithPath("tradesId").type(JsonFieldType.NUMBER).description("거래 ID")
+					)
+					.responseFields(
+						fieldWithPath("success").type(JsonFieldType.BOOLEAN).description("요청 성공 여부"),
+						fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지"),
+						fieldWithPath("results").type(JsonFieldType.NUMBER).description("응답 결과 데이터 (채팅방 ID)")
+					)
+					.requestSchema(Schema.schema("ChatRoomAddRequestFromTradeDto"))
 					.responseSchema(Schema.schema("ApiResponse<Long>"))
 					.build()
 				)

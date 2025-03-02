@@ -22,11 +22,13 @@ import com.example.swapit.domain.Chats;
 import com.example.swapit.domain.Goods;
 import com.example.swapit.domain.GoodsImages;
 import com.example.swapit.domain.GoodsQuality;
+import com.example.swapit.domain.Trades;
 import com.example.swapit.domain.Users;
 import com.example.swapit.domain.dto.ChatDto;
 import com.example.swapit.domain.dto.ChatListDto;
+import com.example.swapit.domain.dto.ChatRoomAddRequestFromGoodDto;
+import com.example.swapit.domain.dto.ChatRoomAddRequestFromTradeDto;
 import com.example.swapit.domain.dto.ChatRoomGoodsDto;
-import com.example.swapit.domain.dto.ChatRoomRequestDto;
 import com.example.swapit.domain.dto.ChatRoomResponseDto;
 import com.example.swapit.domain.dto.ChatStompRequestDto;
 import com.example.swapit.domain.dto.ChatStompResponseDto;
@@ -34,6 +36,7 @@ import com.example.swapit.repository.ChatRoomsRepository;
 import com.example.swapit.repository.ChatsRepository;
 import com.example.swapit.repository.GoodsImagesRepository;
 import com.example.swapit.repository.GoodsRepository;
+import com.example.swapit.repository.TradesRepository;
 import com.example.swapit.repository.UsersRepository;
 
 @ExtendWith(MockitoExtension.class)
@@ -61,16 +64,19 @@ class ChatServiceTest {
 	private AwsS3Service awsS3Service;
 
 	@Mock
+	private TradesRepository tradesRepository;
+
+	@Mock
 	private NotificationEventPublisher notificationEventPublisher;
 
 	@InjectMocks
 	private ChatServiceImpl chatService;
 
 	@Test
-	@DisplayName("채팅방 생성 테스트")
-	void addChatRoom() {
+	@DisplayName("물건 기반 채팅방 생성 테스트")
+	void addChatRoomFromGood() {
 		// given
-		ChatRoomRequestDto requestDto = new ChatRoomRequestDto(1L, 1L);
+		ChatRoomAddRequestFromGoodDto requestDto = new ChatRoomAddRequestFromGoodDto(1L);
 
 		Users requester = Users.builder()
 			.usersId(1L)
@@ -82,34 +88,73 @@ class ChatServiceTest {
 			.email("test@example.com")
 			.build();
 
-		Goods testGood = Goods.builder()
+		Goods targetGood = Goods.builder()
 			.title("test 물건")
 			.price(1000L)
 			.quality(GoodsQuality.NEW)
 			.content("싸게 드려요! 교환주세요!")
 			.user(owner)
 			.build();
+		when(goodsRepository.findById(1L)).thenReturn(Optional.of(targetGood));
+		when(usersRepository.findById(2L)).thenReturn(Optional.of(owner));
+		when(currentUserService.getCurrentUser()).thenReturn(requester);
 
-		ChatRooms chatRooms = ChatRooms.builder()
-			.goods(testGood)
+		Trades trade = new Trades(requester, targetGood);
+		doReturn(Optional.of(trade)).when(tradesRepository)
+			.findByRequesterAndTargetGoods(eq(requester), eq(targetGood));
+
+		ChatRooms chatRoom = ChatRooms.builder()
+			.trade(trade)
+			.targetGoods(targetGood)
 			.requester(requester)
 			.owner(owner)
 			.build();
-
-		when(goodsRepository.findById(any())).thenReturn(Optional.of(testGood));
-		when(usersRepository.findById(1L)).thenReturn(Optional.of(requester));
-		when(usersRepository.findById(2L)).thenReturn(Optional.of(owner));
-		when(chatRoomsRepository.save(any())).thenReturn(chatRooms);
+		when(chatRoomsRepository.save(any(ChatRooms.class))).thenReturn(chatRoom);
 
 		// when
-		chatService.addChatRoom(requestDto);
+		Long chatRoomId = chatService.addChatRoomFromGood(requestDto);
 
 		// then
-		verify(chatRoomsRepository, times(1)).save(any());
+		verify(chatRoomsRepository, times(1)).save(any(ChatRooms.class));
+		assertEquals(chatRoom.getTargetGoods(), targetGood);
+		assertEquals(chatRoom.getRequester(), requester);
+		assertEquals(chatRoom.getOwner(), owner);
+	}
 
-		assertEquals(chatRooms.getGoods(), testGood);
-		assertEquals(chatRooms.getRequester(), requester);
-		assertEquals(chatRooms.getOwner(), owner);
+	@Test
+	@DisplayName("거래 기반 채팅방 생성 테스트")
+	void addChatRoomFromSwap() {
+		// given
+		Long tradeId = 1L;
+
+		Users requester = Users.builder()
+			.usersId(1L)
+			.build();
+
+		Users owner = Users.builder()
+			.usersId(2L)
+			.build();
+
+		Goods targetGood = Goods.builder()
+			.user(owner)
+			.build();
+
+		Trades trade = new Trades(requester, targetGood);
+
+		ChatRooms chatRoom = new ChatRooms(trade);
+
+		ChatRoomAddRequestFromTradeDto dto = new ChatRoomAddRequestFromTradeDto(tradeId);
+
+		when(tradesRepository.findById(tradeId)).thenReturn(Optional.of(trade));
+		when(currentUserService.getCurrentUser()).thenReturn(requester);
+		when(chatRoomsRepository.findByTrade(trade)).thenReturn(Optional.empty());
+		when(chatRoomsRepository.save(any(ChatRooms.class))).thenReturn(chatRoom);
+
+		// when
+		Long chatRoomId = chatService.addChatRoomFromSwap(dto);
+
+		// then
+		verify(chatRoomsRepository, times(1)).save(any(ChatRooms.class));
 	}
 
 	@Test
@@ -284,7 +329,7 @@ class ChatServiceTest {
 
 		ChatRooms chatRooms = ChatRooms.builder()
 			.id(chatroomId)
-			.goods(goods)
+			.targetGoods(goods)
 			.build();
 
 		when(chatRoomsRepository.findById(chatroomId))
