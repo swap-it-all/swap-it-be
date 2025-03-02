@@ -49,9 +49,6 @@ public class TradesServiceImpl implements TradesService {
 		Goods targetGoods = goodsRepository.findById(tradesRequestDto.getTargetGoodsId())
 			.orElseThrow(() -> new CustomException(ErrorCode.GOOD_NOT_FOUND));
 
-		// todo : 기존에는 try-catch로 duplicte를 잡았는데, 이전에 생성된 trade를 활용할 수도 있기 때문에
-		//   		이 방식으로 변경. 만약 try-catch로 성능향상이 필요하다면 변경.
-
 		// 기존 'NONE'이 아닌 거래가 있는지 확인 -> DUPLICATE 예외 발생
 		boolean existingTradeExists = tradesRepository.existsByTargetGoodsAndStatusNot(targetGoods,
 			TradeStatus.NONE);
@@ -67,7 +64,6 @@ public class TradesServiceImpl implements TradesService {
 			trade = existingTrade.get();
 			trade.setStatus(TradeStatus.PENDING);
 			trade.setRequestedGoods(requestedGoods);
-			tradesRepository.save(trade);
 		} else {
 			// targetGoods의 PENDING 상태인 거래 개수가 한도 초과인지 확인.
 			long count = tradesRepository.countByTargetGoodsIdAndIsDeletedFalse(tradesRequestDto.getTargetGoodsId());
@@ -77,17 +73,17 @@ public class TradesServiceImpl implements TradesService {
 
 			// 거래 횟수 초과되지 않으면, trade 생성.
 			trade = new Trades(requestedGoods, targetGoods);
+		}
+
+		try {
 			tradesRepository.save(trade);
+		} catch (DataIntegrityViolationException e) {
+			throw new CustomException(ErrorCode.DUPLICATE_TRADE_REQUEST);
 		}
 
 		// 알림 발생
 		notificationEventPublisher.publishNotification(
 			targetGoods.getUser().getUsersId(), NotificationType.REQUESTED);
-		try {
-
-		} catch (DataIntegrityViolationException ex) {
-			throw new CustomException(ErrorCode.DUPLICATE_TRADE_REQUEST);
-		}
 	}
 
 	@Override
