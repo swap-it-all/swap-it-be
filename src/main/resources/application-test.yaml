@@ -23,10 +23,3 @@ cloud:
       bucket: test-bucket
     stack:
       auto: false
-
-  logging.level:
-    org:
-      springframework=DEBUG
-      springframework.beans.factory=DEBUG
-      springframework.context.annotation=DEBUG
-      springframework.boot=DEBUG
