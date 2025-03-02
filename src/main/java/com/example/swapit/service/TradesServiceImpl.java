@@ -2,6 +2,7 @@ package com.example.swapit.service;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.dao.DataIntegrityViolationException;
@@ -48,18 +49,42 @@ public class TradesServiceImpl implements TradesService {
 		Goods targetGoods = goodsRepository.findById(tradesRequestDto.getTargetGoodsId())
 			.orElseThrow(() -> new CustomException(ErrorCode.GOOD_NOT_FOUND));
 
-		long count = tradesRepository.countByTargetGoodsIdAndIsDeletedFalse(tradesRequestDto.getTargetGoodsId());
+		// todo : 기존에는 try-catch로 duplicte를 잡았는데, 이전에 생성된 trade를 활용할 수도 있기 때문에
+		//   		이 방식으로 변경. 만약 try-catch로 성능향상이 필요하다면 변경.
 
-		if (count >= MAX_REQUEST_COUNT) {
-			throw new CustomException(ErrorCode.MAXIMUM_TRADE_REQUEST);
+		// 기존 'NONE'이 아닌 거래가 있는지 확인 -> DUPLICATE 예외 발생
+		boolean existingTradeExists = tradesRepository.existsByTargetGoodsAndStatusNot(targetGoods,
+			TradeStatus.NONE);
+		if (existingTradeExists) {
+			throw new CustomException(ErrorCode.DUPLICATE_TRADE_REQUEST);
 		}
 
-		try {
-			tradesRepository.save(new Trades(requestedGoods, targetGoods));
+		// 기존 거래에서 상태가 NONE인 거래가 있으면, 상태값 변경과 requestedGood만 추가
+		Optional<Trades> existingTrade = tradesRepository.findByRequesterAndTargetGoods(requestedGoods.getUser(),
+			targetGoods);
+		Trades trade;
+		if (existingTrade.isPresent()) {
+			trade = existingTrade.get();
+			trade.setStatus(TradeStatus.PENDING);
+			trade.setRequestedGoods(requestedGoods);
+			tradesRepository.save(trade);
+		} else {
+			// targetGoods의 PENDING 상태인 거래 개수가 한도 초과인지 확인.
+			long count = tradesRepository.countByTargetGoodsIdAndIsDeletedFalse(tradesRequestDto.getTargetGoodsId());
+			if (count >= MAX_REQUEST_COUNT) {
+				throw new CustomException(ErrorCode.MAXIMUM_TRADE_REQUEST);
+			}
 
-			// 알림 발생
-			notificationEventPublisher.publishNotification(
-				targetGoods.getUser().getUsersId(), NotificationType.REQUESTED);
+			// 거래 횟수 초과되지 않으면, trade 생성.
+			trade = new Trades(requestedGoods, targetGoods);
+			tradesRepository.save(trade);
+		}
+
+		// 알림 발생
+		notificationEventPublisher.publishNotification(
+			targetGoods.getUser().getUsersId(), NotificationType.REQUESTED);
+		try {
+
 		} catch (DataIntegrityViolationException ex) {
 			throw new CustomException(ErrorCode.DUPLICATE_TRADE_REQUEST);
 		}

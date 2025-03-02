@@ -1,16 +1,18 @@
 package com.example.swapit.repository;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
 import com.example.swapit.domain.Goods;
+import com.example.swapit.domain.TradeStatus;
 import com.example.swapit.domain.Trades;
+import com.example.swapit.domain.Users;
 import com.example.swapit.domain.dto.trade.RequestGoodsImageDto;
 import com.example.swapit.domain.dto.trade.TradeCountProjection;
-import com.example.swapit.domain.Users;
 
 import io.lettuce.core.dynamic.annotation.Param;
 
@@ -38,4 +40,7 @@ public interface TradesRepository extends JpaRepository<Trades, Long> {
 	@Query("SELECT t.requestedGoods FROM Trades t WHERE t.targetGoods.id = :goodsId")
 	List<Goods> findGoodsRequests(@Param("goodsId") Long goodsId);
 
+	Optional<Trades> findByRequesterAndTargetGoods(Users requester, Goods targetGoods);
+
+	boolean existsByTargetGoodsAndStatusNot(Goods targetGoods, TradeStatus status);
 }
