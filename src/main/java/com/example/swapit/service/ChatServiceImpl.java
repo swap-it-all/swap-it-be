@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.example.swapit.common.exception.CustomException;
 import com.example.swapit.common.exception.ErrorCode;
@@ -13,11 +14,13 @@ import com.example.swapit.domain.Chats;
 import com.example.swapit.domain.Goods;
 import com.example.swapit.domain.GoodsImages;
 import com.example.swapit.domain.NotificationType;
+import com.example.swapit.domain.Trades;
 import com.example.swapit.domain.Users;
 import com.example.swapit.domain.dto.ChatDto;
 import com.example.swapit.domain.dto.ChatListDto;
+import com.example.swapit.domain.dto.ChatRoomAddRequestFromGoodDto;
+import com.example.swapit.domain.dto.ChatRoomAddRequestFromTradeDto;
 import com.example.swapit.domain.dto.ChatRoomGoodsDto;
-import com.example.swapit.domain.dto.ChatRoomRequestDto;
 import com.example.swapit.domain.dto.ChatRoomResponseDto;
 import com.example.swapit.domain.dto.ChatStompRequestDto;
 import com.example.swapit.domain.dto.ChatStompResponseDto;
@@ -26,6 +29,7 @@ import com.example.swapit.repository.ChatRoomsRepository;
 import com.example.swapit.repository.ChatsRepository;
 import com.example.swapit.repository.GoodsImagesRepository;
 import com.example.swapit.repository.GoodsRepository;
+import com.example.swapit.repository.TradesRepository;
 import com.example.swapit.repository.UsersRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -36,6 +40,7 @@ public class ChatServiceImpl implements ChatService {
 
 	private final GoodsRepository goodsRepository;
 	private final UsersRepository usersRepository;
+	private final TradesRepository tradesRepository;
 	private final CurrentUserService currentUserService;
 	private final ChatRoomsRepository chatRoomsRepository;
 	private final ChatsRepository chatRepository;
@@ -46,17 +51,43 @@ public class ChatServiceImpl implements ChatService {
 	private static final int size = 30;
 
 	@Override
-	public Long addChatRoom(ChatRoomRequestDto chatRoomRequestDto) {
-		Goods goods = goodsRepository.findById(chatRoomRequestDto.getGoodsId())
+	@Transactional
+	public Long addChatRoomFromGood(ChatRoomAddRequestFromGoodDto chatRoomAddRequestFromGoodDto) {
+		Goods goods = goodsRepository.findById(chatRoomAddRequestFromGoodDto.getGoodsId())
 			.orElseThrow(() -> new CustomException(ErrorCode.GOOD_NOT_FOUND));
-		Users requester = usersRepository.findById(chatRoomRequestDto.getRequesterId())
-			.orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+		Users requester = currentUserService.getCurrentUser();
 		Users owner = usersRepository.findById(goods.getUser().getUsersId())
 			.orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
-		ChatRooms chatRooms = ChatRooms.builder().goods(goods).owner(owner).requester(requester).build();
+		// 먼저 거래 조회 및 생성
+		Trades trade = tradesRepository.findByRequesterAndTargetGoods(requester, goods)
+			.orElseGet(() -> tradesRepository.save(new Trades(requester, goods)));
 
-		return chatRoomsRepository.save(chatRooms).getId();
+		// 같은 채팅방이 있는지 존재 검증 후, 생성
+		ChatRooms chatroom = chatRoomsRepository.findByTrade(trade)
+			.orElseGet(() -> chatRoomsRepository.save(new ChatRooms(trade)));
+
+		return chatroom.getId();
+	}
+
+	@Override
+	@Transactional
+	public Long addChatRoomFromSwap(ChatRoomAddRequestFromTradeDto chatRoomAddRequestDto) {
+		Trades trade = tradesRepository.findById(chatRoomAddRequestDto.getTradesId())
+			.orElseThrow(() -> new CustomException(ErrorCode.TRADES_NOT_FOUND));
+
+		// 거래 관계자인지 검증
+		Users user = currentUserService.getCurrentUser();
+		Long userId = user.getUsersId();
+		if (!userId.equals(trade.getOwner().getUsersId()) && !userId.equals(trade.getRequester().getUsersId())) {
+			throw new CustomException(ErrorCode.TRADE_UNAUTHORIZED);
+		}
+
+		// 같은 채팅방이 있는지 존재 검증 후, 생성
+		ChatRooms chatroom = chatRoomsRepository.findByTrade(trade)
+			.orElseGet(() -> chatRoomsRepository.save(new ChatRooms(trade)));
+
+		return chatroom.getId();
 	}
 
 	@Override
@@ -159,7 +190,7 @@ public class ChatServiceImpl implements ChatService {
 	public ChatRoomGoodsDto getChatRoomGoods(Long chatroomId) {
 		ChatRooms chatRooms = chatRoomsRepository.findById(chatroomId)
 			.orElseThrow(() -> new CustomException(ErrorCode.CHATROOMS_NOT_FOUND));
-		Goods goods = chatRooms.getGoods();
+		Goods goods = chatRooms.getTargetGoods();
 		String firstImageUrl = goodsImagesRepository.findFirstByGoodOrderByIdAsc(goods)
 			.map(GoodsImages::getS3Key)
 			.map(awsS3Service::generatePreSignedImageUrl)
