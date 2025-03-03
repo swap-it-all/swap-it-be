@@ -5,6 +5,7 @@ import static com.epages.restdocs.apispec.ResourceDocumentation.*;
 import static org.mockito.BDDMockito.*;
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.*;
 import static org.springframework.restdocs.payload.PayloadDocumentation.*;
+import static org.springframework.restdocs.snippet.Attributes.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -96,7 +97,9 @@ public class NotificationControllerDocsTest extends RestDocsTest {
 					.tag("Notification")
 					.description("알림을 읽음 처리하는 API")
 					.pathParameters(
-						parameterWithName("notificationsId").description("읽음 처리할 알림 ID")
+						parameterWithName("notificationsId")
+							.description("읽음 처리할 알림 ID")
+							.attributes(key("type").value("Long"))
 					)
 					.responseFields(
 						fieldWithPath("success").type(JsonFieldType.BOOLEAN).description("요청 성공 여부"),
