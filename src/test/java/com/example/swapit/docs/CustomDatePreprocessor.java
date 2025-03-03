@@ -42,7 +42,7 @@ public class CustomDatePreprocessor implements OperationPreprocessor {
 		JsonNode resultsNode = rootNode.get("results");
 		if (resultsNode != null) {
 			// 처리할 필드 이름들을 리스트로 정의
-			List<String> fieldNames = Arrays.asList("goodsList", "chatRoomList", "chatList");
+			List<String> fieldNames = Arrays.asList("goodsList", "chatRoomList", "chatList", "notifications");
 			for (String fieldName : fieldNames) {
 				JsonNode node = resultsNode.get(fieldName);
 				if (node != null) {
