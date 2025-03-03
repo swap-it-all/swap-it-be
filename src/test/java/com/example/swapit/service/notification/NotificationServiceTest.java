@@ -18,7 +18,7 @@ import com.example.swapit.common.exception.ErrorCode;
 import com.example.swapit.domain.NotificationType;
 import com.example.swapit.domain.Notifications;
 import com.example.swapit.domain.Users;
-import com.example.swapit.domain.dto.NotificationDto;
+import com.example.swapit.domain.dto.NotificationListDto;
 import com.example.swapit.repository.NotificationRepository;
 import com.example.swapit.service.CurrentUserService;
 
@@ -69,11 +69,11 @@ class NotificationServiceTest {
 			.willReturn(mockNotifications);
 
 		// when
-		List<NotificationDto> notifications = notificationService.getMyNotifications();
+		NotificationListDto notifications = notificationService.getMyNotifications();
 
 		// then
-		assertThat(notifications).hasSize(1);
-		assertThat(notifications.get(0).getBody()).isEqualTo("Test Notification");
+		assertThat(notifications.getNotifications()).hasSize(1);
+		assertThat(notifications.getNotifications().get(0).getBody()).isEqualTo("Test Notification");
 		verify(notificationRepository, times(1)).findByUserAndReadNotOrderByCreatedAtDesc(mockUser);
 
 	}

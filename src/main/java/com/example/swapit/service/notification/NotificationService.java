@@ -1,11 +1,9 @@
 package com.example.swapit.service.notification;
 
-import java.util.List;
-
-import com.example.swapit.domain.dto.NotificationDto;
+import com.example.swapit.domain.dto.NotificationListDto;
 
 public interface NotificationService {
-	List<NotificationDto> getMyNotifications();
+	NotificationListDto getMyNotifications();
 
 	void notificationRead(Long notificationId);
 }
