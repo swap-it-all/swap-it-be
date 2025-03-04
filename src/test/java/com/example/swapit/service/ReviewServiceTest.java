@@ -6,6 +6,7 @@ import static org.mockito.Mockito.*;
 import java.util.List;
 import java.util.Optional;
 
+import com.example.swapit.domain.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -17,10 +18,6 @@ import org.springframework.dao.DataIntegrityViolationException;
 
 import com.example.swapit.common.exception.CustomException;
 import com.example.swapit.common.exception.ErrorCode;
-import com.example.swapit.domain.Reviews;
-import com.example.swapit.domain.TradeStatus;
-import com.example.swapit.domain.Trades;
-import com.example.swapit.domain.Users;
 import com.example.swapit.domain.dto.ReviewListDto;
 import com.example.swapit.domain.dto.ReviewRequestDto;
 import com.example.swapit.repository.ReviewRepository;
@@ -43,6 +40,8 @@ class ReviewServiceTest {
 
 	private Users writer;
 	private Users owner;
+	private Goods requestedGoods;
+	private Goods targetGoods;
 	private Trades completedTrade;
 	private Trades inProgressTrade;
 	private ReviewRequestDto reviewRequestDto;
@@ -53,17 +52,20 @@ class ReviewServiceTest {
 		writer = Users.builder().usersId(1L).build();
 		owner = Users.builder().usersId(2L).build();
 
+		requestedGoods = Goods.builder().user(writer).build();
+		targetGoods = Goods.builder().user(owner).build();
+
 		completedTrade = Trades.builder()
 			.id(1L)
-			.requester(writer)
-			.owner(owner)
+			.requestedGoods(requestedGoods)
+			.targetGoods(targetGoods)
 			.status(TradeStatus.COMPLETED) // 거래 완료 상태
 			.build();
 
 		inProgressTrade = Trades.builder()
 			.id(2L)
-			.requester(writer)
-			.owner(owner)
+			.requestedGoods(requestedGoods)
+			.targetGoods(targetGoods)
 			.status(TradeStatus.INPROGRESS) // 거래 진행 중 상태
 			.build();
 

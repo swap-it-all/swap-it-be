@@ -4,17 +4,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.example.swapit.domain.*;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import com.example.swapit.common.exception.CustomException;
 import com.example.swapit.common.exception.ErrorCode;
-import com.example.swapit.domain.Goods;
-import com.example.swapit.domain.GoodsImages;
-import com.example.swapit.domain.NotificationType;
-import com.example.swapit.domain.TradeStatus;
-import com.example.swapit.domain.Trades;
-import com.example.swapit.domain.Users;
 import com.example.swapit.domain.dto.trade.MyGoodsDto;
 import com.example.swapit.domain.dto.trade.MyRequestDto;
 import com.example.swapit.domain.dto.trade.ReceivedRequestDto;
@@ -81,7 +76,9 @@ public class TradesServiceImpl implements TradesService {
 			.orElseThrow(() -> new CustomException(ErrorCode.TRADES_NOT_FOUND));
 
 		// 거래 owner 인지 검증
-		if (!currentUserService.getCurrentUser().getUsersId().equals(trades.getOwner().getUsersId())) {
+		if (!currentUserService.getCurrentUser().getUsersId().equals(
+				trades.getTargetGoods().getUser().getUsersId())
+		) {
 			throw new CustomException(ErrorCode.TRADE_UNAUTHORIZED);
 		}
 
@@ -90,9 +87,17 @@ public class TradesServiceImpl implements TradesService {
 		// 같은 물건의 다른 거래 요청을 모두 REJECTED로 변경
 		tradesRepository.rejectOtherTrades(trades.getTargetGoods(), tradesId);
 
+		// 각 물건 상태를 reserved로 변경
+		trades.getTargetGoods().setGoodsTradeStatus(GoodsTradeStatus.RESERVED);
+		goodsRepository.save(trades.getTargetGoods());
+		trades.getRequestedGoods().setGoodsTradeStatus(GoodsTradeStatus.RESERVED);
+		goodsRepository.save(trades.getRequestedGoods());
+
 		// 알림 발생
 		notificationEventPublisher.publishNotification(
-			trades.getRequester().getUsersId(), NotificationType.ACCEPTED, trades.getTargetGoods().getId()
+			trades.getRequestedGoods().getUser().getUsersId(),
+			NotificationType.ACCEPTED,
+			trades.getTargetGoods().getId()
 		);
 	}
 
@@ -103,7 +108,7 @@ public class TradesServiceImpl implements TradesService {
 			.orElseThrow(() -> new CustomException(ErrorCode.TRADES_NOT_FOUND));
 
 		// 거래 owner 인지 검증
-		if (!currentUserService.getCurrentUser().getUsersId().equals(trades.getOwner().getUsersId())) {
+		if (!currentUserService.getCurrentUser().getUsersId().equals(trades.getTargetGoods().getUser().getUsersId())) {
 			throw new CustomException(ErrorCode.TRADE_UNAUTHORIZED);
 		}
 
@@ -111,7 +116,9 @@ public class TradesServiceImpl implements TradesService {
 
 		// 알림 발생
 		notificationEventPublisher.publishNotification(
-			trades.getRequester().getUsersId(), NotificationType.REJECTED, trades.getTargetGoods().getId()
+			trades.getRequestedGoods().getUser().getUsersId(),
+				NotificationType.REJECTED,
+				trades.getTargetGoods().getId()
 		);
 	}
 
@@ -125,7 +132,8 @@ public class TradesServiceImpl implements TradesService {
 		Long userId = user.getUsersId();
 
 		// 거래 관계자인지 확인
-		if (!userId.equals(trade.getOwner().getUsersId()) && !userId.equals(trade.getRequester().getUsersId())) {
+		if (!userId.equals(trade.getTargetGoods().getUser().getUsersId())
+				&& !userId.equals(trade.getRequestedGoods().getUser().getUsersId())) {
 			throw new CustomException(ErrorCode.TRADE_UNAUTHORIZED);
 		}
 
@@ -133,8 +141,15 @@ public class TradesServiceImpl implements TradesService {
 		trade.setStatus(TradeStatus.COMPLETED);
 		tradesRepository.save(trade);
 
+		// 각 물건 거래 상태도 sold out 처리
+		trade.getTargetGoods().setGoodsTradeStatus(GoodsTradeStatus.SOLDOUT);
+		goodsRepository.save(trade.getTargetGoods());
+		trade.getRequestedGoods().setGoodsTradeStatus(GoodsTradeStatus.SOLDOUT);
+		goodsRepository.save(trade.getRequestedGoods());
+
 		// 거래 상대방에게 알림 전송
-		Users recipient = (userId.equals(trade.getOwner().getUsersId())) ? trade.getRequester() : trade.getOwner();
+		Users recipient = (userId.equals(trade.getTargetGoods().getUser().getUsersId()))
+				? trade.getRequestedGoods().getUser() : trade.getTargetGoods().getUser();
 		notificationEventPublisher.publishNotification(
 			recipient.getUsersId(), NotificationType.COMPLETED
 		);
