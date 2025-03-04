@@ -50,19 +50,9 @@ public class Trades extends BaseEntity {
 	@JoinColumn(name = "target_goods_id", nullable = false)
 	private Goods targetGoods;
 
-	@ManyToOne
-	@JoinColumn(name = "requester_id", nullable = false)
-	private Users requester;
-
-	@ManyToOne
-	@JoinColumn(name = "owner_id", nullable = false)
-	private Users owner;
-
 	public Trades(Goods requestedGoods, Goods targetGoods) {
 		this.status = TradeStatus.PENDING;
 		this.requestedGoods = requestedGoods;
 		this.targetGoods = targetGoods;
-		this.requester = requestedGoods.getUser();
-		this.owner = targetGoods.getUser();
 	}
 }
