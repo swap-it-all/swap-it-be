@@ -49,8 +49,14 @@ public class UsersServiceImpl implements UsersService {
 			.map(ReviewDto::of)
 			.toList();
 
+		// 프로필 이미지가 내부 저장 이미지일 때, 처리
+		String profileImageUrl = user.getProfileImageUrl();
+		if(profileImageUrl.startsWith("images/users/")) {
+			profileImageUrl = awsS3Service.generatePreSignedImageUrl(profileImageUrl);
+		}
+
 		return new UserPageDto(
-			user.getUsersId(), user.getNickname(), user.getEmail(), user.getProfileImageUrl(),
+			user.getUsersId(), user.getNickname(), user.getEmail(), profileImageUrl,
 			totalUsersGoodsCount, completedSwapCount, averageRating, reviews
 		);
 	}
@@ -68,8 +74,14 @@ public class UsersServiceImpl implements UsersService {
 			.map(ReviewDto::of)
 			.toList();
 
+		// 프로필 이미지가 내부 저장 이미지일 때, 처리
+		String profileImageUrl = user.getProfileImageUrl();
+		if(profileImageUrl.startsWith("images/users/")) {
+			profileImageUrl = awsS3Service.generatePreSignedImageUrl(profileImageUrl);
+		}
+
 		return new UserPageDto(
-			user.getUsersId(), user.getNickname(), null, user.getProfileImageUrl(),
+			user.getUsersId(), user.getNickname(), null, profileImageUrl,
 			totalUsersGoodsCount, completedSwapCount, averageRating, reviews
 		);
 	}
