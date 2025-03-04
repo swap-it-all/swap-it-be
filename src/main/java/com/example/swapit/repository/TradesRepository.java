@@ -17,9 +17,9 @@ import com.example.swapit.domain.dto.trade.TradeCountProjection;
 import io.lettuce.core.dynamic.annotation.Param;
 
 public interface TradesRepository extends JpaRepository<Trades, Long> {
-	long countByTargetGoodsIdAndIsDeletedFalse(Long goodsId);
+	long countByTargetGoodsIdAndStatus(Long goodsId, TradeStatus status);
 
-	@Query("SELECT COUNT(*) FROM Trades t WHERE ( t.owner = :user OR t.requester = :user ) AND t.status = 'COMPLETED'")
+	@Query("SELECT COUNT(*) FROM Trades t WHERE ( t.targetGoods.user = :user OR t.requestedGoods.user = :user ) AND t.status = 'COMPLETED'")
 	long countByCompletedTradesByUser(@Param("user") Users user);
 
 	@Modifying
@@ -34,13 +34,13 @@ public interface TradesRepository extends JpaRepository<Trades, Long> {
 
 	@Query("SELECT new com.example.swapit.domain.dto.trade.RequestGoodsImageDto(t.targetGoods, t.requestedGoods) "
 		+ "FROM Trades t "
-		+ "WHERE t.requester.id = :userId")
+		+ "WHERE t.requestedGoods.user.id = :userId")
 	List<RequestGoodsImageDto> findMyRequests(@Param("userId") Long userId);
 
 	@Query("SELECT t.requestedGoods FROM Trades t WHERE t.targetGoods.id = :goodsId")
 	List<Goods> findGoodsRequests(@Param("goodsId") Long goodsId);
 
-	Optional<Trades> findByRequesterAndTargetGoods(Users requester, Goods targetGoods);
+	Optional<Trades> findByRequestedGoodsUserAndTargetGoods(Users requester, Goods targetGoods);
 
 	boolean existsByTargetGoodsAndStatusNot(Goods targetGoods, TradeStatus status);
 }

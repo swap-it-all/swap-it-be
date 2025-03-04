@@ -88,6 +88,14 @@ class ChatServiceTest {
 			.email("test@example.com")
 			.build();
 
+		Goods requestedGood = Goods.builder()
+			.title("물건")
+			.price(2000L)
+			.quality(GoodsQuality.NEW)
+			.content("싸게 드려요!")
+			.user(owner)
+			.build();
+
 		Goods targetGood = Goods.builder()
 			.title("test 물건")
 			.price(1000L)
@@ -99,16 +107,11 @@ class ChatServiceTest {
 		when(usersRepository.findById(2L)).thenReturn(Optional.of(owner));
 		when(currentUserService.getCurrentUser()).thenReturn(requester);
 
-		Trades trade = new Trades(requester, targetGood);
+		Trades trade = new Trades(requestedGood, targetGood);
 		doReturn(Optional.of(trade)).when(tradesRepository)
-			.findByRequesterAndTargetGoods(eq(requester), eq(targetGood));
+			.findByRequestedGoodsUserAndTargetGoods(eq(requester), eq(targetGood));
 
-		ChatRooms chatRoom = ChatRooms.builder()
-			.trade(trade)
-			.targetGoods(targetGood)
-			.requester(requester)
-			.owner(owner)
-			.build();
+		ChatRooms chatRoom = new ChatRooms(targetGood, requester, trade);
 		when(chatRoomsRepository.save(any(ChatRooms.class))).thenReturn(chatRoom);
 
 		// when
@@ -116,9 +119,9 @@ class ChatServiceTest {
 
 		// then
 		verify(chatRoomsRepository, times(1)).save(any(ChatRooms.class));
-		assertEquals(chatRoom.getTargetGoods(), targetGood);
-		assertEquals(chatRoom.getRequester(), requester);
-		assertEquals(chatRoom.getOwner(), owner);
+		assertEquals(chatRoom.getGoods(), targetGood);
+		assertEquals(chatRoom.getInviter(), requester);
+		assertEquals(chatRoom.getTrade(), trade);
 	}
 
 	@Test
@@ -139,9 +142,13 @@ class ChatServiceTest {
 			.user(owner)
 			.build();
 
-		Trades trade = new Trades(requester, targetGood);
+		Goods requestedGood = Goods.builder()
+			.user(requester)
+			.build();
 
-		ChatRooms chatRoom = new ChatRooms(trade);
+		Trades trade = new Trades(requestedGood, targetGood);
+
+		ChatRooms chatRoom = new ChatRooms(targetGood, requester, trade);
 
 		ChatRoomAddRequestFromTradeDto dto = new ChatRoomAddRequestFromTradeDto(tradeId);
 
@@ -175,8 +182,7 @@ class ChatServiceTest {
 			.build();
 
 		ChatRooms chatRoom = ChatRooms.builder()
-			.requester(currentUser)
-			.owner(owner)
+			.inviter(currentUser)
 			.build();
 
 		ReflectionTestUtils.setField(chatRoom, "id", 1L);
@@ -283,8 +289,7 @@ class ChatServiceTest {
 
 		ChatRooms chatRoom = ChatRooms.builder()
 			.id(chatroomId)
-			.requester(sender)
-			.owner(receiver)
+			.inviter(sender)
 			.build();
 
 		when(chatRoomsRepository.findById(chatroomId)).thenReturn(Optional.of(chatRoom));
@@ -329,7 +334,7 @@ class ChatServiceTest {
 
 		ChatRooms chatRooms = ChatRooms.builder()
 			.id(chatroomId)
-			.targetGoods(goods)
+			.goods(goods)
 			.build();
 
 		when(chatRoomsRepository.findById(chatroomId))

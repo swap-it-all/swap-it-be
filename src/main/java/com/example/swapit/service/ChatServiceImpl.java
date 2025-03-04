@@ -55,17 +55,11 @@ public class ChatServiceImpl implements ChatService {
 	public Long addChatRoomFromGood(ChatRoomAddRequestFromGoodDto chatRoomAddRequestFromGoodDto) {
 		Goods goods = goodsRepository.findById(chatRoomAddRequestFromGoodDto.getGoodsId())
 			.orElseThrow(() -> new CustomException(ErrorCode.GOOD_NOT_FOUND));
-		Users requester = currentUserService.getCurrentUser();
-		Users owner = usersRepository.findById(goods.getUser().getUsersId())
-			.orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
-
-		// 먼저 거래 조회 및 생성
-		Trades trade = tradesRepository.findByRequesterAndTargetGoods(requester, goods)
-			.orElseGet(() -> tradesRepository.save(new Trades(requester, goods)));
+		Users inviter = currentUserService.getCurrentUser();
 
 		// 같은 채팅방이 있는지 존재 검증 후, 생성
-		ChatRooms chatroom = chatRoomsRepository.findByTrade(trade)
-			.orElseGet(() -> chatRoomsRepository.save(new ChatRooms(trade)));
+		ChatRooms chatroom = chatRoomsRepository.findByGoodsAndInviter(goods, inviter)
+			.orElseGet(() -> chatRoomsRepository.save(new ChatRooms(goods, inviter, null)));
 
 		return chatroom.getId();
 	}
@@ -77,15 +71,18 @@ public class ChatServiceImpl implements ChatService {
 			.orElseThrow(() -> new CustomException(ErrorCode.TRADES_NOT_FOUND));
 
 		// 거래 관계자인지 검증
-		Users user = currentUserService.getCurrentUser();
-		Long userId = user.getUsersId();
-		if (!userId.equals(trade.getOwner().getUsersId()) && !userId.equals(trade.getRequester().getUsersId())) {
+		Users inviter = currentUserService.getCurrentUser();
+		Long inviterId = inviter.getUsersId();
+		if (!inviterId.equals(trade.getTargetGoods().getUser().getUsersId()) && !inviterId.equals(
+			trade.getRequestedGoods().getUser().getUsersId())) {
 			throw new CustomException(ErrorCode.TRADE_UNAUTHORIZED);
 		}
 
+		Goods goods = trade.getTargetGoods();
+
 		// 같은 채팅방이 있는지 존재 검증 후, 생성
-		ChatRooms chatroom = chatRoomsRepository.findByTrade(trade)
-			.orElseGet(() -> chatRoomsRepository.save(new ChatRooms(trade)));
+		ChatRooms chatroom = chatRoomsRepository.findByGoodsAndInviter(goods, inviter)
+			.orElseGet(() -> chatRoomsRepository.save(new ChatRooms(goods, inviter, trade)));
 
 		return chatroom.getId();
 	}
@@ -93,28 +90,27 @@ public class ChatServiceImpl implements ChatService {
 	@Override
 	public List<ChatRoomResponseDto> getChatRoomList() {
 		Long loggedInUserId = currentUserService.getCurrentUser().getUsersId();
-		List<ChatRooms> chatRooms = chatRoomsRepository.findByUsersId(loggedInUserId);
+		List<ChatRooms> chatRooms = chatRoomsRepository.findMyChatRooms(loggedInUserId);
+		// List<ChatRooms> chatRooms = chatRoomsRepository.findByUsersId(loggedInUserId);
 
 		return chatRooms.stream()
 			.filter(chatRoom -> chatRepository.countByChatRoomsId(chatRoom.getId()) > 0)
 			.map(chatRoom -> {
 				Long counterpartId =
-					chatRoom.getOwner().getUsersId().equals(loggedInUserId) ? chatRoom.getRequester().getUsersId() :
-						chatRoom.getOwner().getUsersId();
+					chatRoom.getInviter().getUsersId().equals(loggedInUserId)
+						? chatRoom.getGoods().getUser().getUsersId() : chatRoom.getInviter().getUsersId();
 
 				Users counterpart = usersRepository.findById(counterpartId)
 					.orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
-				String recentChat = chatRepository.findTopByChatRoomsIdOrderByCreatedAtDesc(chatRoom.getId())
-					.getContent();
-				LocalDateTime createdAt = chatRoom.getCreatedAt();
+				Chats chats = chatRepository.findTopByChatRoomsIdOrderByCreatedAtDesc(chatRoom.getId());
 
 				return ChatRoomResponseDto.builder()
 					.usersId(counterpartId)
 					.profileImageUrl(counterpart.getProfileImageUrl())
 					.nickname(counterpart.getNickname())
-					.recentChat(recentChat)
-					.createdAt(createdAt)
+					.recentChat(chats.getContent())
+					.recentChatTime(chats.getCreatedAt())
 					.build();
 			}).toList();
 	}
@@ -179,7 +175,7 @@ public class ChatServiceImpl implements ChatService {
 
 		// 알림 발행
 		Long receiverId =
-			(chatRooms.getRequester().getUsersId().equals(userId)) ? userId : chatRooms.getOwner().getUsersId();
+			(chatRooms.getInviter().getUsersId().equals(userId)) ? userId : chatRooms.getGoods().getUser().getUsersId();
 		notificationEventPublisher.publishNotification(
 			receiverId, NotificationType.CHAT, chatRooms.getId()
 		);
@@ -190,7 +186,7 @@ public class ChatServiceImpl implements ChatService {
 	public ChatRoomGoodsDto getChatRoomGoods(Long chatroomId) {
 		ChatRooms chatRooms = chatRoomsRepository.findById(chatroomId)
 			.orElseThrow(() -> new CustomException(ErrorCode.CHATROOMS_NOT_FOUND));
-		Goods goods = chatRooms.getTargetGoods();
+		Goods goods = chatRooms.getGoods();
 		String firstImageUrl = goodsImagesRepository.findFirstByGoodOrderByIdAsc(goods)
 			.map(GoodsImages::getS3Key)
 			.map(awsS3Service::generatePreSignedImageUrl)

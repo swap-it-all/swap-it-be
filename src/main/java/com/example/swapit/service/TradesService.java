@@ -8,7 +8,7 @@ import com.example.swapit.domain.dto.trade.MyRequestDto;
 import com.example.swapit.domain.dto.trade.ReceivedRequestDto;
 
 public interface TradesService {
-	void requestTrade(TradesRequestDto tradesRequestDto);
+	Long requestTrade(TradesRequestDto tradesRequestDto);
 
 	void cancelTrade(Long tradesId);
 

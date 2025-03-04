@@ -61,7 +61,7 @@ public class TradesControllerTest {
 		doNothing().when(tradesService).requestTrade(any(TradesRequestDto.class));
 
 		// When
-		ApiResponse<Void> response = tradesController.requestTrade(dto);
+		ApiResponse<Long> response = tradesController.requestTrade(dto);
 
 		// Then
 		verify(tradesService, times(1)).requestTrade(dto);

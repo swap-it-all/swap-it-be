@@ -27,9 +27,8 @@ public class TradesController {
 	private final TradesService tradesService;
 
 	@PostMapping("/request")
-	public ApiResponse<Void> requestTrade(@RequestBody @Valid TradesRequestDto tradesRequestDto) {
-		tradesService.requestTrade(tradesRequestDto);
-		return ApiResponse.success();
+	public ApiResponse<Long> requestTrade(@RequestBody @Valid TradesRequestDto tradesRequestDto) {
+		return ApiResponse.success(tradesService.requestTrade(tradesRequestDto));
 	}
 
 	@DeleteMapping("/cancel/{tradesId}")
