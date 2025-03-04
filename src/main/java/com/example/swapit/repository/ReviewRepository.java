@@ -14,7 +14,7 @@ public interface ReviewRepository extends JpaRepository<Reviews, Long> {
 	List<Reviews> findAllByRevieweeOrderByCreatedAtDesc(Users reviewee);
 
 	@Query("SELECT COALESCE(AVG(r.rating), 0.0) FROM Reviews r WHERE r.reviewee = :reviewee")
-	Double averageRatingByReviewee(@Param("reviewee") Users reviewee);
+	double averageRatingByReviewee(@Param("reviewee") Users reviewee);
 
-	List<Reviews> findTop3ByRevieweeOrderByCreatedAtDesc(Users reviewee);
+	List<Reviews> findTop5ByRevieweeOrderByCreatedAtDesc(Users reviewee);
 }
