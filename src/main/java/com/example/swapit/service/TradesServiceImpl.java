@@ -85,6 +85,12 @@ public class TradesServiceImpl implements TradesService {
 		// 같은 물건의 다른 거래 요청을 모두 REJECTED로 변경
 		tradesRepository.rejectOtherTrades(trades.getTargetGoods(), tradesId);
 
+		// 각 물건 상태를 reserved로 변경
+		trades.getTargetGoods().setGoodsTradeStatus(GoodsTradeStatus.RESERVED);
+		goodsRepository.save(trades.getTargetGoods());
+		trades.getRequestedGoods().setGoodsTradeStatus(GoodsTradeStatus.RESERVED);
+		goodsRepository.save(trades.getRequestedGoods());
+
 		// 알림 발생
 		notificationEventPublisher.publishNotification(
 			trades.getRequesterId(), NotificationType.ACCEPTED, trades.getTargetGoods().getId()
@@ -130,7 +136,9 @@ public class TradesServiceImpl implements TradesService {
 
 		// 각 물건 거래 상태도 sold out 처리
 		trade.getTargetGoods().setGoodsTradeStatus(GoodsTradeStatus.SOLDOUT);
+		goodsRepository.save(trade.getTargetGoods());
 		trade.getRequestedGoods().setGoodsTradeStatus(GoodsTradeStatus.SOLDOUT);
+		goodsRepository.save(trade.getRequestedGoods());
 
 		// 거래 상대방에게 알림 전송
 		Users recipient = (userId.equals(trade.getOwnerId()))
