@@ -30,7 +30,7 @@ public interface TradesRepository extends JpaRepository<Trades, Long> {
 
 	@Query("SELECT new com.example.swapit.domain.dto.trade.RequestGoodsImageDto(t.targetGoods, t.requestedGoods) "
 		+ "FROM Trades t "
-		+ "WHERE t.requesterId = :userId")
+		+ "WHERE t.requestedGoods.user.usersId = :userId")
 	List<RequestGoodsImageDto> findMyRequests(@Param("userId") Long userId);
 
 	@Query("SELECT t.requestedGoods FROM Trades t WHERE t.targetGoods.id = :goodsId")

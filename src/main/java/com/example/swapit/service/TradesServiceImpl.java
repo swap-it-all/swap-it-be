@@ -76,7 +76,9 @@ public class TradesServiceImpl implements TradesService {
 			.orElseThrow(() -> new CustomException(ErrorCode.TRADES_NOT_FOUND));
 
 		// 거래 owner 인지 검증
-		if (!currentUserService.getCurrentUser().getUsersId().equals(trades.getTargetGoods().getUser().getUsersId())) {
+		if (!currentUserService.getCurrentUser().getUsersId().equals(
+				trades.getTargetGoods().getUser().getUsersId())
+		) {
 			throw new CustomException(ErrorCode.TRADE_UNAUTHORIZED);
 		}
 
@@ -93,7 +95,9 @@ public class TradesServiceImpl implements TradesService {
 
 		// 알림 발생
 		notificationEventPublisher.publishNotification(
-			trades.getRequesterId(), NotificationType.ACCEPTED, trades.getTargetGoods().getId()
+			trades.getRequestedGoods().getUser().getUsersId(),
+			NotificationType.ACCEPTED,
+			trades.getTargetGoods().getId()
 		);
 	}
 
@@ -104,7 +108,7 @@ public class TradesServiceImpl implements TradesService {
 			.orElseThrow(() -> new CustomException(ErrorCode.TRADES_NOT_FOUND));
 
 		// 거래 owner 인지 검증
-		if (!currentUserService.getCurrentUser().getUsersId().equals(trades.getOwnerId())) {
+		if (!currentUserService.getCurrentUser().getUsersId().equals(trades.getTargetGoods().getUser().getUsersId())) {
 			throw new CustomException(ErrorCode.TRADE_UNAUTHORIZED);
 		}
 
@@ -112,7 +116,9 @@ public class TradesServiceImpl implements TradesService {
 
 		// 알림 발생
 		notificationEventPublisher.publishNotification(
-			trades.getRequesterId(), NotificationType.REJECTED, trades.getTargetGoods().getId()
+			trades.getRequestedGoods().getUser().getUsersId(),
+				NotificationType.REJECTED,
+				trades.getTargetGoods().getId()
 		);
 	}
 
@@ -126,7 +132,8 @@ public class TradesServiceImpl implements TradesService {
 		Long userId = user.getUsersId();
 
 		// 거래 관계자인지 확인
-		if (!userId.equals(trade.getOwnerId()) && !userId.equals(trade.getRequesterId())) {
+		if (!userId.equals(trade.getTargetGoods().getUser().getUsersId())
+				&& !userId.equals(trade.getRequestedGoods().getUser().getUsersId())) {
 			throw new CustomException(ErrorCode.TRADE_UNAUTHORIZED);
 		}
 
@@ -141,7 +148,7 @@ public class TradesServiceImpl implements TradesService {
 		goodsRepository.save(trade.getRequestedGoods());
 
 		// 거래 상대방에게 알림 전송
-		Users recipient = (userId.equals(trade.getOwnerId()))
+		Users recipient = (userId.equals(trade.getTargetGoods().getUser().getUsersId()))
 				? trade.getRequestedGoods().getUser() : trade.getTargetGoods().getUser();
 		notificationEventPublisher.publishNotification(
 			recipient.getUsersId(), NotificationType.COMPLETED

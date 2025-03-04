@@ -42,9 +42,9 @@ public class ReviewServiceImpl implements ReviewService {
 
 		// 리뷰 대상자 설정
 		Users reviewee;
-		if (trade.getRequesterId().equals(writer.getUsersId())) {
+		if (trade.getRequestedGoods().getUser().getUsersId().equals(writer.getUsersId())) {
 			reviewee = trade.getTargetGoods().getUser(); // 요청자가 작성하는 경우 -> 리뷰 대상자는 소유자
-		} else if (trade.getOwnerId().equals(writer.getUsersId())) {
+		} else if (trade.getTargetGoods().getUser().getUsersId().equals(writer.getUsersId())) {
 			reviewee = trade.getRequestedGoods().getUser(); // 소유자가 작성하는 경우 -> 리뷰 대상자는 요청자
 		} else {
 			throw new CustomException(ErrorCode.REVIEW_UNAUTHORIZED_ACCESS);

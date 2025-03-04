@@ -51,12 +51,6 @@ public class Trades extends BaseEntity {
 	@JoinColumn(name = "target_goods_id", nullable = false)
 	private Goods targetGoods;
 
-	@Formula("(SELECT g.users_id FROM goods g WHERE g.goods_id = requested_goods_id)")
-	private Long requesterId;
-
-	@Formula("(SELECT g.users_id FROM goods g WHERE g.goods_id = target_goods_id)")
-	private Long ownerId;
-
 	public Trades(Goods requestedGoods, Goods targetGoods) {
 		this.status = TradeStatus.PENDING;
 		this.requestedGoods = requestedGoods;
