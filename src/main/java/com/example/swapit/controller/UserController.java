@@ -31,7 +31,7 @@ public class UserController {
 	}
 
 	@GetMapping("/all/auth/info/{userId}")
-	public ApiResponse<UserPageDto> getAnotherUserPage(@PathVariable Long userId) {
+	public ApiResponse<UserPageDto> getAnotherUserPage(@PathVariable("userId") Long userId) {
 		return ApiResponse.success(usersService.getAnotherUserPage(userId));
 	}
 

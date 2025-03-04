@@ -20,7 +20,6 @@ import com.example.swapit.domain.dto.UserPageDto;
 import com.example.swapit.repository.FcmTokenRepository;
 import com.example.swapit.repository.GoodsRepository;
 import com.example.swapit.repository.ReviewRepository;
-import com.example.swapit.repository.TradesRepository;
 import com.example.swapit.repository.UsersRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -33,7 +32,6 @@ public class UsersServiceImpl implements UsersService {
 	private final AwsS3Service awsS3Service;
 	private final UsersRepository usersRepository;
 	private final GoodsRepository goodsRepository;
-	private final TradesRepository tradesRepository;
 	private final ReviewRepository reviewRepository;
 	private final FcmTokenRepository fcmTokenRepository;
 

@@ -3,6 +3,7 @@ package com.example.swapit.domain;
 import java.util.ArrayList;
 import java.util.List;
 
+import lombok.*;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
@@ -20,11 +21,6 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -61,6 +57,7 @@ public class Goods extends BaseEntity {
 	@Column(columnDefinition = "TEXT", nullable = false)
 	private String content;
 
+	@Setter
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false)
 	private GoodsTradeStatus goodsTradeStatus;
