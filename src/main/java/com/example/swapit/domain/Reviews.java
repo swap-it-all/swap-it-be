@@ -21,7 +21,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@SQLDelete(sql = "UPDATE reviews SET is_deleted = true WHERE trades_id = ?")
+@SQLDelete(sql = "UPDATE reviews SET is_deleted = true WHERE reviews_id = ?")
 @Table(
 	name = "reviews",
 	uniqueConstraints = {

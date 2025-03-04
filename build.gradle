@@ -75,6 +75,9 @@ dependencies {
     // test container
     testImplementation 'org.testcontainers:junit-jupiter:1.18.0'
     testImplementation 'org.testcontainers:mysql:1.18.0'
+
+    // firebase
+    implementation 'com.google.firebase:firebase-admin:9.2.0'
 }
 
 // .env 파일 읽기

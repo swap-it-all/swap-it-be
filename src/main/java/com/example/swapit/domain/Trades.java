@@ -28,7 +28,7 @@ import lombok.Setter;
 @SQLDelete(sql = "UPDATE trades SET is_deleted = true WHERE trades_id = ?")
 @SQLRestriction("is_deleted = false")
 @Table(name = "trades",
-	uniqueConstraints = @UniqueConstraint(columnNames = {"target_goods_id, requester_id"})
+	uniqueConstraints = @UniqueConstraint(columnNames = {"target_goods_id, requested_goods_id"})
 )
 public class Trades extends BaseEntity {
 
@@ -52,7 +52,7 @@ public class Trades extends BaseEntity {
 
 	public Trades(Goods requestedGoods, Goods targetGoods) {
 		this.status = TradeStatus.PENDING;
-		this.targetGoods = targetGoods;
 		this.requestedGoods = requestedGoods;
+		this.targetGoods = targetGoods;
 	}
 }

@@ -24,15 +24,16 @@ import com.example.swapit.domain.GoodsImages;
 import com.example.swapit.domain.TradeStatus;
 import com.example.swapit.domain.Trades;
 import com.example.swapit.domain.Users;
-import com.example.swapit.domain.dto.TradesRequestDto;
 import com.example.swapit.domain.dto.trade.MyGoodsDto;
 import com.example.swapit.domain.dto.trade.MyRequestDto;
 import com.example.swapit.domain.dto.trade.ReceivedRequestDto;
 import com.example.swapit.domain.dto.trade.RequestGoodsImageDto;
 import com.example.swapit.domain.dto.trade.TradeCountProjection;
+import com.example.swapit.domain.dto.trade.TradesRequestDto;
 import com.example.swapit.repository.GoodsImagesRepository;
 import com.example.swapit.repository.GoodsRepository;
 import com.example.swapit.repository.TradesRepository;
+import com.example.swapit.service.notification.NotificationEventPublisher;
 
 @ExtendWith(MockitoExtension.class)
 public class TradesServiceTest {
@@ -204,7 +205,6 @@ public class TradesServiceTest {
 			.build();
 		Trades trade = Trades.builder()
 			.id(1L)
-			.owner(target)
 			.targetGoods(targetGood)
 			.requestedGoods(requestedGood)
 			.status(TradeStatus.PENDING)
@@ -225,48 +225,56 @@ public class TradesServiceTest {
 	@Test
 	@DisplayName("거래 수락 성공 - 다른 거래들 거절 되었는지 확인")
 	void acceptTrade_ShouldRejectAllOtherTrades() {
-		// Given
+		// given
 		Long acceptedTradeId = 1L;
-		Goods targetGood = Goods.builder()
-			.build();
-		Users target = Users.builder()
-			.usersId(1L)
-			.build();
+
+		Users target = Users.builder().usersId(1L).build();
+
+		Users requester1 = Users.builder().usersId(2L).build();
+		Users requester2 = Users.builder().usersId(3L).build();
+		Users requester3 = Users.builder().usersId(4L).build();
+
+		Goods targetGood = Goods.builder().user(target).build();
+		Goods requestedGood1 = Goods.builder().user(requester1).build();
+		Goods requestedGood2 = Goods.builder().user(requester2).build();
+		Goods requestedGood3 = Goods.builder().user(requester3).build();
 
 		// 1. 거래 리스트 (거래를 요청한 사용자 3명)
 		Trades acceptedTrade = Trades.builder()
-			.id(acceptedTradeId)
-			.owner(target)
-			.targetGoods(targetGood)
-			.build();
+				.id(acceptedTradeId)
+				.targetGoods(targetGood)
+				.requestedGoods(requestedGood1)
+				.build();
 
 		Trades otherTrade1 = Trades.builder()
-			.id(2L)
-			.targetGoods(targetGood)
-			.build();
+				.id(2L)
+				.targetGoods(targetGood)
+				.requestedGoods(requestedGood2)
+				.build();
+
 		Trades otherTrade2 = Trades.builder()
-			.id(3L)
-			.targetGoods(targetGood)
-			.build();
+				.id(3L)
+				.targetGoods(targetGood)
+				.requestedGoods(requestedGood3)
+				.build();
 
 		List<Trades> pendingTrades = Arrays.asList(acceptedTrade, otherTrade1, otherTrade2);
 
 		when(tradesRepository.findById(acceptedTradeId)).thenReturn(Optional.of(acceptedTrade));
 		when(currentUserService.getCurrentUser()).thenReturn(target);
 
-		// 3. Mock 설정: rejectOtherTrades() 호출 시 상태 변경 로직을 직접 수행
+		// Mock 설정: rejectOtherTrades() 호출 시 상태 변경 로직을 직접 수행
 		doAnswer(invocation -> {
 			Goods myTargetGood = invocation.getArgument(0);
 			Long excludedTradeId = invocation.getArgument(1);
 
 			// 다른 거래 요청들을 모두 REJECTED 상태로 변경
 			pendingTrades.stream()
-				.filter(
-					trade -> trade.getTargetGoods().equals(myTargetGood) && !trade.getId().equals(excludedTradeId))
-				.forEach(trade -> trade.setStatus(TradeStatus.REJECTED));
-
+					.filter(trade -> trade.getTargetGoods().equals(myTargetGood) && !trade.getId().equals(excludedTradeId))
+					.forEach(trade -> trade.setStatus(TradeStatus.REJECTED));
 			return null;
 		}).when(tradesRepository).rejectOtherTrades(targetGood, acceptedTradeId);
+
 
 		// When
 		tradesService.acceptTrade(acceptedTradeId);
@@ -337,7 +345,6 @@ public class TradesServiceTest {
 			.build();
 		Trades trade = Trades.builder()
 			.id(1L)
-			.owner(target)
 			.targetGoods(targetGood)
 			.requestedGoods(requestedGood)
 			.status(TradeStatus.PENDING)

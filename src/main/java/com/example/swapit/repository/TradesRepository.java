@@ -19,9 +19,6 @@ import io.lettuce.core.dynamic.annotation.Param;
 public interface TradesRepository extends JpaRepository<Trades, Long> {
 	long countByTargetGoodsIdAndStatus(Long goodsId, TradeStatus status);
 
-	@Query("SELECT COUNT(*) FROM Trades t WHERE ( t.targetGoods.user = :user OR t.requestedGoods.user = :user ) AND t.status = 'COMPLETED'")
-	long countByCompletedTradesByUser(@Param("user") Users user);
-
 	@Modifying
 	@Query("UPDATE Trades t SET t.status = 'REJECTED' WHERE t.targetGoods = :targetGoods AND t.id <> :acceptedTradeId")
 	void rejectOtherTrades(@Param("targetGoods") Goods targetGoods, @Param("acceptedTradeId") Long acceptedTradeId);
@@ -34,7 +31,7 @@ public interface TradesRepository extends JpaRepository<Trades, Long> {
 
 	@Query("SELECT new com.example.swapit.domain.dto.trade.RequestGoodsImageDto(t.targetGoods, t.requestedGoods) "
 		+ "FROM Trades t "
-		+ "WHERE t.requestedGoods.user.id = :userId")
+		+ "WHERE t.requestedGoods.user.usersId = :userId")
 	List<RequestGoodsImageDto> findMyRequests(@Param("userId") Long userId);
 
 	@Query("SELECT t.requestedGoods FROM Trades t WHERE t.targetGoods.id = :goodsId")

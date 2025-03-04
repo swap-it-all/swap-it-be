@@ -31,6 +31,7 @@ import com.example.swapit.repository.GoodsImagesRepository;
 import com.example.swapit.repository.GoodsRepository;
 import com.example.swapit.repository.TradesRepository;
 import com.example.swapit.repository.UsersRepository;
+import com.example.swapit.service.notification.NotificationEventPublisher;
 
 import lombok.RequiredArgsConstructor;
 
@@ -177,7 +178,7 @@ public class ChatServiceImpl implements ChatService {
 		Long receiverId =
 			(chatRooms.getInviter().getUsersId().equals(userId)) ? userId : chatRooms.getGoods().getUser().getUsersId();
 		notificationEventPublisher.publishNotification(
-			receiverId, NotificationType.CHAT, chatRooms.getId()
+			receiverId, NotificationType.CHAT, chatroomId
 		);
 		return new ChatStompResponseDto(chats);
 	}

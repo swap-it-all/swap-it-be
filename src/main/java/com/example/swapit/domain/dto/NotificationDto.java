@@ -15,16 +15,18 @@ import lombok.Getter;
 public class NotificationDto {
 	private final Long notificationsId;
 	private final String type;
-	private final String url;
-	private final String message;
+	private final String title;
+	private final String body;
+	private final String deeplink;
 	private final LocalDateTime createdAt;
 
 	public static NotificationDto of(Notifications noti) {
 		return NotificationDto.builder()
 			.notificationsId(noti.getId())
 			.type(noti.getType().toString())
-			.url(noti.getUrl())
-			.message(noti.getMessage())
+			.deeplink(noti.getDeeplink())
+			.title(noti.getTitle())
+			.body(noti.getBody())
 			.createdAt(noti.getCreatedAt())
 			.build();
 	}

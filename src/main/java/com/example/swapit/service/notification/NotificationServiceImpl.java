@@ -1,6 +1,4 @@
-package com.example.swapit.service;
-
-import java.util.List;
+package com.example.swapit.service.notification;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -10,7 +8,9 @@ import com.example.swapit.common.exception.ErrorCode;
 import com.example.swapit.domain.Notifications;
 import com.example.swapit.domain.Users;
 import com.example.swapit.domain.dto.NotificationDto;
+import com.example.swapit.domain.dto.NotificationListDto;
 import com.example.swapit.repository.NotificationRepository;
+import com.example.swapit.service.CurrentUserService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -23,12 +23,13 @@ public class NotificationServiceImpl implements NotificationService {
 
 	@Override
 	@Transactional(readOnly = true)
-	public List<NotificationDto> getMyNotifications() {
+	public NotificationListDto getMyNotifications() {
 		Users user = currentUserService.getCurrentUser();
-		return notificationRepository.findByUserAndReadNotOrderByCreatedAtDesc(user)
-			.stream()
-			.map(NotificationDto::of)
-			.toList();
+		return new NotificationListDto(
+			notificationRepository.findByUserAndReadNotOrderByCreatedAtDesc(user)
+				.stream()
+				.map(NotificationDto::of)
+				.toList());
 	}
 
 	@Override
@@ -36,8 +37,7 @@ public class NotificationServiceImpl implements NotificationService {
 	public void notificationRead(Long notificationId) {
 		Notifications noti = notificationRepository.findById(notificationId)
 			.orElseThrow(() -> new CustomException(ErrorCode.NOTIFICATION_NOT_FOUND));
-
-		noti.updateToRead();
+		noti.setRead(true);
 		notificationRepository.save(noti);
 	}
 }

@@ -3,12 +3,14 @@ package com.example.swapit.controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.example.swapit.common.api.ApiResponse;
+import com.example.swapit.domain.dto.FcmTokenDto;
 import com.example.swapit.domain.dto.UserNicknameDto;
 import com.example.swapit.domain.dto.UserPageDto;
 import com.example.swapit.service.UsersService;
@@ -29,7 +31,7 @@ public class UserController {
 	}
 
 	@GetMapping("/all/auth/info/{userId}")
-	public ApiResponse<UserPageDto> getAnotherUserPage(@PathVariable Long userId) {
+	public ApiResponse<UserPageDto> getAnotherUserPage(@PathVariable("userId") Long userId) {
 		return ApiResponse.success(usersService.getAnotherUserPage(userId));
 	}
 
@@ -42,6 +44,12 @@ public class UserController {
 	@PatchMapping("/user/auth/profile/nickname")
 	public ApiResponse<Void> updateProfileNickname(@Valid @RequestBody UserNicknameDto dto) {
 		usersService.updateNickname(dto);
+		return ApiResponse.success();
+	}
+
+	@PutMapping("/user/fcm")
+	public ApiResponse<Void> updateFcmToken(@Valid @RequestBody FcmTokenDto fcmTokenDto) {
+		usersService.updateFcmToken(fcmTokenDto);
 		return ApiResponse.success();
 	}
 }

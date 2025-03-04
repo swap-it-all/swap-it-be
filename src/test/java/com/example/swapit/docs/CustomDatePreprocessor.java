@@ -1,8 +1,5 @@
 package com.example.swapit.docs;
 
-import java.util.Arrays;
-import java.util.List;
-
 import org.springframework.restdocs.operation.OperationRequest;
 import org.springframework.restdocs.operation.OperationResponse;
 import org.springframework.restdocs.operation.OperationResponseFactory;
@@ -19,7 +16,7 @@ public class CustomDatePreprocessor implements OperationPreprocessor {
 
 	@Override
 	public OperationRequest preprocess(OperationRequest operationRequest) {
-		return null;
+		return operationRequest;
 	}
 
 	@Override
@@ -38,41 +35,54 @@ public class CustomDatePreprocessor implements OperationPreprocessor {
 			throw new RuntimeException(e);
 		}
 
-		// results 노드가 존재하면 처리
+		// results 객체 내 모든 createdAt 변환
 		JsonNode resultsNode = rootNode.get("results");
 		if (resultsNode != null) {
-			// 처리할 필드 이름들을 리스트로 정의
-			List<String> fieldNames = Arrays.asList("goodsList", "chatRoomList", "chatList");
-			for (String fieldName : fieldNames) {
-				JsonNode node = resultsNode.get(fieldName);
-				if (node != null) {
-					if (node.isArray()) {
-						for (JsonNode itemNode : node) {
-							processCreatedAtField(itemNode);
-						}
-					} else if (node.isObject()) {
-						processCreatedAtField(node);
-					}
-				}
-			}
+			recursiveProcessCreatedAtFields(resultsNode);
 		}
 
-		// 수정된 JSON 트리를 문자열로 다시 직렬화하여 새 바이트 배열을 준비
+		// 수정된 JSON을 문자열로 변환
 		String newContent;
 		try {
 			newContent = objectMapper.writeValueAsString(rootNode);
 		} catch (JsonProcessingException e) {
 			throw new RuntimeException(e);
 		}
-		byte[] newContentBytes = newContent.getBytes();
 
-		// 새로운 OperationResponse를 만들어 반환
-		OperationResponseFactory responseFactory = new OperationResponseFactory();
-		return responseFactory.create(
-			response.getStatus(),         // 기존 상태 코드
-			response.getHeaders(),        // 기존 헤더
-			newContentBytes
-		);
+		return new OperationResponseFactory().create(response.getStatus(), response.getHeaders(),
+			newContent.getBytes());
+	}
+
+	private void recursiveProcessCreatedAtFields(JsonNode node) {
+		if (node.isObject()) {
+			ObjectNode objectNode = (ObjectNode)node;
+			JsonNode createdAtNode = objectNode.get("createdAt");
+
+			// createdAt이 배열이면 ISO-8601 문자열로 변환
+			if (createdAtNode != null && createdAtNode.isArray() && createdAtNode.size() == 7) {
+				objectNode.put("createdAt", convertArrayToISODate(createdAtNode));
+			}
+
+			// 현재 객체의 모든 필드를 순회하며 재귀 호출
+			node.fieldNames().forEachRemaining(fieldName -> recursiveProcessCreatedAtFields(node.get(fieldName)));
+
+		} else if (node.isArray()) {
+			for (JsonNode itemNode : node) {
+				recursiveProcessCreatedAtFields(itemNode);
+			}
+		}
+	}
+
+	private String convertArrayToISODate(JsonNode createdAtNode) {
+		int year = createdAtNode.get(0).asInt();
+		int month = createdAtNode.get(1).asInt();
+		int day = createdAtNode.get(2).asInt();
+		int hour = createdAtNode.get(3).asInt();
+		int minute = createdAtNode.get(4).asInt();
+		int second = createdAtNode.get(5).asInt();
+		int nano = createdAtNode.get(6).asInt();
+
+		return String.format("%04d-%02d-%02dT%02d:%02d:%02d.%09d", year, month, day, hour, minute, second, nano);
 	}
 
 	// createdAt 필드를 처리하는 메서드

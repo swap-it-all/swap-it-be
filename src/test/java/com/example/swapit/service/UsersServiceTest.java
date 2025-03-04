@@ -6,6 +6,7 @@ import static org.mockito.Mockito.*;
 import java.util.List;
 import java.util.Optional;
 
+import com.example.swapit.domain.GoodsTradeStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -40,9 +41,6 @@ class UsersServiceTest {
 	private GoodsRepository goodsRepository;
 
 	@Mock
-	private TradesRepository tradesRepository;
-
-	@Mock
 	private ReviewRepository reviewRepository;
 
 	@Mock
@@ -67,9 +65,9 @@ class UsersServiceTest {
 		// given
 		when(currentUserService.getCurrentUser()).thenReturn(user);
 		when(goodsRepository.countByUser(user)).thenReturn(5L); // 상품 5개
-		when(tradesRepository.countByCompletedTradesByUser(user)).thenReturn(3L); // 거래 완료 3개
+		when(goodsRepository.countByUserAndGoodsTradeStatus(user, GoodsTradeStatus.SOLDOUT)).thenReturn(3L); // 거래 완료 3개
 		when(reviewRepository.averageRatingByReviewee(user)).thenReturn(4.5); // 평균 평점 4.5
-		when(reviewRepository.findTop3ByRevieweeOrderByCreatedAtDesc(user)).thenReturn(List.of());
+		when(reviewRepository.findTop5ByRevieweeOrderByCreatedAtDesc(user)).thenReturn(List.of());
 
 		// when
 		UserPageDto result = usersService.getMyPage();
@@ -91,9 +89,9 @@ class UsersServiceTest {
 		Users currentUser = Users.builder().usersId(2L).build();
 		when(usersRepository.findById(1L)).thenReturn(Optional.of(user));
 		when(goodsRepository.countByUser(user)).thenReturn(5L); // 상품 5개
-		when(tradesRepository.countByCompletedTradesByUser(user)).thenReturn(3L); // 거래 완료 3개
+		when(goodsRepository.countByUserAndGoodsTradeStatus(user, GoodsTradeStatus.SOLDOUT)).thenReturn(3L); // 거래 완료 3개
 		when(reviewRepository.averageRatingByReviewee(user)).thenReturn(4.5); // 평균 평점 4.5
-		when(reviewRepository.findTop3ByRevieweeOrderByCreatedAtDesc(user)).thenReturn(List.of());
+		when(reviewRepository.findTop5ByRevieweeOrderByCreatedAtDesc(user)).thenReturn(List.of());
 
 		// when
 		UserPageDto result = usersService.getAnotherUserPage(1L);

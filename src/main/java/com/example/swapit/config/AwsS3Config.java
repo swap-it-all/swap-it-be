@@ -40,20 +40,6 @@ public class AwsS3Config {
 	}
 
 	@Bean
-	@Profile("test")
-	public S3Client testS3Client(
-		@Value("${cloud.aws.credentials.access-key}") String accessKey,
-		@Value("${cloud.aws.credentials.secret-key}") String secretKey
-	) {
-		return S3Client.builder()
-			.region(Region.AP_NORTHEAST_2)
-			.credentialsProvider(StaticCredentialsProvider.create(
-				AwsBasicCredentials.create(accessKey, secretKey)
-			))
-			.build();
-	}
-
-	@Bean
 	@Profile("prd")
 	public S3Presigner prdS3Presigner() {
 		return S3Presigner.builder()
@@ -65,20 +51,6 @@ public class AwsS3Config {
 	@Bean
 	@Profile("dev")
 	public S3Presigner devS3Presigner(
-		@Value("${cloud.aws.credentials.access-key}") String accessKey,
-		@Value("${cloud.aws.credentials.secret-key}") String secretKey
-	) {
-		return S3Presigner.builder()
-			.region(Region.AP_NORTHEAST_2) // S3 리전 설정 (서울)
-			.credentialsProvider(StaticCredentialsProvider.create(
-				AwsBasicCredentials.create(accessKey, secretKey)
-			)) // IAM Role 또는 환경 변수 사용
-			.build();
-	}
-
-	@Bean
-	@Profile("test")
-	public S3Presigner testS3Presigner(
 		@Value("${cloud.aws.credentials.access-key}") String accessKey,
 		@Value("${cloud.aws.credentials.secret-key}") String secretKey
 	) {

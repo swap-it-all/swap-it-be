@@ -1,17 +1,17 @@
 pipeline {
     agent any
     stages {
-        stage('SwapIt Service Gradle Project Test') {
+        stage('Test') {
             steps {
                 sh './gradlew clean test -Dspring.profiles.active=test'
             }
         }
-        stage('SwapIt Service Gradle Project Build') {
+        stage('Build') {
             steps {
                 sh './gradlew clean bootJar'
             }
         }
-        stage('SwapIt Service Project Deploy') {
+        stage('Deploy') {
             when {
                 branch 'develop'
             }

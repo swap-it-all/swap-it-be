@@ -5,29 +5,23 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import com.example.swapit.domain.*;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import com.example.swapit.common.exception.CustomException;
 import com.example.swapit.common.exception.ErrorCode;
-import com.example.swapit.domain.ChatRooms;
-import com.example.swapit.domain.ChatType;
-import com.example.swapit.domain.Goods;
-import com.example.swapit.domain.GoodsImages;
-import com.example.swapit.domain.NotificationType;
-import com.example.swapit.domain.TradeStatus;
-import com.example.swapit.domain.Trades;
-import com.example.swapit.domain.Users;
-import com.example.swapit.domain.dto.TradesRequestDto;
 import com.example.swapit.domain.dto.trade.MyGoodsDto;
 import com.example.swapit.domain.dto.trade.MyRequestDto;
 import com.example.swapit.domain.dto.trade.ReceivedRequestDto;
 import com.example.swapit.domain.dto.trade.RequestGoodsImageDto;
 import com.example.swapit.domain.dto.trade.TradeCountProjection;
+import com.example.swapit.domain.dto.trade.TradesRequestDto;
 import com.example.swapit.repository.ChatRoomsRepository;
 import com.example.swapit.repository.GoodsImagesRepository;
 import com.example.swapit.repository.GoodsRepository;
 import com.example.swapit.repository.TradesRepository;
+import com.example.swapit.service.notification.NotificationEventPublisher;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -66,6 +60,12 @@ public class TradesServiceImpl implements TradesService {
 		Trades savedTrade;
 		try {
 			savedTrade = tradesRepository.save(trades);
+
+			// 알림 발생
+			notificationEventPublisher.publishNotification(
+				targetGoods.getUser().getUsersId(), NotificationType.REQUESTED, targetGoods.getId());
+		} catch (DataIntegrityViolationException ex) {
+			savedTrade = tradesRepository.save(trades);
 		} catch (DataIntegrityViolationException e) {
 			throw new CustomException(ErrorCode.DUPLICATE_TRADE_REQUEST);
 		}
@@ -75,9 +75,6 @@ public class TradesServiceImpl implements TradesService {
 			requestedGoods.getUser());
 		chatRoomsOpt.ifPresent(
 			chatRooms -> updateChatRoomsAndNotify(chatRooms, savedTrade, ChatType.REQUEST, requestedGoods));
-
-		// 알림 발생
-		notificationEventPublisher.publishNotification(targetGoods.getUser().getUsersId(), NotificationType.REQUESTED);
 
 		return savedTrade.getId();
 	}
@@ -102,7 +99,9 @@ public class TradesServiceImpl implements TradesService {
 			.orElseThrow(() -> new CustomException(ErrorCode.TRADES_NOT_FOUND));
 
 		// 거래 owner 인지 검증
-		if (!currentUserService.getCurrentUser().getUsersId().equals(trades.getTargetGoods().getUser().getUsersId())) {
+		if (!currentUserService.getCurrentUser().getUsersId().equals(
+				trades.getTargetGoods().getUser().getUsersId())
+		) {
 			throw new CustomException(ErrorCode.TRADE_UNAUTHORIZED);
 		}
 
@@ -117,9 +116,18 @@ public class TradesServiceImpl implements TradesService {
 			rooms -> updateChatRoomsAndNotify(rooms, trades, ChatType.ACCEPT, trades.getRequestedGoods())
 		);
 
+		// 각 물건 상태를 reserved로 변경
+		trades.getTargetGoods().setGoodsTradeStatus(GoodsTradeStatus.RESERVED);
+		goodsRepository.save(trades.getTargetGoods());
+		trades.getRequestedGoods().setGoodsTradeStatus(GoodsTradeStatus.RESERVED);
+		goodsRepository.save(trades.getRequestedGoods());
+
 		// 알림 발생
-		notificationEventPublisher.publishNotification(trades.getTargetGoods().getUser().getUsersId(),
-			NotificationType.ACCEPTED, trades.getTargetGoods().getId());
+		notificationEventPublisher.publishNotification(
+			trades.getRequestedGoods().getUser().getUsersId(),
+			NotificationType.ACCEPTED,
+			trades.getTargetGoods().getId()
+		);
 	}
 
 	@Override
@@ -142,8 +150,11 @@ public class TradesServiceImpl implements TradesService {
 		);
 
 		// 알림 발생
-		notificationEventPublisher.publishNotification(trades.getTargetGoods().getUser().getUsersId(),
-			NotificationType.REJECTED, trades.getTargetGoods().getId());
+		notificationEventPublisher.publishNotification(
+			trades.getRequestedGoods().getUser().getUsersId(),
+				NotificationType.REJECTED,
+				trades.getTargetGoods().getId()
+		);
 	}
 
 	@Override
@@ -156,17 +167,32 @@ public class TradesServiceImpl implements TradesService {
 		Long userId = user.getUsersId();
 
 		// 거래 관계자인지 확인
-		if (!userId.equals(trade.getTargetGoods().getUser().getUsersId()) && !userId.equals(
-			trade.getRequestedGoods().getUser().getUsersId())) {
+		if (!userId.equals(trade.getTargetGoods().getUser().getUsersId())
+				&& !userId.equals(trade.getRequestedGoods().getUser().getUsersId())) {
 			throw new CustomException(ErrorCode.TRADE_UNAUTHORIZED);
 		}
 
+		// 거래 완료 처리
 		trade.setStatus(TradeStatus.COMPLETED);
 
 		// 채팅방이 있으면 메시지 전송
 		Optional<ChatRooms> chatRoomsOpt = chatRoomsRepository.findByTrade(trade);
 		chatRoomsOpt.ifPresent(
 			rooms -> updateChatRoomsAndNotify(rooms, trade, ChatType.COMPLETE, trade.getRequestedGoods())
+		);
+		tradesRepository.save(trade);
+
+		// 각 물건 거래 상태도 sold out 처리
+		trade.getTargetGoods().setGoodsTradeStatus(GoodsTradeStatus.SOLDOUT);
+		goodsRepository.save(trade.getTargetGoods());
+		trade.getRequestedGoods().setGoodsTradeStatus(GoodsTradeStatus.SOLDOUT);
+		goodsRepository.save(trade.getRequestedGoods());
+
+		// 거래 상대방에게 알림 전송
+		Users recipient = (userId.equals(trade.getTargetGoods().getUser().getUsersId()))
+				? trade.getRequestedGoods().getUser() : trade.getTargetGoods().getUser();
+		notificationEventPublisher.publishNotification(
+			recipient.getUsersId(), NotificationType.COMPLETED
 		);
 	}
 
@@ -201,14 +227,22 @@ public class TradesServiceImpl implements TradesService {
 		List<RequestGoodsImageDto> dtoList = tradesRepository.findMyRequests(
 			currentUserService.getCurrentUser().getUsersId());
 
-		return dtoList.stream().map(dto -> {
-			String requestedGoodsPhotoUrl = getFirstImageUrl(dto.getRequestedGoods());
-			String myGoodsPhotoUrl = getFirstImageUrl(dto.getMyGoods());
+		return dtoList.stream()
+			.map(dto -> {
+				String requestedGoodsPhotoUrl = getFirstImageUrl(dto.getRequestedGoods());
+				String myGoodsPhotoUrl = getFirstImageUrl(dto.getMyGoods());
 
-			return new MyRequestDto(dto.getRequestedGoods().getId(), dto.getRequestedGoods().getTitle(),
-				dto.getRequestedGoods().getPrice(), dto.getRequestedGoods().getCategory().getName(),
-				dto.getRequestedGoods().getPlaceName(), myGoodsPhotoUrl, requestedGoodsPhotoUrl);
-		}).toList();
+				return new MyRequestDto(
+					dto.getRequestedGoods().getId(),
+					dto.getRequestedGoods().getTitle(),
+					dto.getRequestedGoods().getPrice(),
+					dto.getRequestedGoods().getCategory().getName(),
+					dto.getRequestedGoods().getPlaceName(),
+					myGoodsPhotoUrl,
+					requestedGoodsPhotoUrl
+				);
+			})
+			.toList();
 	}
 
 	private String getFirstImageUrl(Goods goods) {

@@ -21,5 +21,6 @@ public class UserPageDto {
 	private long totalGoodsCount;
 	private long completedSwapCount;
 	private double ratingAverage;
+	private long totalReviewCount;
 	private List<ReviewDto> reviews;
 }
