@@ -42,10 +42,11 @@ public class UsersServiceImpl implements UsersService {
 		long totalUsersGoodsCount = goodsRepository.countByUser(user);
 		long completedSwapCount = goodsRepository.countByUserAndGoodsTradeStatus(user, GoodsTradeStatus.SOLDOUT);
 		double averageRating = reviewRepository.averageRatingByReviewee(user);
-		List<ReviewDto> reviews = reviewRepository.findTop5ByRevieweeOrderByCreatedAtDesc(user)
+		List<ReviewDto> reviewsTop5 = reviewRepository.findTop5ByRevieweeOrderByCreatedAtDesc(user)
 			.stream()
 			.map(ReviewDto::of)
 			.toList();
+		long totalReviewCount = reviewRepository.countByReviewee(user);
 
 		// 프로필 이미지가 내부 저장 이미지일 때, 처리
 		String profileImageUrl = user.getProfileImageUrl();
@@ -55,7 +56,7 @@ public class UsersServiceImpl implements UsersService {
 
 		return new UserPageDto(
 			user.getUsersId(), user.getNickname(), user.getEmail(), profileImageUrl,
-			totalUsersGoodsCount, completedSwapCount, averageRating, reviews
+			totalUsersGoodsCount, completedSwapCount, averageRating, totalReviewCount, reviewsTop5
 		);
 	}
 
@@ -67,10 +68,11 @@ public class UsersServiceImpl implements UsersService {
 		long totalUsersGoodsCount = goodsRepository.countByUser(user);
 		long completedSwapCount = goodsRepository.countByUserAndGoodsTradeStatus(user, GoodsTradeStatus.SOLDOUT);
 		double averageRating = reviewRepository.averageRatingByReviewee(user);
-		List<ReviewDto> reviews = reviewRepository.findTop5ByRevieweeOrderByCreatedAtDesc(user)
+		List<ReviewDto> reviewsRecentlyTop5 = reviewRepository.findTop5ByRevieweeOrderByCreatedAtDesc(user)
 			.stream()
 			.map(ReviewDto::of)
 			.toList();
+		long totalReviewCount = reviewRepository.countByReviewee(user);
 
 		// 프로필 이미지가 내부 저장 이미지일 때, 처리
 		String profileImageUrl = user.getProfileImageUrl();
@@ -80,7 +82,7 @@ public class UsersServiceImpl implements UsersService {
 
 		return new UserPageDto(
 			user.getUsersId(), user.getNickname(), null, profileImageUrl,
-			totalUsersGoodsCount, completedSwapCount, averageRating, reviews
+			totalUsersGoodsCount, completedSwapCount, averageRating, totalReviewCount, reviewsRecentlyTop5
 		);
 	}
 
