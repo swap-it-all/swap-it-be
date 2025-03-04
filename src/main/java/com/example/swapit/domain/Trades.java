@@ -1,5 +1,6 @@
 package com.example.swapit.domain;
 
+import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
@@ -28,7 +29,7 @@ import lombok.Setter;
 @SQLDelete(sql = "UPDATE trades SET is_deleted = true WHERE trades_id = ?")
 @SQLRestriction("is_deleted = false")
 @Table(name = "trades",
-	uniqueConstraints = @UniqueConstraint(columnNames = {"target_goods_id, requester_id"})
+	uniqueConstraints = @UniqueConstraint(columnNames = {"target_goods_id, requested_goods_id"})
 )
 public class Trades extends BaseEntity {
 
@@ -50,19 +51,9 @@ public class Trades extends BaseEntity {
 	@JoinColumn(name = "target_goods_id", nullable = false)
 	private Goods targetGoods;
 
-	@ManyToOne
-	@JoinColumn(name = "requester_id", nullable = false)
-	private Users requester;
-
-	@ManyToOne
-	@JoinColumn(name = "owner_id", nullable = false)
-	private Users owner;
-
 	public Trades(Goods requestedGoods, Goods targetGoods) {
 		this.status = TradeStatus.PENDING;
 		this.requestedGoods = requestedGoods;
 		this.targetGoods = targetGoods;
-		this.requester = requestedGoods.getUser();
-		this.owner = targetGoods.getUser();
 	}
 }

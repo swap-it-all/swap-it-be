@@ -46,7 +46,7 @@ class UserControllerTest {
 		userPageDto = new UserPageDto(
 			1L, "testUser", "test@example.com",
 			"https://profile.img", 10L, 5L, 4.5,
-			List.of()  // 리뷰 리스트는 비워둠
+				0L, List.of()  // 리뷰 리스트는 비워둠
 		);
 	}
 

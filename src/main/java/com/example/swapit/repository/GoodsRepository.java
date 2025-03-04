@@ -2,6 +2,7 @@ package com.example.swapit.repository;
 
 import java.util.List;
 
+import com.example.swapit.domain.GoodsTradeStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.example.swapit.domain.Goods;
@@ -12,4 +13,6 @@ public interface GoodsRepository extends JpaRepository<Goods, Long>, CustomGoods
 	List<Goods> findByUserOrderByCreatedAtDesc(Users user);
 
 	long countByUser(Users user);
+
+	long countByUserAndGoodsTradeStatus(Users user, GoodsTradeStatus goodsTradeStatus);
 }
