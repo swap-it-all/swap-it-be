@@ -3,6 +3,8 @@ package com.example.swapit.service;
 import java.util.List;
 import java.util.Optional;
 
+import com.example.swapit.domain.GoodsTradeStatus;
+import com.example.swapit.domain.TradeStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -24,7 +26,6 @@ import com.example.swapit.repository.UsersRepository;
 import lombok.RequiredArgsConstructor;
 
 @Service
-@Transactional
 @RequiredArgsConstructor
 public class UsersServiceImpl implements UsersService {
 
@@ -37,21 +38,20 @@ public class UsersServiceImpl implements UsersService {
 	private final FcmTokenRepository fcmTokenRepository;
 
 	@Override
-	@Transactional(readOnly = true)
 	public UserPageDto getMyPage() {
 		Users user = currentUserService.getCurrentUser();
 
 		long totalUsersGoodsCount = goodsRepository.countByUser(user);
-		long completedSwapCount = tradesRepository.countByCompletedTradesByUser(user);
+		long completedSwapCount = goodsRepository.countByUserAndGoodsTradeStatus(user, GoodsTradeStatus.SOLDOUT);
 		double averageRating = reviewRepository.averageRatingByReviewee(user);
-		List<ReviewDto> reviews = reviewRepository.findTop3ByRevieweeOrderByCreatedAtDesc(user)
+		List<ReviewDto> reviews = reviewRepository.findTop5ByRevieweeOrderByCreatedAtDesc(user)
 			.stream()
 			.map(ReviewDto::of)
 			.toList();
 
 		// 프로필 이미지가 내부 저장 이미지일 때, 처리
 		String profileImageUrl = user.getProfileImageUrl();
-		if(profileImageUrl.startsWith("images/users/")) {
+		if(profileImageUrl.startsWith("images/")) {
 			profileImageUrl = awsS3Service.generatePreSignedImageUrl(profileImageUrl);
 		}
 
@@ -67,16 +67,16 @@ public class UsersServiceImpl implements UsersService {
 			.orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
 		long totalUsersGoodsCount = goodsRepository.countByUser(user);
-		long completedSwapCount = tradesRepository.countByCompletedTradesByUser(user);
+		long completedSwapCount = goodsRepository.countByUserAndGoodsTradeStatus(user, GoodsTradeStatus.SOLDOUT);
 		double averageRating = reviewRepository.averageRatingByReviewee(user);
-		List<ReviewDto> reviews = reviewRepository.findTop3ByRevieweeOrderByCreatedAtDesc(user)
+		List<ReviewDto> reviews = reviewRepository.findTop5ByRevieweeOrderByCreatedAtDesc(user)
 			.stream()
 			.map(ReviewDto::of)
 			.toList();
 
 		// 프로필 이미지가 내부 저장 이미지일 때, 처리
 		String profileImageUrl = user.getProfileImageUrl();
-		if(profileImageUrl.startsWith("images/users/")) {
+		if(profileImageUrl.startsWith("images/")) {
 			profileImageUrl = awsS3Service.generatePreSignedImageUrl(profileImageUrl);
 		}
 
@@ -87,12 +87,14 @@ public class UsersServiceImpl implements UsersService {
 	}
 
 	@Override
+	@Transactional
 	public void updateProfileImage(MultipartFile file) {
 		Users user = currentUserService.getCurrentUser();
 		user.updateProfileImageUrl(awsS3Service.updateUserProfileImage(user, file));
 	}
 
 	@Override
+	@Transactional
 	public void updateNickname(UserNicknameDto dto) {
 		Users user = currentUserService.getCurrentUser();
 		user.updateNickname(dto.getNickname());
@@ -100,6 +102,7 @@ public class UsersServiceImpl implements UsersService {
 	}
 
 	@Override
+	@Transactional
 	public void updateFcmToken(FcmTokenDto dto) {
 		Users user = currentUserService.getCurrentUser();
 
