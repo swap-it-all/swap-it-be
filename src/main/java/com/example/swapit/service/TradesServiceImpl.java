@@ -4,17 +4,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.example.swapit.domain.*;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import com.example.swapit.common.exception.CustomException;
 import com.example.swapit.common.exception.ErrorCode;
-import com.example.swapit.domain.Goods;
-import com.example.swapit.domain.GoodsImages;
-import com.example.swapit.domain.NotificationType;
-import com.example.swapit.domain.TradeStatus;
-import com.example.swapit.domain.Trades;
-import com.example.swapit.domain.Users;
 import com.example.swapit.domain.dto.trade.MyGoodsDto;
 import com.example.swapit.domain.dto.trade.MyRequestDto;
 import com.example.swapit.domain.dto.trade.ReceivedRequestDto;
@@ -132,6 +127,10 @@ public class TradesServiceImpl implements TradesService {
 		// 거래 완료 처리
 		trade.setStatus(TradeStatus.COMPLETED);
 		tradesRepository.save(trade);
+
+		// 각 물건 거래 상태도 sold out 처리
+		trade.getTargetGoods().setGoodsTradeStatus(GoodsTradeStatus.SOLDOUT);
+		trade.getRequestedGoods().setGoodsTradeStatus(GoodsTradeStatus.SOLDOUT);
 
 		// 거래 상대방에게 알림 전송
 		Users recipient = (userId.equals(trade.getOwnerId()))
