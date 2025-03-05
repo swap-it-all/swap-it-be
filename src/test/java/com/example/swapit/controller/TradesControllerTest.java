@@ -27,6 +27,7 @@ import com.example.swapit.common.api.ApiResponse;
 import com.example.swapit.common.exception.CustomException;
 import com.example.swapit.common.exception.ErrorCode;
 import com.example.swapit.common.exception.GlobalExceptionHandler;
+import com.example.swapit.domain.dto.Result;
 import com.example.swapit.domain.dto.trade.MyGoodsDto;
 import com.example.swapit.domain.dto.trade.MyRequestDto;
 import com.example.swapit.domain.dto.trade.ReceivedRequestDto;
@@ -59,7 +60,7 @@ public class TradesControllerTest {
 		// Given
 		TradesRequestDto dto = new TradesRequestDto(1L, 2L);
 
-		when(tradesService.requestTrade(any(TradesRequestDto.class))).thenReturn(1L);
+		when(tradesService.requestTrade(any(TradesRequestDto.class))).thenReturn(Result.success(1L));
 
 		// When
 		ApiResponse<Long> response = tradesController.requestTrade(dto);

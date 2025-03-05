@@ -20,6 +20,7 @@ import org.springframework.restdocs.payload.JsonFieldType;
 import com.epages.restdocs.apispec.ResourceSnippetParameters;
 import com.epages.restdocs.apispec.Schema;
 import com.example.swapit.controller.TradesController;
+import com.example.swapit.domain.dto.Result;
 import com.example.swapit.domain.dto.trade.MyGoodsDto;
 import com.example.swapit.domain.dto.trade.MyRequestDto;
 import com.example.swapit.domain.dto.trade.ReceivedRequestDto;
@@ -44,7 +45,7 @@ public class TradesControllerDocsTest extends RestDocsTest {
 		String token = "Bearer valid_token";
 		TradesRequestDto dto = new TradesRequestDto(1L, 2L);
 
-		when(tradesService.requestTrade(any(TradesRequestDto.class))).thenReturn(1L);
+		when(tradesService.requestTrade(any(TradesRequestDto.class))).thenReturn(Result.success(1L));
 
 		ObjectMapper objectMapper = new ObjectMapper();
 
