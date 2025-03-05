@@ -4,11 +4,11 @@ import java.util.List;
 
 import com.example.swapit.domain.dto.trade.MyGoodsDto;
 import com.example.swapit.domain.dto.trade.MyRequestDto;
-import com.example.swapit.domain.dto.trade.ReceivedRequestDto;
+import com.example.swapit.domain.dto.trade.TradeMyGoodsRequestDto;
 import com.example.swapit.domain.dto.trade.TradesRequestDto;
 
 public interface TradesService {
-	void requestTrade(TradesRequestDto tradesRequestDto);
+	Long requestTrade(TradesRequestDto tradesRequestDto);
 
 	void cancelTrade(Long tradesId);
 
@@ -20,7 +20,7 @@ public interface TradesService {
 
 	List<MyGoodsDto> getMyGoods();
 
-	List<ReceivedRequestDto> getGoodsRequests(Long goodsId);
+	TradeMyGoodsRequestDto getGoodsRequests(Long goodsId);
 
 	List<MyRequestDto> getMyRequests();
 }

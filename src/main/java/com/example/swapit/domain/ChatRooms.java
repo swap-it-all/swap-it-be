@@ -1,31 +1,29 @@
 package com.example.swapit.domain;
 
-import java.time.LocalDateTime;
-
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EntityListeners;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@EntityListeners(AuditingEntityListener.class)
-@Table(name = "chatrooms")
+@Table(name = "chatrooms",
+	uniqueConstraints = @UniqueConstraint(columnNames = {"goods_id, inviter_id"})
+)
 public class ChatRooms {
 
 	@Id
@@ -33,26 +31,26 @@ public class ChatRooms {
 	@Column(name = "chatrooms_id")
 	private Long id;
 
+	@Setter
+	@OneToOne
+	@JoinColumn(name = "trades_id")
+	private Trades trade;
+
 	@ManyToOne
 	@JoinColumn(name = "goods_id", nullable = false)
 	private Goods goods;
 
 	@ManyToOne
-	@JoinColumn(name = "owner_id", nullable = false)
-	private Users owner;
+	@JoinColumn(name = "inviter_id", nullable = false)
+	private Users inviter;
 
-	@ManyToOne
-	@JoinColumn(name = "requester_id", nullable = false)
-	private Users requester;
-
-	@CreatedDate
-	@Column(name = "created_at", nullable = false, updatable = false)
-	private LocalDateTime createdAt;
-
-	@Builder
-	public ChatRooms(Goods goods, Users owner, Users requester) {
+	public ChatRooms(Goods goods, Users inviter, Trades trade) {
 		this.goods = goods;
-		this.owner = owner;
-		this.requester = requester;
+		this.inviter = inviter;
+		this.trade = trade;
+	}
+
+	public void updateTrade(Trades trade) {
+		this.trade = trade;
 	}
 }

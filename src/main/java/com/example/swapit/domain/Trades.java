@@ -1,6 +1,5 @@
 package com.example.swapit.domain;
 
-import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 

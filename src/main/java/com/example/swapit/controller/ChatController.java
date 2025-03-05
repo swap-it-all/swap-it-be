@@ -11,9 +11,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.swapit.common.api.ApiResponse;
 import com.example.swapit.domain.dto.ChatListDto;
+import com.example.swapit.domain.dto.ChatRoomAddRequestFromGoodDto;
+import com.example.swapit.domain.dto.ChatRoomAddRequestFromTradeDto;
 import com.example.swapit.domain.dto.ChatRoomGoodsDto;
 import com.example.swapit.domain.dto.ChatRoomListResponseDto;
-import com.example.swapit.domain.dto.ChatRoomRequestDto;
 import com.example.swapit.service.ChatService;
 
 import jakarta.validation.Valid;
@@ -24,9 +25,22 @@ import lombok.RequiredArgsConstructor;
 public class ChatController {
 	private final ChatService chatService;
 
+	/**
+	 * 거래가 없을 때 채팅방 생성
+	 */
 	@PostMapping("/api/user/chatroom")
-	public ApiResponse<Long> addChatRoom(@Valid @RequestBody ChatRoomRequestDto chatRoomRequestDto) {
-		return ApiResponse.success(chatService.addChatRoom(chatRoomRequestDto));
+	public ApiResponse<Long> addChatRoomWithGood(
+		@Valid @RequestBody ChatRoomAddRequestFromGoodDto chatRoomAddRequestFromGoodDto) {
+		return ApiResponse.success(chatService.addChatRoomFromGood(chatRoomAddRequestFromGoodDto));
+	}
+
+	/**
+	 * 거래가 있을 때 채팅방 생성
+	 */
+	@PostMapping("/api/user/swap-chatroom")
+	public ApiResponse<Long> addChatRoomWithTrade(
+		@Valid @RequestBody ChatRoomAddRequestFromTradeDto chatRoomAddRequestFromTradeDto) {
+		return ApiResponse.success(chatService.addChatRoomFromSwap(chatRoomAddRequestFromTradeDto));
 	}
 
 	@GetMapping("/api/user/chatroom")

@@ -22,11 +22,13 @@ import com.example.swapit.domain.Chats;
 import com.example.swapit.domain.Goods;
 import com.example.swapit.domain.GoodsImages;
 import com.example.swapit.domain.GoodsQuality;
+import com.example.swapit.domain.Trades;
 import com.example.swapit.domain.Users;
 import com.example.swapit.domain.dto.ChatDto;
 import com.example.swapit.domain.dto.ChatListDto;
+import com.example.swapit.domain.dto.ChatRoomAddRequestFromGoodDto;
+import com.example.swapit.domain.dto.ChatRoomAddRequestFromTradeDto;
 import com.example.swapit.domain.dto.ChatRoomGoodsDto;
-import com.example.swapit.domain.dto.ChatRoomRequestDto;
 import com.example.swapit.domain.dto.ChatRoomResponseDto;
 import com.example.swapit.domain.dto.ChatStompRequestDto;
 import com.example.swapit.domain.dto.ChatStompResponseDto;
@@ -34,6 +36,7 @@ import com.example.swapit.repository.ChatRoomsRepository;
 import com.example.swapit.repository.ChatsRepository;
 import com.example.swapit.repository.GoodsImagesRepository;
 import com.example.swapit.repository.GoodsRepository;
+import com.example.swapit.repository.TradesRepository;
 import com.example.swapit.repository.UsersRepository;
 import com.example.swapit.service.notification.NotificationEventPublisher;
 
@@ -62,104 +65,127 @@ class ChatServiceTest {
 	private AwsS3Service awsS3Service;
 
 	@Mock
+	private TradesRepository tradesRepository;
+
+	@Mock
 	private NotificationEventPublisher notificationEventPublisher;
 
 	@InjectMocks
 	private ChatServiceImpl chatService;
 
 	@Test
-	@DisplayName("채팅방 생성 테스트")
-	void addChatRoom() {
-		// given
-		ChatRoomRequestDto requestDto = new ChatRoomRequestDto(1L, 1L);
+	@DisplayName("물건 기반 채팅방 생성 테스트")
+	void addChatRoomFromGood() {
+		// Given
+		ChatRoomAddRequestFromGoodDto requestDto = new ChatRoomAddRequestFromGoodDto(1L);
 
-		Users requester = Users.builder()
-			.usersId(1L)
-			.email("test@example.com")
-			.build();
+		Users requester = Users.builder().usersId(1L).email("test@example.com").build();
+		Users owner = Users.builder().usersId(2L).email("owner@example.com").build();
 
-		Users owner = Users.builder()
-			.usersId(2L)
-			.email("test@example.com")
-			.build();
-
-		Goods testGood = Goods.builder()
+		Goods targetGood = Goods.builder()
 			.title("test 물건")
 			.price(1000L)
 			.quality(GoodsQuality.NEW)
-			.content("싸게 드려요! 교환주세요!")
+			.content("교환 요청")
 			.user(owner)
 			.build();
 
-		ChatRooms chatRooms = ChatRooms.builder()
-			.goods(testGood)
-			.requester(requester)
-			.owner(owner)
-			.build();
+		when(goodsRepository.findById(1L)).thenReturn(Optional.of(targetGood));
+		when(currentUserService.getCurrentUser()).thenReturn(requester);
 
-		when(goodsRepository.findById(any())).thenReturn(Optional.of(testGood));
-		when(usersRepository.findById(1L)).thenReturn(Optional.of(requester));
-		when(usersRepository.findById(2L)).thenReturn(Optional.of(owner));
-		when(chatRoomsRepository.save(any())).thenReturn(chatRooms);
+		when(chatRoomsRepository.findByGoodsAndInviter(targetGood, requester))
+			.thenReturn(Optional.empty());
 
-		// when
-		chatService.addChatRoom(requestDto);
+		ChatRooms chatRoom = new ChatRooms(targetGood, requester, null);
+		ReflectionTestUtils.setField(chatRoom, "id", 100L);
 
-		// then
-		verify(chatRoomsRepository, times(1)).save(any());
+		when(chatRoomsRepository.save(any(ChatRooms.class))).thenReturn(chatRoom);
 
-		assertEquals(chatRooms.getGoods(), testGood);
-		assertEquals(chatRooms.getRequester(), requester);
-		assertEquals(chatRooms.getOwner(), owner);
+		// When
+		Long chatRoomId = chatService.addChatRoomFromGood(requestDto);
+
+		// Then
+		verify(chatRoomsRepository, times(1)).save(any(ChatRooms.class));
+		assertEquals(100L, chatRoomId);
+	}
+
+	@Test
+	@DisplayName("거래 기반 채팅방 생성 테스트")
+	void addChatRoomFromSwap() {
+		// Given
+		Long tradeId = 1L;
+		ChatRoomAddRequestFromTradeDto requestDto = new ChatRoomAddRequestFromTradeDto(tradeId);
+
+		Users requester = Users.builder().usersId(1L).build();
+		Users owner = Users.builder().usersId(2L).build();
+
+		Goods targetGood = Goods.builder().user(owner).build();
+		Goods requestedGood = Goods.builder().user(requester).build();
+
+		Trades trade = new Trades(requestedGood, targetGood);
+
+		when(tradesRepository.findById(tradeId)).thenReturn(Optional.of(trade));
+		when(currentUserService.getCurrentUser()).thenReturn(requester);
+
+		when(chatRoomsRepository.findByGoodsAndInviter(targetGood, requester))
+			.thenReturn(Optional.empty());
+
+		ChatRooms chatRoom = new ChatRooms(targetGood, requester, trade);
+		ReflectionTestUtils.setField(chatRoom, "id", 200L);
+		when(chatRoomsRepository.save(any(ChatRooms.class))).thenReturn(chatRoom);
+
+		// When
+		Long chatRoomId = chatService.addChatRoomFromSwap(requestDto);
+
+		// Then
+		verify(chatRoomsRepository, times(1)).save(any(ChatRooms.class));
+		assertEquals(200L, chatRoomId);
 	}
 
 	@Test
 	@DisplayName("채팅방 목록 조회 성공")
 	void getChatRoomListTest() {
-		// given
-		Users currentUser = Users.builder()
-			.usersId(1L)
-			.email("current@example.com")
-			.build();
-
+		// Given
+		Users currentUser = Users.builder().usersId(1L).email("current@example.com").build();
 		when(currentUserService.getCurrentUser()).thenReturn(currentUser);
 
 		Users owner = Users.builder()
 			.usersId(2L)
-			.email("owner@example.com")
 			.profileImageUrl("http://example.com/profile.jpg")
+			.nickname("ownerNick")
+			.build();
+		Goods goods = Goods.builder()
+			.user(owner)
 			.build();
 
 		ChatRooms chatRoom = ChatRooms.builder()
-			.requester(currentUser)
-			.owner(owner)
+			.id(1L)
+			.inviter(currentUser)
+			.goods(goods)
 			.build();
 
-		ReflectionTestUtils.setField(chatRoom, "id", 1L);
+		when(chatRoomsRepository.findMyChatRooms(1L)).thenReturn(List.of(chatRoom));
 
-		List<ChatRooms> chatRoomsList = List.of(chatRoom);
-		when(chatRoomsRepository.findByUsersId(1L)).thenReturn(chatRoomsList);
-
-		when(chatRepository.countByChatRoomsId(any())).thenReturn(1L);
+		when(chatRepository.countByChatRoomsId(1L)).thenReturn(1L);
 
 		Chats latestChat = Chats.builder()
-			.content("Hello")
+			.content("안녕하세요")
 			.build();
-		when(chatRepository.findTopByChatRoomsIdOrderByCreatedAtDesc(any())).thenReturn(latestChat);
+
+		when(chatRepository.findTopByChatRoomsIdOrderByCreatedAtDesc(1L)).thenReturn(latestChat);
 
 		when(usersRepository.findById(2L)).thenReturn(Optional.of(owner));
 
-		// when
+		// When
 		List<ChatRoomResponseDto> result = chatService.getChatRoomList();
 
-		// then
+		// Then
 		assertNotNull(result);
 		assertEquals(1, result.size());
-
 		ChatRoomResponseDto dto = result.get(0);
-		assertEquals(2L, dto.getUsersId());
+		assertEquals(2L, dto.getUsersId()); // 상대방의 id
 		assertEquals("http://example.com/profile.jpg", dto.getProfileImageUrl());
-		assertEquals("Hello", dto.getRecentChat());
+		assertEquals("안녕하세요", dto.getRecentChat());
 	}
 
 	@Test
@@ -230,17 +256,14 @@ class ChatServiceTest {
 		// given
 		Long chatroomId = 1L;
 		Long userId = 100L;
-		String email = "test@example.com";
 
 		ChatStompRequestDto chatDto = new ChatStompRequestDto(ChatType.TALK, "Hello, this is a test chat", 123L);
 
 		Users sender = Users.builder().usersId(100L).build();
-		Users receiver = Users.builder().usersId(101L).build();
 
 		ChatRooms chatRoom = ChatRooms.builder()
 			.id(chatroomId)
-			.requester(sender)
-			.owner(receiver)
+			.inviter(sender)
 			.build();
 
 		when(chatRoomsRepository.findById(chatroomId)).thenReturn(Optional.of(chatRoom));

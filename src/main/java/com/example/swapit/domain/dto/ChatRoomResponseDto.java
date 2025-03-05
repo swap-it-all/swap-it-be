@@ -12,5 +12,5 @@ public class ChatRoomResponseDto {
 	private String profileImageUrl;
 	private String nickname;
 	private String recentChat;
-	private LocalDateTime createdAt;
+	private LocalDateTime recentChatTime;
 }
