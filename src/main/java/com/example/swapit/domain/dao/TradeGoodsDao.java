@@ -1,4 +1,4 @@
-package com.example.swapit.domain.dto.trade;
+package com.example.swapit.domain.dao;
 
 import com.example.swapit.domain.Goods;
 
@@ -9,7 +9,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @AllArgsConstructor
-public class RequestGoodsImageDto {
-	private Goods requestedGoods;
+public class TradeGoodsDao {
+	private Goods targetGoods;
 	private Goods myGoods;
 }

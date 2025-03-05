@@ -2,16 +2,14 @@ package com.example.swapit.repository;
 
 import java.util.List;
 
-import com.example.swapit.domain.TradeStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
 import com.example.swapit.domain.Goods;
 import com.example.swapit.domain.Trades;
-import com.example.swapit.domain.dto.trade.RequestGoodsImageDto;
+import com.example.swapit.domain.dao.TradeGoodsDao;
 import com.example.swapit.domain.dto.trade.TradeCountProjection;
-import com.example.swapit.domain.Users;
 
 import io.lettuce.core.dynamic.annotation.Param;
 
@@ -28,10 +26,10 @@ public interface TradesRepository extends JpaRepository<Trades, Long> {
 		+ "GROUP BY t.targetGoods.id")
 	List<TradeCountProjection> findTradeCountByGoodsIds(@Param("goodsIds") List<Long> goodsIds);
 
-	@Query("SELECT new com.example.swapit.domain.dto.trade.RequestGoodsImageDto(t.targetGoods, t.requestedGoods) "
+	@Query("SELECT new com.example.swapit.domain.dao.TradeGoodsDao(t.targetGoods, t.requestedGoods) "
 		+ "FROM Trades t "
 		+ "WHERE t.requestedGoods.user.usersId = :userId")
-	List<RequestGoodsImageDto> findMyRequests(@Param("userId") Long userId);
+	List<TradeGoodsDao> findMyRequests(@Param("userId") Long userId);
 
 	@Query("SELECT t.requestedGoods FROM Trades t WHERE t.targetGoods.id = :goodsId")
 	List<Goods> findGoodsRequests(@Param("goodsId") Long goodsId);
