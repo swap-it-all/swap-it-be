@@ -28,10 +28,11 @@ import com.example.swapit.domain.NotificationType;
 import com.example.swapit.domain.TradeStatus;
 import com.example.swapit.domain.Trades;
 import com.example.swapit.domain.Users;
+import com.example.swapit.domain.dao.TradeGoodsDao;
+import com.example.swapit.domain.dto.Result;
 import com.example.swapit.domain.dto.trade.MyGoodsDto;
 import com.example.swapit.domain.dto.trade.MyRequestDto;
 import com.example.swapit.domain.dto.trade.ReceivedRequestDto;
-import com.example.swapit.domain.dto.trade.RequestGoodsImageDto;
 import com.example.swapit.domain.dto.trade.TradeCountProjection;
 import com.example.swapit.domain.dto.trade.TradeMyGoodsRequestDto;
 import com.example.swapit.domain.dto.trade.TradesRequestDto;
@@ -107,7 +108,8 @@ public class TradesServiceTest {
 			.sendTradeRequestChat(eq(chatRoom.getId()), eq(ChatType.REQUEST), eq(requestedGoods));
 
 		// When
-		Long returnedTradeId = tradesService.requestTrade(dto);
+		Result<Long> result = tradesService.requestTrade(dto);
+		Long returnedTradeId = result.getData();
 
 		// Then
 		verify(goodsRepository).findById(dto.getRequestedGoodsId());
@@ -148,10 +150,11 @@ public class TradesServiceTest {
 			10L);
 
 		// When
-		CustomException exception = assertThrows(CustomException.class, () -> tradesService.requestTrade(dto));
-		assertEquals(ErrorCode.MAXIMUM_TRADE_REQUEST, exception.getErrorCode());
+		Result<Long> result = tradesService.requestTrade(dto);
 
 		// Then
+		assertFalse(result.isSuccess());
+		assertEquals(ErrorCode.MAXIMUM_TRADE_REQUEST.getMessage(), result.getMessage());
 		verify(goodsRepository, times(1)).findById(dto.getRequestedGoodsId());
 		verify(goodsRepository, times(1)).findById(dto.getTargetGoodsId());
 		verify(tradesRepository, times(1)).countByTargetGoodsIdAndStatus(dto.getTargetGoodsId(), TradeStatus.PENDING);
@@ -185,10 +188,11 @@ public class TradesServiceTest {
 		doThrow(new DataIntegrityViolationException("Duplicate")).when(tradesRepository).save(any(Trades.class));
 
 		// When
-		CustomException exception = assertThrows(CustomException.class, () -> tradesService.requestTrade(dto));
-		assertEquals(ErrorCode.DUPLICATE_TRADE_REQUEST, exception.getErrorCode());
+		Result<Long> result = tradesService.requestTrade(dto);
 
 		// Then
+		assertFalse(result.isSuccess());
+		assertEquals(ErrorCode.DUPLICATE_TRADE_REQUEST.getMessage(), result.getMessage());
 		verify(goodsRepository, times(1)).findById(dto.getRequestedGoodsId());
 		verify(goodsRepository, times(1)).findById(dto.getTargetGoodsId());
 		verify(tradesRepository, times(1)).countByTargetGoodsIdAndStatus(dto.getTargetGoodsId(), TradeStatus.PENDING);
@@ -602,9 +606,9 @@ public class TradesServiceTest {
 			.category(categories2)
 			.price(4000L).build();
 
-		RequestGoodsImageDto requestDto = new RequestGoodsImageDto(requestedGoods, myGoods);
+		TradeGoodsDao requestDto = new TradeGoodsDao(requestedGoods, myGoods);
 
-		List<RequestGoodsImageDto> dtoList = List.of(requestDto);
+		List<TradeGoodsDao> dtoList = List.of(requestDto);
 		when(tradesRepository.findMyRequests(anyLong())).thenReturn(dtoList);
 		Users dummyUser = Users.builder().usersId(1L).build();
 		when(currentUserService.getCurrentUser()).thenReturn(dummyUser);
@@ -630,6 +634,6 @@ public class TradesServiceTest {
 		assertEquals("Requested Item", dto.getTitle());
 		assertEquals(3000L, dto.getPrice());
 		assertEquals("http://image.url/400", dto.getMyGoodsPhotoUrl());
-		assertEquals("http://image.url/300", dto.getRequestedGoodsPhotoUrl());
+		assertEquals("http://image.url/300", dto.getTargetGoodsPhotoUrl());
 	}
 }

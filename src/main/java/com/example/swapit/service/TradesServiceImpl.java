@@ -19,11 +19,12 @@ import com.example.swapit.domain.NotificationType;
 import com.example.swapit.domain.TradeStatus;
 import com.example.swapit.domain.Trades;
 import com.example.swapit.domain.Users;
+import com.example.swapit.domain.dao.TradeGoodsDao;
+import com.example.swapit.domain.dto.Result;
 import com.example.swapit.domain.dto.trade.InProgressCountDto;
 import com.example.swapit.domain.dto.trade.MyGoodsDto;
 import com.example.swapit.domain.dto.trade.MyRequestDto;
 import com.example.swapit.domain.dto.trade.ReceivedRequestDto;
-import com.example.swapit.domain.dto.trade.RequestGoodsImageDto;
 import com.example.swapit.domain.dto.trade.TradeCountProjection;
 import com.example.swapit.domain.dto.trade.TradeMyGoodsRequestDto;
 import com.example.swapit.domain.dto.trade.TradesRequestDto;
@@ -52,7 +53,7 @@ public class TradesServiceImpl implements TradesService {
 
 	@Override
 	@Transactional
-	public Long requestTrade(TradesRequestDto tradesRequestDto) {
+	public Result<Long> requestTrade(TradesRequestDto tradesRequestDto) {
 		Goods requestedGoods = goodsRepository.findById(tradesRequestDto.getRequestedGoodsId())
 			.orElseThrow(() -> new CustomException(ErrorCode.GOOD_NOT_FOUND));
 		Goods targetGoods = goodsRepository.findById(tradesRequestDto.getTargetGoodsId())
@@ -62,7 +63,7 @@ public class TradesServiceImpl implements TradesService {
 		long count = tradesRepository.countByTargetGoodsIdAndStatus(tradesRequestDto.getTargetGoodsId(),
 			TradeStatus.PENDING);
 		if (count >= MAX_REQUEST_COUNT) {
-			throw new CustomException(ErrorCode.MAXIMUM_TRADE_REQUEST);
+			return Result.fail(ErrorCode.MAXIMUM_TRADE_REQUEST.getMessage());
 		}
 
 		// 거래 생성
@@ -74,7 +75,7 @@ public class TradesServiceImpl implements TradesService {
 			notificationEventPublisher.publishNotification(
 				targetGoods.getUser().getUsersId(), NotificationType.REQUESTED, targetGoods.getId());
 		} catch (DataIntegrityViolationException e) {
-			throw new CustomException(ErrorCode.DUPLICATE_TRADE_REQUEST);
+			return Result.fail(ErrorCode.DUPLICATE_TRADE_REQUEST.getMessage());
 		}
 
 		// 채팅방이 존재하면 거래 연결 + 메시지 전송
@@ -84,7 +85,7 @@ public class TradesServiceImpl implements TradesService {
 			chatRooms -> updateChatroomAndSendChat(chatRooms, savedTrade, ChatType.REQUEST, requestedGoods)
 		);
 
-		return savedTrade.getId();
+		return Result.success(savedTrade.getId());
 	}
 
 	@Override
@@ -187,6 +188,7 @@ public class TradesServiceImpl implements TradesService {
 
 		// 거래 완료 처리
 		trade.setStatus(TradeStatus.COMPLETED);
+		tradesRepository.save(trade);
 
 		// 각 물건 거래 상태도 sold out 처리
 		trade.getTargetGoods().setGoodsTradeStatus(GoodsTradeStatus.SOLDOUT);
@@ -277,22 +279,24 @@ public class TradesServiceImpl implements TradesService {
 
 	@Override
 	public List<MyRequestDto> getMyRequests() {
-		List<RequestGoodsImageDto> dtoList = tradesRepository.findMyRequests(
+		List<TradeGoodsDao> daoList = tradesRepository.findMyRequests(
 			currentUserService.getCurrentUser().getUsersId());
 
-		return dtoList.stream()
-			.map(dto -> {
-				String requestedGoodsPhotoUrl = getFirstImageUrl(dto.getRequestedGoods());
-				String myGoodsPhotoUrl = getFirstImageUrl(dto.getMyGoods());
+		return daoList.stream()
+			.map(dao -> {
+				String targetGoodsPhotoUrl = getFirstImageUrl(dao.getTargetGoods());
+				String myGoodsPhotoUrl = getFirstImageUrl(dao.getMyGoods());
 
 				return new MyRequestDto(
-					dto.getRequestedGoods().getId(),
-					dto.getRequestedGoods().getTitle(),
-					dto.getRequestedGoods().getPrice(),
-					dto.getRequestedGoods().getCategory().getName(),
-					dto.getRequestedGoods().getPlaceName(),
+					dao.getTargetGoods().getId(),
+					dao.getTargetGoods().getTitle(),
+					dao.getTargetGoods().getPrice(),
+					dao.getTargetGoods().getCategory().getName(),
+					dao.getTargetGoods().getPlaceName(),
 					myGoodsPhotoUrl,
-					requestedGoodsPhotoUrl
+					targetGoodsPhotoUrl,
+					dao.getTargetGoods().getViewCount(),
+					dao.getTargetGoods().getCreatedAt()
 				);
 			})
 			.toList();
@@ -306,7 +310,7 @@ public class TradesServiceImpl implements TradesService {
 	}
 
 	@Transactional
-	private void updateChatroomAndSendChat(ChatRooms chatRooms, Trades trade, ChatType chatType,
+	protected void updateChatroomAndSendChat(ChatRooms chatRooms, Trades trade, ChatType chatType,
 		Goods goodsForMessage) {
 		chatRooms.updateTrade(trade);
 		chatNotificationService.sendTradeRequestChat(chatRooms.getId(), chatType, goodsForMessage);

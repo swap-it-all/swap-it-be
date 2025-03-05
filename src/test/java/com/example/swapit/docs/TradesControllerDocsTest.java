@@ -20,6 +20,7 @@ import org.springframework.restdocs.payload.JsonFieldType;
 import com.epages.restdocs.apispec.ResourceSnippetParameters;
 import com.epages.restdocs.apispec.Schema;
 import com.example.swapit.controller.TradesController;
+import com.example.swapit.domain.dto.Result;
 import com.example.swapit.domain.dto.trade.MyGoodsDto;
 import com.example.swapit.domain.dto.trade.MyRequestDto;
 import com.example.swapit.domain.dto.trade.ReceivedRequestDto;
@@ -44,7 +45,7 @@ public class TradesControllerDocsTest extends RestDocsTest {
 		String token = "Bearer valid_token";
 		TradesRequestDto dto = new TradesRequestDto(1L, 2L);
 
-		when(tradesService.requestTrade(any(TradesRequestDto.class))).thenReturn(1L);
+		when(tradesService.requestTrade(any(TradesRequestDto.class))).thenReturn(Result.success(1L));
 
 		ObjectMapper objectMapper = new ObjectMapper();
 
@@ -327,7 +328,9 @@ public class TradesControllerDocsTest extends RestDocsTest {
 			"MISC",
 			"경기도 안산시",
 			"http://example.com/my-goods.jpg",
-			"http://example.com/requested-goods.jpg"
+			"http://example.com/requested-goods.jpg",
+			100,
+			LocalDateTime.now()
 		);
 		requestList.add(dummyGoods);
 		when(tradesService.getMyRequests()).thenReturn(requestList);
@@ -341,7 +344,7 @@ public class TradesControllerDocsTest extends RestDocsTest {
 			.andExpect(jsonPath("$.results.goodsList").isArray())
 			.andDo(document("get-my-request",
 				preprocessRequest(prettyPrint()),
-				preprocessResponse(prettyPrint()),
+				preprocessResponse(new CustomDatePreprocessor()),
 				resource(ResourceSnippetParameters.builder()
 					.tag("Swap")
 					.description("스왑 요청 보낸 물건 목록을 조회하는 API")
@@ -357,8 +360,12 @@ public class TradesControllerDocsTest extends RestDocsTest {
 						fieldWithPath("results.goodsList[].placeName").type(JsonFieldType.STRING).description("물건 위치"),
 						fieldWithPath("results.goodsList[].myGoodsPhotoUrl").type(JsonFieldType.STRING)
 							.description("내 물건 이미지 URL"),
-						fieldWithPath("results.goodsList[].requestedGoodsPhotoUrl").type(JsonFieldType.STRING)
-							.description("요청한 물건 이미지 URL")
+						fieldWithPath("results.goodsList[].targetGoodsPhotoUrl").type(JsonFieldType.STRING)
+							.description("요청한 물건 이미지 URL"),
+						fieldWithPath("results.goodsList[].targetGoodsViewCount").type(JsonFieldType.NUMBER)
+							.description("요청한 물건 이미지 조회 수"),
+						fieldWithPath("results.goodsList[].createdAt").type(JsonFieldType.STRING)
+							.description("신청한 물건 등록 시간")
 					)
 					.responseSchema(Schema.schema("ApiResponse<TradesGoodsListResponseDto<MyRequestDto>>"))
 					.build()

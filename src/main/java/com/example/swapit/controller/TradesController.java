@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.swapit.common.api.ApiResponse;
+import com.example.swapit.domain.dto.Result;
 import com.example.swapit.domain.dto.trade.MyGoodsDto;
 import com.example.swapit.domain.dto.trade.MyRequestDto;
 import com.example.swapit.domain.dto.trade.TradeMyGoodsRequestDto;
@@ -28,7 +29,13 @@ public class TradesController {
 
 	@PostMapping("/request")
 	public ApiResponse<Long> requestTrade(@RequestBody @Valid TradesRequestDto tradesRequestDto) {
-		return ApiResponse.success(tradesService.requestTrade(tradesRequestDto));
+		Result<Long> tradeResult = tradesService.requestTrade(tradesRequestDto);
+
+		if (tradeResult.isSuccess()) {
+			return ApiResponse.success(tradeResult.getData());
+		} else {
+			return ApiResponse.fail(tradeResult.getMessage());
+		}
 	}
 
 	@DeleteMapping("/cancel/{tradesId}")
