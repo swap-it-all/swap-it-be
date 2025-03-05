@@ -22,8 +22,9 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import com.example.swapit.domain.ChatType;
 import com.example.swapit.domain.dto.ChatDto;
 import com.example.swapit.domain.dto.ChatListDto;
+import com.example.swapit.domain.dto.ChatRoomAddRequestFromGoodDto;
+import com.example.swapit.domain.dto.ChatRoomAddRequestFromTradeDto;
 import com.example.swapit.domain.dto.ChatRoomGoodsDto;
-import com.example.swapit.domain.dto.ChatRoomRequestDto;
 import com.example.swapit.domain.dto.ChatRoomResponseDto;
 import com.example.swapit.service.ChatService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -47,12 +48,13 @@ class ChatControllerTest {
 	}
 
 	@Test
-	@DisplayName("채팅방 생성 성공")
-	void addChatRoomSuccess() throws Exception {
+	@DisplayName("채팅방 생성 성공 - 물건 상세에서 요청")
+	void addChatRoomWithGoodSuccess() throws Exception {
 		// Given
-		ChatRoomRequestDto dto = new ChatRoomRequestDto(1L, 1L);
+		ChatRoomAddRequestFromGoodDto dto = new ChatRoomAddRequestFromGoodDto(1L);
 
-		doReturn(1L).when(chatService).addChatRoom(org.mockito.ArgumentMatchers.any(ChatRoomRequestDto.class));
+		doReturn(1L).when(chatService)
+			.addChatRoomFromGood(org.mockito.ArgumentMatchers.any(ChatRoomAddRequestFromGoodDto.class));
 
 		// When & Then
 		mockMvc.perform(post("/api/user/chatroom")
@@ -62,7 +64,31 @@ class ChatControllerTest {
 			.andExpect(jsonPath("$.success").value(true))
 			.andExpect(jsonPath("$.message").value("요청에 성공하였습니다."));
 
-		verify(chatService, times(1)).addChatRoom(org.mockito.ArgumentMatchers.any(ChatRoomRequestDto.class));
+		verify(chatService, times(1)).addChatRoomFromGood(
+			org.mockito.ArgumentMatchers.any(ChatRoomAddRequestFromGoodDto.class));
+	}
+
+	@Test
+	@DisplayName("채팅방 생성 성공 - 거래 요청 내역에서 요청")
+	void addChatRoomWithTrade_Success() throws Exception {
+		// Given
+		Long tradeId = 1L;
+		Long expectedChatRoomId = 10L;
+		ChatRoomAddRequestFromTradeDto requestDto = new ChatRoomAddRequestFromTradeDto(tradeId);
+
+		when(chatService.addChatRoomFromSwap(any(ChatRoomAddRequestFromTradeDto.class)))
+			.thenReturn(expectedChatRoomId);
+
+		// When & Then
+		mockMvc.perform(post("/api/user/swap-chatroom")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(new ObjectMapper().writeValueAsString(requestDto)))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.success").value(true))
+			.andExpect(jsonPath("$.message").value("요청에 성공하였습니다."));
+
+		// Verify
+		verify(chatService, times(1)).addChatRoomFromSwap(any(ChatRoomAddRequestFromTradeDto.class));
 	}
 
 	@Test

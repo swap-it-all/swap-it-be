@@ -1,5 +1,8 @@
 package com.example.swapit.docs;
 
+import java.util.Arrays;
+import java.util.List;
+
 import org.springframework.restdocs.operation.OperationRequest;
 import org.springframework.restdocs.operation.OperationResponse;
 import org.springframework.restdocs.operation.OperationResponseFactory;
@@ -36,9 +39,10 @@ public class CustomDatePreprocessor implements OperationPreprocessor {
 		}
 
 		// results 객체 내 모든 createdAt 변환
+		List<String> dateFields = Arrays.asList("createdAt", "recentChatTime");
 		JsonNode resultsNode = rootNode.get("results");
 		if (resultsNode != null) {
-			recursiveProcessCreatedAtFields(resultsNode);
+			recursiveProcessDateFields(resultsNode, dateFields);
 		}
 
 		// 수정된 JSON을 문자열로 변환
@@ -53,22 +57,22 @@ public class CustomDatePreprocessor implements OperationPreprocessor {
 			newContent.getBytes());
 	}
 
-	private void recursiveProcessCreatedAtFields(JsonNode node) {
+	private void recursiveProcessDateFields(JsonNode node, List<String> dateFieldNames) {
 		if (node.isObject()) {
 			ObjectNode objectNode = (ObjectNode)node;
-			JsonNode createdAtNode = objectNode.get("createdAt");
-
-			// createdAt이 배열이면 ISO-8601 문자열로 변환
-			if (createdAtNode != null && createdAtNode.isArray() && createdAtNode.size() == 7) {
-				objectNode.put("createdAt", convertArrayToISODate(createdAtNode));
-			}
-
-			// 현재 객체의 모든 필드를 순회하며 재귀 호출
-			node.fieldNames().forEachRemaining(fieldName -> recursiveProcessCreatedAtFields(node.get(fieldName)));
-
+			// 현재 객체의 모든 필드를 순회하며, 지정한 날짜 필드명이 있는지 확인
+			node.fieldNames().forEachRemaining(fieldName -> {
+				JsonNode fieldNode = node.get(fieldName);
+				if (dateFieldNames.contains(fieldName) && fieldNode.isArray() && fieldNode.size() == 7) {
+					((ObjectNode)node).put(fieldName, convertArrayToISODate(fieldNode));
+				} else {
+					// 재귀 호출로 하위 노드도 처리
+					recursiveProcessDateFields(fieldNode, dateFieldNames);
+				}
+			});
 		} else if (node.isArray()) {
 			for (JsonNode itemNode : node) {
-				recursiveProcessCreatedAtFields(itemNode);
+				recursiveProcessDateFields(itemNode, dateFieldNames);
 			}
 		}
 	}

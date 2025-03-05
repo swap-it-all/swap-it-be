@@ -30,6 +30,7 @@ import com.example.swapit.common.exception.GlobalExceptionHandler;
 import com.example.swapit.domain.dto.trade.MyGoodsDto;
 import com.example.swapit.domain.dto.trade.MyRequestDto;
 import com.example.swapit.domain.dto.trade.ReceivedRequestDto;
+import com.example.swapit.domain.dto.trade.TradeMyGoodsRequestDto;
 import com.example.swapit.domain.dto.trade.TradesRequestDto;
 import com.example.swapit.service.TradesService;
 
@@ -58,15 +59,16 @@ public class TradesControllerTest {
 		// Given
 		TradesRequestDto dto = new TradesRequestDto(1L, 2L);
 
-		doNothing().when(tradesService).requestTrade(any(TradesRequestDto.class));
+		when(tradesService.requestTrade(any(TradesRequestDto.class))).thenReturn(1L);
 
 		// When
-		ApiResponse<Void> response = tradesController.requestTrade(dto);
+		ApiResponse<Long> response = tradesController.requestTrade(dto);
 
 		// Then
 		verify(tradesService, times(1)).requestTrade(dto);
 		assertTrue(response.isSuccess());
 		assertEquals("요청에 성공하였습니다.", response.getMessage());
+		assertEquals(1L, response.getResults());
 	}
 
 	@Test
@@ -218,6 +220,7 @@ public class TradesControllerTest {
 			"http://example.com/image.jpg",
 			100L,
 			5L,
+			2L,
 			LocalDateTime.now()
 		);
 		goodsList.add(dummyGoods);
@@ -248,7 +251,9 @@ public class TradesControllerTest {
 			LocalDateTime.now()
 		);
 		requestList.add(dummyRequest);
-		when(tradesService.getGoodsRequests(goodsId)).thenReturn(requestList);
+		TradeMyGoodsRequestDto dto = new TradeMyGoodsRequestDto("title", requestList);
+
+		when(tradesService.getGoodsRequests(goodsId)).thenReturn(dto);
 
 		// when & then
 		mockMvc.perform(get("/api/user/swap/my-goods/{goodsId}/requests", goodsId))
