@@ -3,6 +3,8 @@ package com.example.swapit.service;
 import java.util.List;
 import java.util.Optional;
 
+import com.example.swapit.domain.GoodsTradeStatus;
+import com.example.swapit.domain.TradeStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
