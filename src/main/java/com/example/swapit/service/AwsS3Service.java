@@ -12,8 +12,6 @@ import com.example.swapit.domain.Users;
 public interface AwsS3Service {
 	List<Pair<String, String>> uploadFiles(Goods good, List<MultipartFile> files);
 
-	String generatePreSignedImageUrl(String objectKey);
-
 	void deleteFile(GoodsImages image);
 
 	String updateUserProfileImage(Users user, MultipartFile file);
