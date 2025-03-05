@@ -5,8 +5,10 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.example.swapit.common.exception.CustomException;
 import com.example.swapit.common.exception.ErrorCode;
@@ -34,9 +36,10 @@ import com.example.swapit.repository.GoodsRepository;
 import com.example.swapit.repository.TradesRepository;
 import com.example.swapit.service.notification.NotificationEventPublisher;
 
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class TradesServiceImpl implements TradesService {
@@ -52,7 +55,6 @@ public class TradesServiceImpl implements TradesService {
 	public static final int MAX_REQUEST_COUNT = 10;
 
 	@Override
-	@Transactional
 	public Result<Long> requestTrade(TradesRequestDto tradesRequestDto) {
 		Goods requestedGoods = goodsRepository.findById(tradesRequestDto.getRequestedGoodsId())
 			.orElseThrow(() -> new CustomException(ErrorCode.GOOD_NOT_FOUND));
@@ -67,25 +69,33 @@ public class TradesServiceImpl implements TradesService {
 		}
 
 		// 거래 생성
-		Trades trades = new Trades(requestedGoods, targetGoods);
-		Trades savedTrade;
-		try {
-			savedTrade = tradesRepository.save(trades);
-			// 알림 발생
-			notificationEventPublisher.publishNotification(
-				targetGoods.getUser().getUsersId(), NotificationType.REQUESTED, targetGoods.getId());
-		} catch (DataIntegrityViolationException e) {
+		Trades savedTrades = createAndSaveTrade(requestedGoods, targetGoods);
+		if (savedTrades == null) {
 			return Result.fail(ErrorCode.DUPLICATE_TRADE_REQUEST.getMessage());
 		}
+
+		// 알림 발생
+		notificationEventPublisher.publishNotification(
+			targetGoods.getUser().getUsersId(), NotificationType.REQUESTED, targetGoods.getId());
 
 		// 채팅방이 존재하면 거래 연결 + 메시지 전송
 		Optional<ChatRooms> chatRoomsOpt = chatRoomsRepository.findByGoodsAndInviter(targetGoods,
 			requestedGoods.getUser());
 		chatRoomsOpt.ifPresent(
-			chatRooms -> updateChatroomAndSendChat(chatRooms, savedTrade, ChatType.REQUEST, requestedGoods)
+			chatRooms -> updateChatroomAndSendChat(chatRooms, savedTrades, ChatType.REQUEST, requestedGoods)
 		);
 
-		return Result.success(savedTrade.getId());
+		return Result.success(savedTrades.getId());
+	}
+
+	private Trades createAndSaveTrade(Goods requestedGoods, Goods targetGoods) {
+		try {
+			return tradesRepository.save(new Trades(requestedGoods, targetGoods));
+		} catch (DataIntegrityViolationException | ConstraintViolationException e) {
+			log.warn("[swap 요청] Duplicate trade request: requestedGoodsId={}, targetGoodsId={}, errorName={}",
+				requestedGoods.getId(), targetGoods.getId(), e.getClass().getSimpleName());
+			return null;
+		}
 	}
 
 	@Override
@@ -309,7 +319,6 @@ public class TradesServiceImpl implements TradesService {
 			.orElse(null);
 	}
 
-	@Transactional
 	protected void updateChatroomAndSendChat(ChatRooms chatRooms, Trades trade, ChatType chatType,
 		Goods goodsForMessage) {
 		chatRooms.updateTrade(trade);
