@@ -20,6 +20,7 @@ import com.example.swapit.domain.TradeStatus;
 import com.example.swapit.domain.Trades;
 import com.example.swapit.domain.Users;
 import com.example.swapit.domain.dao.TradeGoodsDao;
+import com.example.swapit.domain.dto.Result;
 import com.example.swapit.domain.dto.trade.InProgressCountDto;
 import com.example.swapit.domain.dto.trade.MyGoodsDto;
 import com.example.swapit.domain.dto.trade.MyRequestDto;
@@ -52,7 +53,7 @@ public class TradesServiceImpl implements TradesService {
 
 	@Override
 	@Transactional
-	public Long requestTrade(TradesRequestDto tradesRequestDto) {
+	public Result<Long> requestTrade(TradesRequestDto tradesRequestDto) {
 		Goods requestedGoods = goodsRepository.findById(tradesRequestDto.getRequestedGoodsId())
 			.orElseThrow(() -> new CustomException(ErrorCode.GOOD_NOT_FOUND));
 		Goods targetGoods = goodsRepository.findById(tradesRequestDto.getTargetGoodsId())
@@ -62,7 +63,7 @@ public class TradesServiceImpl implements TradesService {
 		long count = tradesRepository.countByTargetGoodsIdAndStatus(tradesRequestDto.getTargetGoodsId(),
 			TradeStatus.PENDING);
 		if (count >= MAX_REQUEST_COUNT) {
-			throw new CustomException(ErrorCode.MAXIMUM_TRADE_REQUEST);
+			return Result.fail(ErrorCode.MAXIMUM_TRADE_REQUEST.getMessage());
 		}
 
 		// 거래 생성
@@ -74,7 +75,7 @@ public class TradesServiceImpl implements TradesService {
 			notificationEventPublisher.publishNotification(
 				targetGoods.getUser().getUsersId(), NotificationType.REQUESTED, targetGoods.getId());
 		} catch (DataIntegrityViolationException e) {
-			throw new CustomException(ErrorCode.DUPLICATE_TRADE_REQUEST);
+			return Result.fail(ErrorCode.DUPLICATE_TRADE_REQUEST.getMessage());
 		}
 
 		// 채팅방이 존재하면 거래 연결 + 메시지 전송
@@ -84,7 +85,7 @@ public class TradesServiceImpl implements TradesService {
 			chatRooms -> updateChatroomAndSendChat(chatRooms, savedTrade, ChatType.REQUEST, requestedGoods)
 		);
 
-		return savedTrade.getId();
+		return Result.success(savedTrade.getId());
 	}
 
 	@Override

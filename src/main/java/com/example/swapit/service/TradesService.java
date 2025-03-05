@@ -2,13 +2,14 @@ package com.example.swapit.service;
 
 import java.util.List;
 
+import com.example.swapit.domain.dto.Result;
 import com.example.swapit.domain.dto.trade.MyGoodsDto;
 import com.example.swapit.domain.dto.trade.MyRequestDto;
 import com.example.swapit.domain.dto.trade.TradeMyGoodsRequestDto;
 import com.example.swapit.domain.dto.trade.TradesRequestDto;
 
 public interface TradesService {
-	Long requestTrade(TradesRequestDto tradesRequestDto);
+	Result<Long> requestTrade(TradesRequestDto tradesRequestDto);
 
 	void cancelTrade(Long tradesId);
 
