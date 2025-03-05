@@ -19,11 +19,13 @@ import com.example.swapit.domain.NotificationType;
 import com.example.swapit.domain.TradeStatus;
 import com.example.swapit.domain.Trades;
 import com.example.swapit.domain.Users;
+import com.example.swapit.domain.dto.trade.InProgressCountDto;
 import com.example.swapit.domain.dto.trade.MyGoodsDto;
 import com.example.swapit.domain.dto.trade.MyRequestDto;
 import com.example.swapit.domain.dto.trade.ReceivedRequestDto;
 import com.example.swapit.domain.dto.trade.RequestGoodsImageDto;
 import com.example.swapit.domain.dto.trade.TradeCountProjection;
+import com.example.swapit.domain.dto.trade.TradeMyGoodsRequestDto;
 import com.example.swapit.domain.dto.trade.TradesRequestDto;
 import com.example.swapit.repository.ChatRoomsRepository;
 import com.example.swapit.repository.GoodsImagesRepository;
@@ -202,14 +204,23 @@ public class TradesServiceImpl implements TradesService {
 
 	@Override
 	public List<MyGoodsDto> getMyGoods() {
+		// 내 물건 목록 (최신순)
 		List<Goods> goodsList = goodsRepository.findByUserOrderByCreatedAtDesc(currentUserService.getCurrentUser());
 		List<Long> goodsIds = goodsList.stream().map(Goods::getId).toList();
 
+		// 전체 거래 요청 수 조회
 		List<TradeCountProjection> tradeCounts = tradesRepository.findTradeCountByGoodsIds(goodsIds);
 		Map<Long, Long> tradeCountMap = tradeCounts.stream()
 			.collect(Collectors.toMap(TradeCountProjection::getGoodsId, TradeCountProjection::getTradeCount));
 
-		return goodsList.stream()
+		// INPROGRESS 거래 수 조회
+		List<InProgressCountDto> inProgressCounts = tradesRepository.findInProgressCountByGoodsIds(goodsIds);
+		Map<Long, Long> inProgressMap = inProgressCounts.stream()
+			.collect(Collectors.toMap(InProgressCountDto::getGoodsId, InProgressCountDto::getInProgressCount));
+
+		// MyGoodsDto 변환
+		List<MyGoodsDto> result = goodsList.stream()
+			.filter(goods -> tradeCountMap.getOrDefault(goods.getId(), 0L) != 0L)
 			.map(goods -> new MyGoodsDto(
 				goods.getId(),
 				goods.getTitle(),
@@ -218,17 +229,38 @@ public class TradesServiceImpl implements TradesService {
 				goods.getPlaceName(),
 				getFirstImageUrl(goods),
 				goods.getViewCount(),
-				tradeCountMap.getOrDefault(goods.getId(), 0L),
+				tradeCountMap.getOrDefault(goods.getId(), 0L), // 전체 거래 요청 수
+				inProgressMap.getOrDefault(goods.getId(), 0L), // INPROGRESS 거래 수
 				goods.getCreatedAt()
 			))
-			.toList();
+			.collect(Collectors.toList());
+
+		// 정렬 로직: INPROGRESS 거래 수가 1개 이상인 물건이 우선, 그 후 createdAt 내림차순
+		result.sort((dto1, dto2) -> {
+			boolean dto1HasInProgress = dto1.getInProgressCount() > 0;
+			boolean dto2HasInProgress = dto2.getInProgressCount() > 0;
+
+			// 1) INPROGRESS 거래가 있는 상품(dto1) vs 없는 상품(dto2)
+			if (dto1HasInProgress && !dto2HasInProgress) {
+				return -1; // dto1이 먼저
+			} else if (!dto1HasInProgress && dto2HasInProgress) {
+				return 1;  // dto2가 먼저
+			}
+
+			// 2) 둘 다 INPROGRESS가 있거나 없으면, createdAt 내림차순
+			return dto2.getCreatedAt().compareTo(dto1.getCreatedAt());
+		});
+
+		return result;
 	}
 
 	@Override
-	public List<ReceivedRequestDto> getGoodsRequests(Long goodsId) {
+	public TradeMyGoodsRequestDto getGoodsRequests(Long goodsId) {
+		Goods myGoods = goodsRepository.findById(goodsId)
+			.orElseThrow(() -> new CustomException(ErrorCode.GOOD_NOT_FOUND));
 		List<Goods> goodsList = tradesRepository.findGoodsRequests(goodsId);
 
-		return goodsList.stream()
+		List<ReceivedRequestDto> list = goodsList.stream()
 			.map(goods -> new ReceivedRequestDto(
 				goods.getId(),
 				goods.getTitle(),
@@ -239,6 +271,8 @@ public class TradesServiceImpl implements TradesService {
 				goods.getCreatedAt()
 			))
 			.toList();
+
+		return new TradeMyGoodsRequestDto(myGoods.getTitle(), list);
 	}
 
 	@Override
