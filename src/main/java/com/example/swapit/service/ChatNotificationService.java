@@ -17,7 +17,7 @@ public class ChatNotificationService {
 	private final ChatService chatService;
 	private final CurrentUserService currentUserService;
 
-	public void sendTradeRequestNotification(Long chatRoomId, ChatType chatType, Goods goods) {
+	public void sendTradeRequestChat(Long chatRoomId, ChatType chatType, Goods goods) {
 		ChatStompRequestDto requestDto = new ChatStompRequestDto(chatType, chatType.getMessage(), goods.getId());
 		ChatStompResponseDto responseDto = chatService.saveChat(chatRoomId, requestDto,
 			currentUserService.getCurrentUser().getUsersId());

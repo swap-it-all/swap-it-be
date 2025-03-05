@@ -81,7 +81,7 @@ public class TradesServiceImpl implements TradesService {
 		Optional<ChatRooms> chatRoomsOpt = chatRoomsRepository.findByGoodsAndInviter(targetGoods,
 			requestedGoods.getUser());
 		chatRoomsOpt.ifPresent(
-			chatRooms -> updateChatRoomsAndNotify(chatRooms, savedTrade, ChatType.REQUEST, requestedGoods)
+			chatRooms -> updateChatroomAndSendChat(chatRooms, savedTrade, ChatType.REQUEST, requestedGoods)
 		);
 
 		return savedTrade.getId();
@@ -99,7 +99,7 @@ public class TradesServiceImpl implements TradesService {
 		// 채팅방이 있으면 거래 해제 + 메시지 전송
 		Optional<ChatRooms> chatRoomsOpt = chatRoomsRepository.findByTrade(trades);
 		chatRoomsOpt.ifPresent(
-			chatRooms -> updateChatRoomsAndNotify(chatRooms, null, ChatType.CANCEL, trades.getRequestedGoods())
+			chatRooms -> updateChatroomAndSendChat(chatRooms, null, ChatType.CANCEL, trades.getRequestedGoods())
 		);
 	}
 
@@ -124,7 +124,7 @@ public class TradesServiceImpl implements TradesService {
 		// 채팅방이 있으면 메시지 전송
 		Optional<ChatRooms> chatRoomsOpt = chatRoomsRepository.findByTrade(trades);
 		chatRoomsOpt.ifPresent(
-			rooms -> updateChatRoomsAndNotify(rooms, trades, ChatType.ACCEPT, trades.getRequestedGoods())
+			rooms -> updateChatroomAndSendChat(rooms, trades, ChatType.ACCEPT, trades.getRequestedGoods())
 		);
 
 		// 각 물건 상태를 reserved로 변경
@@ -159,7 +159,7 @@ public class TradesServiceImpl implements TradesService {
 		// 채팅방이 있으면 거래 해제 + 메시지 전송
 		Optional<ChatRooms> chatRoomsOpt = chatRoomsRepository.findByTrade(trades);
 		chatRoomsOpt.ifPresent(
-			rooms -> updateChatRoomsAndNotify(rooms, null, ChatType.REJECT, trades.getRequestedGoods())
+			rooms -> updateChatroomAndSendChat(rooms, null, ChatType.REJECT, trades.getRequestedGoods())
 		);
 
 		// 알림 발생
@@ -306,8 +306,9 @@ public class TradesServiceImpl implements TradesService {
 	}
 
 	@Transactional
-	private void updateChatRoomsAndNotify(ChatRooms chatRooms, Trades trade, ChatType chatType, Goods goodsForMessage) {
+	private void updateChatroomAndSendChat(ChatRooms chatRooms, Trades trade, ChatType chatType,
+		Goods goodsForMessage) {
 		chatRooms.updateTrade(trade);
-		chatNotificationService.sendTradeRequestNotification(chatRooms.getId(), chatType, goodsForMessage);
+		chatNotificationService.sendTradeRequestChat(chatRooms.getId(), chatType, goodsForMessage);
 	}
 }
