@@ -276,7 +276,9 @@ public class TradesControllerTest {
 			"MISC",
 			"경기도 안산시",
 			"http://example.com/mygoods-image.jpg",
-			"http://example.com/requestedgoods-image.jpg"
+			"http://example.com/requestedgoods-image.jpg",
+			200,
+			LocalDateTime.now()
 		);
 		requestList.add(dummyMyRequest);
 		when(tradesService.getMyRequests()).thenReturn(requestList);

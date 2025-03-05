@@ -28,10 +28,10 @@ import com.example.swapit.domain.NotificationType;
 import com.example.swapit.domain.TradeStatus;
 import com.example.swapit.domain.Trades;
 import com.example.swapit.domain.Users;
+import com.example.swapit.domain.dao.TradeGoodsDao;
 import com.example.swapit.domain.dto.trade.MyGoodsDto;
 import com.example.swapit.domain.dto.trade.MyRequestDto;
 import com.example.swapit.domain.dto.trade.ReceivedRequestDto;
-import com.example.swapit.domain.dto.trade.RequestGoodsImageDto;
 import com.example.swapit.domain.dto.trade.TradeCountProjection;
 import com.example.swapit.domain.dto.trade.TradeMyGoodsRequestDto;
 import com.example.swapit.domain.dto.trade.TradesRequestDto;
@@ -602,9 +602,9 @@ public class TradesServiceTest {
 			.category(categories2)
 			.price(4000L).build();
 
-		RequestGoodsImageDto requestDto = new RequestGoodsImageDto(requestedGoods, myGoods);
+		TradeGoodsDao requestDto = new TradeGoodsDao(requestedGoods, myGoods);
 
-		List<RequestGoodsImageDto> dtoList = List.of(requestDto);
+		List<TradeGoodsDao> dtoList = List.of(requestDto);
 		when(tradesRepository.findMyRequests(anyLong())).thenReturn(dtoList);
 		Users dummyUser = Users.builder().usersId(1L).build();
 		when(currentUserService.getCurrentUser()).thenReturn(dummyUser);
@@ -630,6 +630,6 @@ public class TradesServiceTest {
 		assertEquals("Requested Item", dto.getTitle());
 		assertEquals(3000L, dto.getPrice());
 		assertEquals("http://image.url/400", dto.getMyGoodsPhotoUrl());
-		assertEquals("http://image.url/300", dto.getRequestedGoodsPhotoUrl());
+		assertEquals("http://image.url/300", dto.getTargetGoodsPhotoUrl());
 	}
 }
