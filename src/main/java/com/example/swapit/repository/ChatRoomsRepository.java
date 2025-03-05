@@ -19,24 +19,27 @@ public interface ChatRoomsRepository extends JpaRepository<ChatRooms, Long> {
 	List<ChatRooms> findByUsersId(@Param("usersId") Long usersId);
 
 	@Query("""
-		SELECT c 
+		SELECT c
 		FROM ChatRooms c
 		  LEFT JOIN c.trade t
 		  LEFT JOIN t.requestedGoods rg
 		  LEFT JOIN t.targetGoods tg
-		WHERE 
+		  LEFT JOIN Chats ch ON ch.chatRooms.id = c.id
+		WHERE
 		  (
-		    c.trade IS NULL 
+		    c.trade IS NULL
 		    AND c.inviter.id = :myId
 		  )
 		  OR
 		  (
-		    c.trade IS NOT NULL 
+		    c.trade IS NOT NULL
 		    AND (
 		      rg.user.id = :myId
 		      OR tg.user.id = :myId
-		    )
+			)
 		  )
+		GROUP BY c
+		ORDER BY MAX(ch.createdAt) DESC
 		""")
 	List<ChatRooms> findMyChatRooms(@Param("myId") Long myId);
 
