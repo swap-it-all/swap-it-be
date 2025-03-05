@@ -13,10 +13,6 @@ import com.example.swapit.domain.Trades;
 import com.example.swapit.domain.Users;
 
 public interface ChatRoomsRepository extends JpaRepository<ChatRooms, Long> {
-	// List<ChatRooms> findAllByOwnerUsersIdAndRequesterUsersId(Long ownerId, Long requesterId);
-
-	@Query("SELECT c from ChatRooms c WHERE c.inviter.id = :usersId OR c.goods.user.id = :usersId")
-	List<ChatRooms> findByUsersId(@Param("usersId") Long usersId);
 
 	@Query("""
 		SELECT c
