@@ -117,7 +117,7 @@ public class ChatControllerDocsTest extends RestDocsTest {
 			.profileImageUrl("http://example.com/image.jpg")
 			.nickname("testUser")
 			.recentChat("안녕하세요!")
-			.createdAt(LocalDateTime.now())
+			.recentChatTime(LocalDateTime.now())
 			.build();
 
 		dtoList.add(dto);
@@ -146,7 +146,8 @@ public class ChatControllerDocsTest extends RestDocsTest {
 						fieldWithPath("results.chatRoomList[].nickname").type(JsonFieldType.STRING).description("닉네임"),
 						fieldWithPath("results.chatRoomList[].recentChat").type(JsonFieldType.STRING)
 							.description("최근 메세지"),
-						fieldWithPath("results.chatRoomList[].createdAt").type(JsonFieldType.STRING).description("생성시각")
+						fieldWithPath("results.chatRoomList[].recentChatTime").type(JsonFieldType.STRING)
+							.description("최근 채팅 시각")
 					)
 					.responseSchema(Schema.schema("ChatRoomListResponseDto"))
 					.build()

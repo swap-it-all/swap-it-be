@@ -23,6 +23,7 @@ import com.example.swapit.controller.TradesController;
 import com.example.swapit.domain.dto.trade.MyGoodsDto;
 import com.example.swapit.domain.dto.trade.MyRequestDto;
 import com.example.swapit.domain.dto.trade.ReceivedRequestDto;
+import com.example.swapit.domain.dto.trade.TradeMyGoodsRequestDto;
 import com.example.swapit.domain.dto.trade.TradesRequestDto;
 import com.example.swapit.service.TradesServiceImpl;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -43,7 +44,7 @@ public class TradesControllerDocsTest extends RestDocsTest {
 		String token = "Bearer valid_token";
 		TradesRequestDto dto = new TradesRequestDto(1L, 2L);
 
-		doNothing().when(tradesService).requestTrade(any(TradesRequestDto.class));
+		when(tradesService.requestTrade(any(TradesRequestDto.class))).thenReturn(1L);
 
 		ObjectMapper objectMapper = new ObjectMapper();
 
@@ -66,10 +67,10 @@ public class TradesControllerDocsTest extends RestDocsTest {
 					.responseFields(
 						fieldWithPath("success").type(JsonFieldType.BOOLEAN).description("요청 성공 여부"),
 						fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지"),
-						fieldWithPath("results").type(JsonFieldType.OBJECT).description("응답 결과 데이터").optional()
+						fieldWithPath("results").type(JsonFieldType.NUMBER).description("응답 결과 데이터")
 					)
 					.requestSchema(Schema.schema("TradesRequestDto"))
-					.responseSchema(Schema.schema("ApiResponse"))
+					.responseSchema(Schema.schema("ApiResponse<Long>"))
 					.build()
 				)
 			));
@@ -217,6 +218,7 @@ public class TradesControllerDocsTest extends RestDocsTest {
 			"http://example.com/image.jpg",
 			100L,
 			5L,
+			2L,
 			LocalDateTime.now()
 		);
 		goodsList.add(dummyGoods);
@@ -250,6 +252,8 @@ public class TradesControllerDocsTest extends RestDocsTest {
 						fieldWithPath("results.goodsList[].viewCount").type(JsonFieldType.NUMBER).description("조회수"),
 						fieldWithPath("results.goodsList[].requestCount").type(JsonFieldType.NUMBER)
 							.description("스왑 요청 수"),
+						fieldWithPath("results.goodsList[].inProgressCount").type(JsonFieldType.NUMBER)
+							.description("INPROGRESS 상태인 스왑 수"),
 						fieldWithPath("results.goodsList[].createdAt").type(JsonFieldType.STRING).description("등록 시간")
 					)
 					.responseSchema(Schema.schema("ApiResponse<TradesGoodsListResponseDto<MyGoodsDto>>"))
@@ -274,7 +278,8 @@ public class TradesControllerDocsTest extends RestDocsTest {
 			LocalDateTime.now()
 		);
 		requestList.add(dummyGoods);
-		when(tradesService.getGoodsRequests(goodsId)).thenReturn(requestList);
+		TradeMyGoodsRequestDto dto = new TradeMyGoodsRequestDto("스타벅스 머그컵", requestList);
+		when(tradesService.getGoodsRequests(goodsId)).thenReturn(dto);
 
 		// when & then
 		mockMvc.perform(get("/api/user/swap/my-goods/{goodsId}/requests", goodsId)
@@ -293,7 +298,8 @@ public class TradesControllerDocsTest extends RestDocsTest {
 						fieldWithPath("success").type(JsonFieldType.BOOLEAN).description("요청 성공 여부"),
 						fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지"),
 						fieldWithPath("results").type(JsonFieldType.OBJECT).description("응답 결과 데이터"),
-						fieldWithPath("results.goodsList").type(JsonFieldType.ARRAY).description("내 물건 목록"),
+						fieldWithPath("results.myGoodsTitle").type(JsonFieldType.STRING).description("내 물건 제목"),
+						fieldWithPath("results.goodsList").type(JsonFieldType.ARRAY).description("물건 목록"),
 						fieldWithPath("results.goodsList[].goodsId").type(JsonFieldType.NUMBER).description("물건 ID"),
 						fieldWithPath("results.goodsList[].title").type(JsonFieldType.STRING).description("물건 제목"),
 						fieldWithPath("results.goodsList[].price").type(JsonFieldType.NUMBER).description("물건 가격"),
@@ -303,7 +309,7 @@ public class TradesControllerDocsTest extends RestDocsTest {
 							.description("물건 이미지 URL"),
 						fieldWithPath("results.goodsList[].createdAt").type(JsonFieldType.STRING).description("등록 시간")
 					)
-					.responseSchema(Schema.schema("ApiResponse<TradesGoodsListResponseDto<ReceivedRequestDto>>"))
+					.responseSchema(Schema.schema("TradeMyGoodsRequestDto"))
 					.build()
 				)
 			));
