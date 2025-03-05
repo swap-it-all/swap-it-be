@@ -3,8 +3,6 @@ package com.example.swapit.service;
 import java.util.List;
 import java.util.Optional;
 
-import com.example.swapit.domain.GoodsTradeStatus;
-import com.example.swapit.domain.TradeStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -12,6 +10,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.example.swapit.common.exception.CustomException;
 import com.example.swapit.common.exception.ErrorCode;
 import com.example.swapit.domain.FcmToken;
+import com.example.swapit.domain.GoodsTradeStatus;
 import com.example.swapit.domain.Users;
 import com.example.swapit.domain.dto.FcmTokenDto;
 import com.example.swapit.domain.dto.ReviewDto;
@@ -50,8 +49,8 @@ public class UsersServiceImpl implements UsersService {
 
 		// 프로필 이미지가 내부 저장 이미지일 때, 처리
 		String profileImageUrl = user.getProfileImageUrl();
-		if(profileImageUrl.startsWith("images/")) {
-			profileImageUrl = awsS3Service.generatePreSignedImageUrl(profileImageUrl);
+		if (!profileImageUrl.startsWith("http")) {
+			profileImageUrl = awsS3Service.generatePreSignedImageUrl(profileImageUrl.trim());
 		}
 
 		return new UserPageDto(
@@ -76,8 +75,8 @@ public class UsersServiceImpl implements UsersService {
 
 		// 프로필 이미지가 내부 저장 이미지일 때, 처리
 		String profileImageUrl = user.getProfileImageUrl();
-		if(profileImageUrl.startsWith("images/")) {
-			profileImageUrl = awsS3Service.generatePreSignedImageUrl(profileImageUrl);
+		if (!profileImageUrl.startsWith("http")) {
+			profileImageUrl = awsS3Service.generatePreSignedImageUrl(profileImageUrl.trim());
 		}
 
 		return new UserPageDto(
