@@ -92,14 +92,31 @@ public class ChatServiceImpl implements ChatService {
 	public List<ChatRoomResponseDto> getChatRoomList() {
 		Long loggedInUserId = currentUserService.getCurrentUser().getUsersId();
 		List<ChatRooms> chatRooms = chatRoomsRepository.findMyChatRooms(loggedInUserId);
-		// List<ChatRooms> chatRooms = chatRoomsRepository.findByUsersId(loggedInUserId);
 
 		return chatRooms.stream()
 			.filter(chatRoom -> chatRepository.countByChatRoomsId(chatRoom.getId()) > 0)
 			.map(chatRoom -> {
-				Long counterpartId =
-					chatRoom.getInviter().getUsersId().equals(loggedInUserId)
-						? chatRoom.getGoods().getUser().getUsersId() : chatRoom.getInviter().getUsersId();
+				Trades trade = chatRoom.getTrade();
+				Long counterpartId;
+
+				if (trade == null) {
+					// 거래가 없는 채팅방
+					// "채팅방의 물건 소유자" vs "inviter" 중, 내가 아닌 쪽이 상대방
+					if (chatRoom.getGoods().getUser().getUsersId().equals(loggedInUserId)) {
+						counterpartId = chatRoom.getInviter().getUsersId();
+					} else {
+						counterpartId = chatRoom.getGoods().getUser().getUsersId();
+					}
+				} else {
+					// 거래가 있는 채팅방
+					// targetGoods의 user가 나면, requestedGoods.user가 상대방
+					// 반대면, targetGoods.user가 상대방
+					if (trade.getTargetGoods().getUser().getUsersId().equals(loggedInUserId)) {
+						counterpartId = trade.getRequestedGoods().getUser().getUsersId();
+					} else {
+						counterpartId = trade.getTargetGoods().getUser().getUsersId();
+					}
+				}
 
 				Users counterpart = usersRepository.findById(counterpartId)
 					.orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));

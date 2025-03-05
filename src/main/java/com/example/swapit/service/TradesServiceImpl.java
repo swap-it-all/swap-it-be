@@ -5,12 +5,20 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import com.example.swapit.domain.*;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import com.example.swapit.common.exception.CustomException;
 import com.example.swapit.common.exception.ErrorCode;
+import com.example.swapit.domain.ChatRooms;
+import com.example.swapit.domain.ChatType;
+import com.example.swapit.domain.Goods;
+import com.example.swapit.domain.GoodsImages;
+import com.example.swapit.domain.GoodsTradeStatus;
+import com.example.swapit.domain.NotificationType;
+import com.example.swapit.domain.TradeStatus;
+import com.example.swapit.domain.Trades;
+import com.example.swapit.domain.Users;
 import com.example.swapit.domain.dto.trade.MyGoodsDto;
 import com.example.swapit.domain.dto.trade.MyRequestDto;
 import com.example.swapit.domain.dto.trade.ReceivedRequestDto;
@@ -48,33 +56,31 @@ public class TradesServiceImpl implements TradesService {
 		Goods targetGoods = goodsRepository.findById(tradesRequestDto.getTargetGoodsId())
 			.orElseThrow(() -> new CustomException(ErrorCode.GOOD_NOT_FOUND));
 
-		Trades trades = new Trades(requestedGoods, targetGoods);
-
-		// targetGoods의 PENDING 상태인 거래 개수가 한도 초과인지 확인.
+		// 최대 PENDING 요청 제한 체크
 		long count = tradesRepository.countByTargetGoodsIdAndStatus(tradesRequestDto.getTargetGoodsId(),
 			TradeStatus.PENDING);
 		if (count >= MAX_REQUEST_COUNT) {
 			throw new CustomException(ErrorCode.MAXIMUM_TRADE_REQUEST);
 		}
 
+		// 거래 생성
+		Trades trades = new Trades(requestedGoods, targetGoods);
 		Trades savedTrade;
 		try {
 			savedTrade = tradesRepository.save(trades);
-
 			// 알림 발생
 			notificationEventPublisher.publishNotification(
 				targetGoods.getUser().getUsersId(), NotificationType.REQUESTED, targetGoods.getId());
-		} catch (DataIntegrityViolationException ex) {
-			savedTrade = tradesRepository.save(trades);
 		} catch (DataIntegrityViolationException e) {
 			throw new CustomException(ErrorCode.DUPLICATE_TRADE_REQUEST);
 		}
 
-		// 채팅방 조회
+		// 채팅방이 존재하면 거래 연결 + 메시지 전송
 		Optional<ChatRooms> chatRoomsOpt = chatRoomsRepository.findByGoodsAndInviter(targetGoods,
 			requestedGoods.getUser());
 		chatRoomsOpt.ifPresent(
-			chatRooms -> updateChatRoomsAndNotify(chatRooms, savedTrade, ChatType.REQUEST, requestedGoods));
+			chatRooms -> updateChatRoomsAndNotify(chatRooms, savedTrade, ChatType.REQUEST, requestedGoods)
+		);
 
 		return savedTrade.getId();
 	}
@@ -84,12 +90,15 @@ public class TradesServiceImpl implements TradesService {
 	public void cancelTrade(Long tradesId) {
 		Trades trades = tradesRepository.findById(tradesId)
 			.orElseThrow(() -> new CustomException(ErrorCode.TRADES_NOT_FOUND));
+
+		// 거래 삭제
 		tradesRepository.delete(trades);
 
-		// 채팅방이 있으면 거래 id null 저장 및 메시지 전송
+		// 채팅방이 있으면 거래 해제 + 메시지 전송
 		Optional<ChatRooms> chatRoomsOpt = chatRoomsRepository.findByTrade(trades);
 		chatRoomsOpt.ifPresent(
-			chatRooms -> updateChatRoomsAndNotify(chatRooms, null, ChatType.CANCEL, trades.getRequestedGoods()));
+			chatRooms -> updateChatRoomsAndNotify(chatRooms, null, ChatType.CANCEL, trades.getRequestedGoods())
+		);
 	}
 
 	@Override
@@ -98,13 +107,13 @@ public class TradesServiceImpl implements TradesService {
 		Trades trades = tradesRepository.findById(tradesId)
 			.orElseThrow(() -> new CustomException(ErrorCode.TRADES_NOT_FOUND));
 
-		// 거래 owner 인지 검증
-		if (!currentUserService.getCurrentUser().getUsersId().equals(
-				trades.getTargetGoods().getUser().getUsersId())
-		) {
+		// 물건 소유자(Owner)인지 검증
+		Long currentUserId = currentUserService.getCurrentUser().getUsersId();
+		if (!currentUserId.equals(trades.getTargetGoods().getUser().getUsersId())) {
 			throw new CustomException(ErrorCode.TRADE_UNAUTHORIZED);
 		}
 
+		// 거래 상태 변경
 		trades.setStatus(TradeStatus.INPROGRESS);
 
 		// 같은 물건의 다른 거래 요청을 모두 REJECTED로 변경
@@ -136,14 +145,16 @@ public class TradesServiceImpl implements TradesService {
 		Trades trades = tradesRepository.findById(tradesId)
 			.orElseThrow(() -> new CustomException(ErrorCode.TRADES_NOT_FOUND));
 
-		// 거래 owner 인지 검증
-		if (!currentUserService.getCurrentUser().getUsersId().equals(trades.getTargetGoods().getUser().getUsersId())) {
+		// 물건 소유자(Owner)인지 검증
+		Long currentUserId = currentUserService.getCurrentUser().getUsersId();
+		if (!currentUserId.equals(trades.getTargetGoods().getUser().getUsersId())) {
 			throw new CustomException(ErrorCode.TRADE_UNAUTHORIZED);
 		}
 
+		// 거래 상태 변경
 		trades.setStatus(TradeStatus.REJECTED);
 
-		// 채팅방이 있으면 거래 id null 저장 및 메시지 전송
+		// 채팅방이 있으면 거래 해제 + 메시지 전송
 		Optional<ChatRooms> chatRoomsOpt = chatRoomsRepository.findByTrade(trades);
 		chatRoomsOpt.ifPresent(
 			rooms -> updateChatRoomsAndNotify(rooms, null, ChatType.REJECT, trades.getRequestedGoods())
@@ -152,8 +163,8 @@ public class TradesServiceImpl implements TradesService {
 		// 알림 발생
 		notificationEventPublisher.publishNotification(
 			trades.getRequestedGoods().getUser().getUsersId(),
-				NotificationType.REJECTED,
-				trades.getTargetGoods().getId()
+			NotificationType.REJECTED,
+			trades.getTargetGoods().getId()
 		);
 	}
 
@@ -168,19 +179,12 @@ public class TradesServiceImpl implements TradesService {
 
 		// 거래 관계자인지 확인
 		if (!userId.equals(trade.getTargetGoods().getUser().getUsersId())
-				&& !userId.equals(trade.getRequestedGoods().getUser().getUsersId())) {
+			&& !userId.equals(trade.getRequestedGoods().getUser().getUsersId())) {
 			throw new CustomException(ErrorCode.TRADE_UNAUTHORIZED);
 		}
 
 		// 거래 완료 처리
 		trade.setStatus(TradeStatus.COMPLETED);
-
-		// 채팅방이 있으면 메시지 전송
-		Optional<ChatRooms> chatRoomsOpt = chatRoomsRepository.findByTrade(trade);
-		chatRoomsOpt.ifPresent(
-			rooms -> updateChatRoomsAndNotify(rooms, trade, ChatType.COMPLETE, trade.getRequestedGoods())
-		);
-		tradesRepository.save(trade);
 
 		// 각 물건 거래 상태도 sold out 처리
 		trade.getTargetGoods().setGoodsTradeStatus(GoodsTradeStatus.SOLDOUT);
@@ -190,7 +194,7 @@ public class TradesServiceImpl implements TradesService {
 
 		// 거래 상대방에게 알림 전송
 		Users recipient = (userId.equals(trade.getTargetGoods().getUser().getUsersId()))
-				? trade.getRequestedGoods().getUser() : trade.getTargetGoods().getUser();
+			? trade.getRequestedGoods().getUser() : trade.getTargetGoods().getUser();
 		notificationEventPublisher.publishNotification(
 			recipient.getUsersId(), NotificationType.COMPLETED
 		);
@@ -206,9 +210,17 @@ public class TradesServiceImpl implements TradesService {
 			.collect(Collectors.toMap(TradeCountProjection::getGoodsId, TradeCountProjection::getTradeCount));
 
 		return goodsList.stream()
-			.map(goods -> new MyGoodsDto(goods.getId(), goods.getTitle(), goods.getPrice(),
-				goods.getCategory().getName(), goods.getPlaceName(), getFirstImageUrl(goods), goods.getViewCount(),
-				tradeCountMap.getOrDefault(goods.getId(), 0L), goods.getCreatedAt()))
+			.map(goods -> new MyGoodsDto(
+				goods.getId(),
+				goods.getTitle(),
+				goods.getPrice(),
+				goods.getCategory().getName(),
+				goods.getPlaceName(),
+				getFirstImageUrl(goods),
+				goods.getViewCount(),
+				tradeCountMap.getOrDefault(goods.getId(), 0L),
+				goods.getCreatedAt()
+			))
 			.toList();
 	}
 
@@ -217,8 +229,15 @@ public class TradesServiceImpl implements TradesService {
 		List<Goods> goodsList = tradesRepository.findGoodsRequests(goodsId);
 
 		return goodsList.stream()
-			.map(goods -> new ReceivedRequestDto(goods.getId(), goods.getTitle(), goods.getPrice(),
-				goods.getCategory().getName(), goods.getPlaceName(), getFirstImageUrl(goods), goods.getCreatedAt()))
+			.map(goods -> new ReceivedRequestDto(
+				goods.getId(),
+				goods.getTitle(),
+				goods.getPrice(),
+				goods.getCategory().getName(),
+				goods.getPlaceName(),
+				getFirstImageUrl(goods),
+				goods.getCreatedAt()
+			))
 			.toList();
 	}
 
@@ -257,5 +276,4 @@ public class TradesServiceImpl implements TradesService {
 		chatRooms.updateTrade(trade);
 		chatNotificationService.sendTradeRequestNotification(chatRooms.getId(), chatType, goodsForMessage);
 	}
-
 }
