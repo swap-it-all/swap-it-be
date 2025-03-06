@@ -33,6 +33,7 @@ public class AwsS3ServiceImpl implements AwsS3Service {
 	private String bucketName;
 
 	private static final List<String> ALLOWED_EXTENSIONS = List.of("jpg", "jpeg", "png"); // 이미지 가능 확장자
+	private final String baseUrl = "images/";
 	private final S3Client s3Client;
 
 	/**
@@ -45,7 +46,7 @@ public class AwsS3ServiceImpl implements AwsS3Service {
 				if (!isValidImageFile(file.getOriginalFilename())) {
 					throw new CustomException(ErrorCode.INVALID_IMAGE_FORMAT);
 				}
-				String s3Key = uploadFileToS3(file, "images/goods/" + good.getId());
+				String s3Key = uploadFileToS3(file, "goods/" + good.getId());
 				return Pair.of(s3Key, file.getContentType());
 			}).toList();
 	}
@@ -53,19 +54,14 @@ public class AwsS3ServiceImpl implements AwsS3Service {
 	@Override
 	public void deleteFile(GoodsImages image) {
 		// S3에서 이미지 삭제
-		deleteFileFromS3(image.getS3Key());
+		deleteFileFromS3(baseUrl + image.getS3Key());
 	}
 
 	@Override
 	public String updateUserProfileImage(Users user, MultipartFile file) {
 		isValidImageFile(file.getOriginalFilename());
-
-		// 기존 프로필 이미지 삭제 (있다면)
-		if (user.getProfileImageUrl() != null) {
-			deleteFileFromS3(user.getProfileImageUrl()); // 기존 이미지 삭제
-		}
-
-		return uploadFileToS3(file, "images/users/" + user.getUsersId());
+		deleteFileFromS3(user.getProfileImageUrl()); // 기존 이미지 삭제
+		return uploadFileToS3(file, "users/" + user.getUsersId());
 	}
 
 	/**
@@ -78,7 +74,7 @@ public class AwsS3ServiceImpl implements AwsS3Service {
 		try {
 			PutObjectRequest putRequest = PutObjectRequest.builder()
 				.bucket(bucketName)
-				.key(s3Key)
+				.key(baseUrl + s3Key)
 				.contentType(file.getContentType())
 				.build();
 
@@ -100,7 +96,7 @@ public class AwsS3ServiceImpl implements AwsS3Service {
 	private void deleteFileFromS3(String s3Key) {
 		DeleteObjectRequest deleteObjectRequest = DeleteObjectRequest.builder()
 			.bucket(bucketName)
-			.key(s3Key)
+			.key(baseUrl + s3Key)
 			.build();
 
 		s3Client.deleteObject(deleteObjectRequest);
