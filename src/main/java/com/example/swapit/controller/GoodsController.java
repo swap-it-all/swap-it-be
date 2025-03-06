@@ -89,6 +89,9 @@ public class GoodsController {
 	 */
 	@GetMapping("/user/goods/my/{goodTradeStatus}")
 	public ApiResponse<Dto<List<MyGoodDto>>> getMyAllGoods(@PathVariable String goodTradeStatus) {
+		if (!goodTradeStatus.equals("onsale") && !goodTradeStatus.equals("soldout")) {
+			throw new CustomException(ErrorCode.PAGE_NOT_FOUND);
+		}
 		return ApiResponse.success(goodsService.getMyGoods(goodTradeStatus));
 	}
 
