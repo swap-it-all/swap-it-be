@@ -18,6 +18,7 @@ pipeline {
             steps {
                 sshagent(credentials: ['aws-ssh-key']) {
                     sh '''
+                        export FIREBASE_CONFIG_B64=$(echo "$FIREBASE_CONFIG" | base64 -w 0)
                         ssh -o StrictHostKeyChecking=no $AWS_IP_ADDRESS uptime
                         scp $JENKINS_ROUTE $AWS_IP_ADDRESS:$AWS_ROUTE
                         ssh -T $AWS_IP_ADDRESS "export DB_URL=$DB_URL && \
@@ -32,7 +33,7 @@ pipeline {
                         export MAIL_SEND_TO=$MAIL_SEND_TO && \
                         export S3_BUCKET_NAME=$S3_BUCKET_NAME && \
                         export REDIS_HOST=$REDIS_HOST && \
-                        export FIREBASE_CONFIG=\$FIREBASE_CONFIG && \
+                        export FIREBASE_CONFIG=$(echo $FIREBASE_CONFIG_B64 | base64 -d) && \
                         bash ./deploy.sh"
                     '''
                 }
