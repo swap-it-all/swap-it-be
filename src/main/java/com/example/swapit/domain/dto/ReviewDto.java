@@ -21,11 +21,11 @@ public class ReviewDto {
 	private String content;
 	private LocalDateTime createdAt;
 
-	public static ReviewDto of(Reviews review) {
+	public static ReviewDto of(Reviews review, String writerProfileImageUrl) {
 		return ReviewDto.builder()
 			.usersId(review.getWriter().getUsersId())
 			.nickname(review.getWriter().getNickname())
-			.profileImageUrl(review.getWriter().getProfileImageUrl())
+			.profileImageUrl(writerProfileImageUrl)
 			.rating(review.getRating())
 			.content(review.getContent())
 			.createdAt(review.getCreatedAt())

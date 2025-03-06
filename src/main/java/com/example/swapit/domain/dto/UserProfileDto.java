@@ -16,11 +16,11 @@ public class UserProfileDto {
 	private String profileImageUrl;
 	private Double userRating;
 
-	public static UserProfileDto of(Users user, Double averageRating) {
+	public static UserProfileDto of(Users user, String userProfileImageUrl, Double averageRating) {
 		return UserProfileDto.builder()
 			.userId(user.getUsersId())
 			.nickname(user.getNickname())
-			.profileImageUrl(user.getProfileImageUrl())
+			.profileImageUrl(userProfileImageUrl)
 			.userRating(averageRating)
 			.build();
 	}
