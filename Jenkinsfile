@@ -32,6 +32,7 @@ pipeline {
                         export MAIL_SEND_TO=$MAIL_SEND_TO && \
                         export S3_BUCKET_NAME=$S3_BUCKET_NAME && \
                         export REDIS_HOST=$REDIS_HOST && \
+                        export FIREBASE_CONFIG="$(echo "$FIREBASE_CONFIG_B64" | base64 -d)" && \
                         bash ./deploy.sh"
                     '''
                 }
