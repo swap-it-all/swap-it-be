@@ -17,10 +17,11 @@ import org.springframework.web.multipart.MultipartFile;
 import com.example.swapit.common.api.ApiResponse;
 import com.example.swapit.common.exception.CustomException;
 import com.example.swapit.common.exception.ErrorCode;
+import com.example.swapit.domain.dto.Dto;
 import com.example.swapit.domain.dto.good.GoodsDetailDto;
-import com.example.swapit.domain.dto.good.GoodsDto;
 import com.example.swapit.domain.dto.good.GoodsListDto;
 import com.example.swapit.domain.dto.good.GoodsRequestDto;
+import com.example.swapit.domain.dto.good.MyGoodDto;
 import com.example.swapit.service.GoodsService;
 
 import jakarta.validation.Valid;
@@ -82,9 +83,13 @@ public class GoodsController {
 		);
 	}
 
-	@GetMapping("/user/goods/my")
-	public ApiResponse<List<GoodsDto>> getMyAllGoods() {
-		return ApiResponse.success(goodsService.getMyGoods());
+	/**
+	 * 내 물건 목록 조회
+	 * @param goodTradeStatus : onsale (판매중), soldout (판매완료)
+	 */
+	@GetMapping("/user/goods/my/{goodTradeStatus}")
+	public ApiResponse<Dto<List<MyGoodDto>>> getMyAllGoods(@PathVariable String goodTradeStatus) {
+		return ApiResponse.success(goodsService.getMyGoods(goodTradeStatus));
 	}
 
 	@PostMapping("/user/goods/register")

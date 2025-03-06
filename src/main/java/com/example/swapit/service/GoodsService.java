@@ -5,10 +5,11 @@ import java.util.List;
 
 import org.springframework.web.multipart.MultipartFile;
 
+import com.example.swapit.domain.dto.Dto;
 import com.example.swapit.domain.dto.good.GoodsDetailDto;
-import com.example.swapit.domain.dto.good.GoodsDto;
 import com.example.swapit.domain.dto.good.GoodsListDto;
 import com.example.swapit.domain.dto.good.GoodsRequestDto;
+import com.example.swapit.domain.dto.good.MyGoodDto;
 
 public interface GoodsService {
 
@@ -16,7 +17,7 @@ public interface GoodsService {
 	GoodsListDto getGoods(Long cursorValue, Long cursorId, LocalDateTime createdAt, List<Long> categoryIds,
 		String keyword, String sortBy);
 
-	List<GoodsDto> getMyGoods();
+	Dto<List<MyGoodDto>> getMyGoods(String goodTradeStatus);
 
 	GoodsDetailDto getGoodDetail(Long goodsId);
 
