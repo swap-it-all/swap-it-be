@@ -1,4 +1,4 @@
-package com.example.swapit.domain.dto;
+package com.example.swapit.domain.dto.good;
 
 import com.example.swapit.domain.Categories;
 import com.example.swapit.domain.Goods;

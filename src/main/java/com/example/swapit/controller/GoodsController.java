@@ -17,10 +17,10 @@ import org.springframework.web.multipart.MultipartFile;
 import com.example.swapit.common.api.ApiResponse;
 import com.example.swapit.common.exception.CustomException;
 import com.example.swapit.common.exception.ErrorCode;
-import com.example.swapit.domain.dto.GoodsDetailDto;
-import com.example.swapit.domain.dto.GoodsDto;
-import com.example.swapit.domain.dto.GoodsListDto;
-import com.example.swapit.domain.dto.GoodsRequestDto;
+import com.example.swapit.domain.dto.good.GoodsDetailDto;
+import com.example.swapit.domain.dto.good.GoodsDto;
+import com.example.swapit.domain.dto.good.GoodsListDto;
+import com.example.swapit.domain.dto.good.GoodsRequestDto;
 import com.example.swapit.service.GoodsService;
 
 import jakarta.validation.Valid;

@@ -1,8 +1,8 @@
 package com.example.swapit.controller;
 
 import static org.hamcrest.Matchers.*;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.*;
@@ -24,12 +24,12 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-import com.example.swapit.domain.dto.GoodsDetailDto;
-import com.example.swapit.domain.dto.GoodsDto;
-import com.example.swapit.domain.dto.GoodsImageDto;
-import com.example.swapit.domain.dto.GoodsListDto;
-import com.example.swapit.domain.dto.GoodsRequestDto;
 import com.example.swapit.domain.dto.UserProfileDto;
+import com.example.swapit.domain.dto.good.GoodsDetailDto;
+import com.example.swapit.domain.dto.good.GoodsDto;
+import com.example.swapit.domain.dto.good.GoodsImageDto;
+import com.example.swapit.domain.dto.good.GoodsListDto;
+import com.example.swapit.domain.dto.good.GoodsRequestDto;
 import com.example.swapit.service.GoodsService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
