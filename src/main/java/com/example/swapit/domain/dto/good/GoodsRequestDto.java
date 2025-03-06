@@ -5,6 +5,7 @@ import com.example.swapit.domain.Goods;
 import com.example.swapit.domain.GoodsQuality;
 import com.example.swapit.domain.Users;
 
+import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -22,6 +23,7 @@ public class GoodsRequestDto {
 
 	@NotNull(message = "가격은 필수 입력 값입니다.")
 	@Positive(message = "가격은 0보다 커야 합니다.")
+	@Max(value = 100_000_000, message = "가격은 1억 이하로 입력해야 합니다.")
 	private Long price;
 
 	@NotBlank(message = "상품 상태는 필수 입력 값입니다.")
