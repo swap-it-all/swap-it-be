@@ -34,6 +34,7 @@ pipeline {
                         export S3_BUCKET_NAME=$S3_BUCKET_NAME && \
                         export REDIS_HOST=$REDIS_HOST && \
                         export FIREBASE_CONFIG=\'$(echo $FIREBASE_CONFIG_B64 | base64 -d)\' && \
+                        export CLOUDFRONT_URL=$CLOUDFRONT_URL && \
                         bash ./deploy.sh"
                     '''
                 }
