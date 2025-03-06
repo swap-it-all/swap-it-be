@@ -6,7 +6,6 @@ import static org.mockito.Mockito.*;
 import java.util.List;
 import java.util.Optional;
 
-import com.example.swapit.domain.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -18,6 +17,11 @@ import org.springframework.dao.DataIntegrityViolationException;
 
 import com.example.swapit.common.exception.CustomException;
 import com.example.swapit.common.exception.ErrorCode;
+import com.example.swapit.domain.Goods;
+import com.example.swapit.domain.Reviews;
+import com.example.swapit.domain.TradeStatus;
+import com.example.swapit.domain.Trades;
+import com.example.swapit.domain.Users;
 import com.example.swapit.domain.dto.ReviewListDto;
 import com.example.swapit.domain.dto.ReviewRequestDto;
 import com.example.swapit.repository.ReviewRepository;
@@ -49,7 +53,7 @@ class ReviewServiceTest {
 
 	@BeforeEach
 	void setUp() {
-		writer = Users.builder().usersId(1L).build();
+		writer = Users.builder().usersId(1L).profileImageUrl("image").build();
 		owner = Users.builder().usersId(2L).build();
 
 		requestedGoods = Goods.builder().user(writer).build();
