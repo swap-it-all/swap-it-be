@@ -23,5 +23,8 @@ cloud:
     credentials:
       instance-profile: true  # IAM Role 사용
 
+    cloudfront:
+      url: ${CLOUDFRONT_URL}
+
 firebase:
   config-env: ${FIREBASE_CONFIG}

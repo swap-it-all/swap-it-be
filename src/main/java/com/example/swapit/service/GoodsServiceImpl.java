@@ -3,6 +3,7 @@ package com.example.swapit.service;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -41,6 +42,9 @@ public class GoodsServiceImpl implements GoodsService {
 	private final ReviewRepository reviewRepository;
 	private final AwsS3Service awsS3Service;
 
+	@Value("${cloud.aws.cloudfront.url}")
+	private String cdnUrl;
+
 	private static final int size = 30;
 	private static final int MAX_IMAGES = 10; // 이미지 최대 개수
 
@@ -59,13 +63,13 @@ public class GoodsServiceImpl implements GoodsService {
 
 		// todo : 트래픽이 많아지면 Goods 엔티티에 "대표 이미지" 필드 추가
 		List<GoodsDto> goodsDtoList = paginateGoods.stream()
-			.map(good -> {
-				String firstImageUrl = goodsImagesRepository.findFirstByGoodOrderByIdAsc(good)
+			.map(good -> GoodsDto.of(
+				good,
+				goodsImagesRepository.findFirstByGoodOrderByIdAsc(good)
 					.map(GoodsImages::getS3Key)
-					.map(awsS3Service::generatePreSignedImageUrl)
-					.orElse(null);
-				return GoodsDto.of(good, firstImageUrl);
-			}).toList();
+					.map(s3Key -> cdnUrl + s3Key)
+					.orElse(null)
+			)).toList();
 
 		Long lastCursorId = paginateGoods.isEmpty() ? null : paginateGoods.get(paginateGoods.size() - 1).getId();
 
@@ -81,13 +85,13 @@ public class GoodsServiceImpl implements GoodsService {
 
 		// todo : 트래픽이 많아지면 Goods 엔티티에 "대표 이미지" 필드 추가
 		return findGoods.stream()
-			.map(good -> {
-				String firstImageUrl = goodsImagesRepository.findFirstByGoodOrderByIdAsc(good)
+			.map(good -> GoodsDto.of(
+				good,
+				goodsImagesRepository.findFirstByGoodOrderByIdAsc(good)
 					.map(GoodsImages::getS3Key)
-					.map(awsS3Service::generatePreSignedImageUrl)
-					.orElse(null);
-				return GoodsDto.of(good, firstImageUrl);
-			}).toList();
+					.map(s3Key -> cdnUrl + s3Key)
+					.orElse(null)
+			)).toList();
 	}
 
 	@Override
@@ -97,7 +101,11 @@ public class GoodsServiceImpl implements GoodsService {
 
 		// 유저 프로필 생성
 		Double averageRating = reviewRepository.averageRatingByReviewee(good.getUser());
-		UserProfileDto userProfileDto = UserProfileDto.of(good.getUser(), averageRating);
+		String profileImageUrl = good.getUser().getProfileImageUrl();
+		if (!profileImageUrl.trim().startsWith("http")) {
+			profileImageUrl = cdnUrl + profileImageUrl;
+		}
+		UserProfileDto userProfileDto = UserProfileDto.of(good.getUser(), profileImageUrl, averageRating);
 
 		// todo :  redis로 ip 제한 걸어서 30초 이내로 다시 요청할 때 변경 가능하도록 하능하게 하면 비기능 향상.
 		// 물건의 viewCount 증가 (새로고침할 때 viewCount가 무한히 증가됨. -> 이 부분은.)
@@ -106,9 +114,8 @@ public class GoodsServiceImpl implements GoodsService {
 		// 물건 이미지 리스트 조회
 		List<GoodsImageDto> photos = goodsImagesRepository.findByGood(good)
 			.stream()
-			.map(image -> new GoodsImageDto(image.getId(), awsS3Service.generatePreSignedImageUrl(image.getS3Key())))
+			.map(image -> new GoodsImageDto(image.getId(), cdnUrl + image.getS3Key()))
 			.toList();
-
 		return GoodsDetailDto.of(good, userProfileDto, photos);
 	}
 

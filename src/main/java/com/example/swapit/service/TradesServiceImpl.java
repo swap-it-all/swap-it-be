@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
@@ -15,7 +16,6 @@ import com.example.swapit.common.exception.ErrorCode;
 import com.example.swapit.domain.ChatRooms;
 import com.example.swapit.domain.ChatType;
 import com.example.swapit.domain.Goods;
-import com.example.swapit.domain.GoodsImages;
 import com.example.swapit.domain.GoodsTradeStatus;
 import com.example.swapit.domain.NotificationType;
 import com.example.swapit.domain.TradeStatus;
@@ -49,10 +49,13 @@ public class TradesServiceImpl implements TradesService {
 	private final GoodsImagesRepository goodsImagesRepository;
 	private final ChatRoomsRepository chatRoomsRepository;
 	private final CurrentUserService currentUserService;
-	private final AwsS3Service awsS3Service;
 	private final ChatNotificationService chatNotificationService;
 	private final NotificationEventPublisher notificationEventPublisher;
+
 	public static final int MAX_REQUEST_COUNT = 10;
+
+	@Value("${cloud.aws.cloudfront.url}")
+	private String cdnUrl;
 
 	@Override
 	public Result<Long> requestTrade(TradesRequestDto tradesRequestDto) {
@@ -314,8 +317,7 @@ public class TradesServiceImpl implements TradesService {
 
 	private String getFirstImageUrl(Goods goods) {
 		return goodsImagesRepository.findFirstByGoodOrderByIdAsc(goods)
-			.map(GoodsImages::getS3Key)
-			.map(awsS3Service::generatePreSignedImageUrl)
+			.map(image -> cdnUrl + image.getS3Key())
 			.orElse(null);
 	}
 

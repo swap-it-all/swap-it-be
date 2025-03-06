@@ -15,6 +15,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Builder
@@ -28,9 +29,11 @@ public class Users {
 	@Column(name = "users_id", columnDefinition = "BIGINT", nullable = false)
 	private Long usersId;
 
+	@Setter
 	@Column(name = "nickname", columnDefinition = "VARCHAR(20)", nullable = false)
 	private String nickname;
 
+	@Setter
 	@Column(name = "profile_image_url", columnDefinition = "TEXT", nullable = false)
 	private String profileImageUrl;
 
@@ -50,12 +53,4 @@ public class Users {
 	@Builder.Default
 	@OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
 	private List<Notifications> notificationsList = new ArrayList<>();
-
-	public void updateProfileImageUrl(String profileImageUrl) {
-		this.profileImageUrl = profileImageUrl;
-	}
-
-	public void updateNickname(String nickname) {
-		this.nickname = nickname;
-	}
 }

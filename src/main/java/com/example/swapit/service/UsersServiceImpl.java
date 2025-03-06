@@ -3,8 +3,7 @@ package com.example.swapit.service;
 import java.util.List;
 import java.util.Optional;
 
-import com.example.swapit.domain.GoodsTradeStatus;
-import com.example.swapit.domain.TradeStatus;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -36,6 +35,9 @@ public class UsersServiceImpl implements UsersService {
 	private final ReviewRepository reviewRepository;
 	private final FcmTokenRepository fcmTokenRepository;
 
+	@Value("${cloud.aws.cloudfront.url}")
+	private String cdnUrl;
+
 	@Override
 	public UserPageDto getMyPage() {
 		Users user = currentUserService.getCurrentUser();
@@ -45,14 +47,14 @@ public class UsersServiceImpl implements UsersService {
 		double averageRating = reviewRepository.averageRatingByReviewee(user);
 		List<ReviewDto> reviewsTop5 = reviewRepository.findTop5ByRevieweeOrderByCreatedAtDesc(user)
 			.stream()
-			.map(ReviewDto::of)
+			.map(review -> ReviewDto.of(review, cdnUrl + review.getWriter().getProfileImageUrl()))
 			.toList();
 		long totalReviewCount = reviewRepository.countByReviewee(user);
 
 		// 프로필 이미지가 내부 저장 이미지일 때, 처리
 		String profileImageUrl = user.getProfileImageUrl();
-		if (!profileImageUrl.startsWith("http")) {
-			profileImageUrl = awsS3Service.generatePreSignedImageUrl(profileImageUrl.trim());
+		if (!profileImageUrl.trim().startsWith("http")) {
+			profileImageUrl = cdnUrl + profileImageUrl;
 		}
 
 		return new UserPageDto(
@@ -71,14 +73,14 @@ public class UsersServiceImpl implements UsersService {
 		double averageRating = reviewRepository.averageRatingByReviewee(user);
 		List<ReviewDto> reviewsRecentlyTop5 = reviewRepository.findTop5ByRevieweeOrderByCreatedAtDesc(user)
 			.stream()
-			.map(ReviewDto::of)
+			.map(review -> ReviewDto.of(review, cdnUrl + review.getWriter().getProfileImageUrl()))
 			.toList();
 		long totalReviewCount = reviewRepository.countByReviewee(user);
 
 		// 프로필 이미지가 내부 저장 이미지일 때, 처리
 		String profileImageUrl = user.getProfileImageUrl();
-		if (!profileImageUrl.startsWith("http")) {
-			profileImageUrl = awsS3Service.generatePreSignedImageUrl(profileImageUrl.trim());
+		if (!profileImageUrl.trim().startsWith("http")) {
+			profileImageUrl = cdnUrl + profileImageUrl;
 		}
 
 		return new UserPageDto(
@@ -91,14 +93,14 @@ public class UsersServiceImpl implements UsersService {
 	@Transactional
 	public void updateProfileImage(MultipartFile file) {
 		Users user = currentUserService.getCurrentUser();
-		user.updateProfileImageUrl(awsS3Service.updateUserProfileImage(user, file));
+		user.setProfileImageUrl(awsS3Service.updateUserProfileImage(user, file));
+		usersRepository.save(user);
 	}
 
 	@Override
-	@Transactional
 	public void updateNickname(UserNicknameDto dto) {
 		Users user = currentUserService.getCurrentUser();
-		user.updateNickname(dto.getNickname());
+		user.setNickname(dto.getNickname());
 		usersRepository.save(user);
 	}
 

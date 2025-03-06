@@ -159,9 +159,6 @@ public class AuthServiceTest {
 		when(jwtProvider.getEmailFromToken(validAccessToken)).thenReturn(email);
 		when(usersRepository.findByEmail(email)).thenReturn(Optional.of(user));
 
-		when(awsS3Service.generatePreSignedImageUrl(user.getProfileImageUrl()))
-			.thenReturn(imageUrl);
-
 		// When
 		UserResponseDTO userResponseDTO = authService.getUserInfo("Bearer " + validAccessToken);
 

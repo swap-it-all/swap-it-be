@@ -7,6 +7,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -62,9 +63,6 @@ class ChatServiceTest {
 	private CurrentUserService currentUserService;
 
 	@Mock
-	private AwsS3Service awsS3Service;
-
-	@Mock
 	private TradesRepository tradesRepository;
 
 	@Mock
@@ -72,6 +70,13 @@ class ChatServiceTest {
 
 	@InjectMocks
 	private ChatServiceImpl chatService;
+
+	private final String testCdnUrl = "http://example.com/";
+
+	@BeforeEach
+	void setUp() {
+		ReflectionTestUtils.setField(chatService, "cdnUrl", testCdnUrl);
+	}
 
 	@Test
 	@DisplayName("물건 기반 채팅방 생성 테스트")
@@ -151,7 +156,7 @@ class ChatServiceTest {
 
 		Users owner = Users.builder()
 			.usersId(2L)
-			.profileImageUrl("http://example.com/profile.jpg")
+			.profileImageUrl("profile.jpg")
 			.nickname("ownerNick")
 			.build();
 		Goods goods = Goods.builder()
@@ -184,7 +189,7 @@ class ChatServiceTest {
 		assertEquals(1, result.size());
 		ChatRoomResponseDto dto = result.get(0);
 		assertEquals(2L, dto.getUsersId()); // 상대방의 id
-		assertEquals("http://example.com/profile.jpg", dto.getProfileImageUrl());
+		assertEquals(testCdnUrl + "profile.jpg", dto.getProfileImageUrl());
 		assertEquals("안녕하세요", dto.getRecentChat());
 	}
 
@@ -319,9 +324,7 @@ class ChatServiceTest {
 		when(goodsImagesRepository.findFirstByGoodOrderByIdAsc(goods))
 			.thenReturn(Optional.of(goodsImages));
 
-		String expectedImageUrl = "http://example.com/test-image.jpg";
-		when(awsS3Service.generatePreSignedImageUrl("test-key"))
-			.thenReturn(expectedImageUrl);
+		String expectedImageUrl = testCdnUrl + goodsImages.getS3Key();
 
 		// when
 		ChatRoomGoodsDto result = chatService.getChatRoomGoods(chatroomId);

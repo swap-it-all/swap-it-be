@@ -31,7 +31,6 @@ public class AuthServiceImpl implements AuthService {
 	private final UsersRepository usersRepository;
 	private final TokensRepository tokensRepository;
 	private final RestTemplate restTemplate;
-	private final AwsS3Service awsS3Service;
 
 	@Override
 	public TokenDTO refresh(String token) {
@@ -75,7 +74,7 @@ public class AuthServiceImpl implements AuthService {
 			return UserResponseDTO.builder()
 				.nickname(user.getNickname())
 				.email(user.getEmail())
-				.profileImgUrl(awsS3Service.generatePreSignedImageUrl(user.getProfileImageUrl()))
+				.profileImgUrl(user.getProfileImageUrl())
 				.loginInfo(user.getLoginInfo())
 				.build();
 		} catch (CustomException ce) {

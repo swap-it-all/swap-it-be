@@ -2,6 +2,7 @@ package com.example.swapit.service;
 
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
@@ -28,6 +29,9 @@ public class ReviewServiceImpl implements ReviewService {
 	private final ReviewRepository reviewRepository;
 	private final TradesRepository tradesRepository;
 	private final CurrentUserService currentUserService;
+
+	@Value("${cloud.aws.cloudfront.url}")
+	private String cdnUrl;
 
 	@Override
 	public void createReview(ReviewRequestDto reviewRequestDto) {
@@ -74,7 +78,12 @@ public class ReviewServiceImpl implements ReviewService {
 		Users reviewee = currentUserService.getCurrentUser();
 		List<ReviewDto> reviewDtos = reviewRepository.findAllByRevieweeOrderByCreatedAtDesc(reviewee)
 			.stream()
-			.map(ReviewDto::of)
+			.map(review -> {
+				String profileImageUrl = review.getWriter().getProfileImageUrl().trim().startsWith("http")
+					? review.getWriter().getProfileImageUrl()
+					: cdnUrl + review.getWriter().getProfileImageUrl();
+				return ReviewDto.of(review, profileImageUrl);
+			})
 			.toList();
 
 		return new ReviewListDto(reviewDtos.size(), reviewDtos);

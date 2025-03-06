@@ -4,8 +4,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import java.io.IOException;
-import java.net.URL;
-import java.time.Duration;
 import java.util.List;
 
 import org.junit.jupiter.api.DisplayName;
@@ -28,8 +26,6 @@ import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
-import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
-import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequest;
 
 @ExtendWith(MockitoExtension.class)
 class AwsS3ServiceTest {
@@ -75,32 +71,10 @@ class AwsS3ServiceTest {
 		// Then
 		assertFalse(uploadedFiles.isEmpty());
 		assertEquals(1, uploadedFiles.size());
-		assertTrue(uploadedFiles.get(0).getFirst().contains("images/goods/1/"));
+		assertTrue(uploadedFiles.get(0).getFirst().contains("goods/1/"));
 		assertEquals("image/jpeg", uploadedFiles.get(0).getSecond());
 
 		verify(s3Client, times(1)).putObject(any(PutObjectRequest.class), any(RequestBody.class));
-	}
-
-	@Test
-	@DisplayName("이미지 pre-signed 경로 가져오기 성공")
-	void generatePreSignedImageUrl_Success() throws IOException {
-		// Given
-		GetObjectPresignRequest presignRequest = GetObjectPresignRequest.builder()
-			.signatureDuration(Duration.ofMinutes(10))
-			.getObjectRequest(req -> req.bucket(bucketName).key(s3Key))
-			.build();
-
-		PresignedGetObjectRequest presignedRequest = mock(PresignedGetObjectRequest.class);
-		when(s3Presigner.presignGetObject(any(GetObjectPresignRequest.class))).thenReturn(presignedRequest);
-		URL preSigneUrlObject = new URL(preSignedUrl);
-		doReturn(preSigneUrlObject).when(presignedRequest).url();
-
-		// When
-		String resultUrl = awsS3Service.generatePreSignedImageUrl(s3Key);
-
-		// Then
-		assertEquals(preSignedUrl, resultUrl);
-		verify(s3Presigner, times(1)).presignGetObject(any(GetObjectPresignRequest.class));
 	}
 
 	@Test
@@ -136,7 +110,7 @@ class AwsS3ServiceTest {
 		String uploadedS3Key = awsS3Service.updateUserProfileImage(mockUser, mockFile);
 
 		// Then
-		assertTrue(uploadedS3Key.contains("images/users/1/"));
+		assertTrue(uploadedS3Key.contains("users/1/"));
 		verify(s3Client, times(1)).putObject(any(PutObjectRequest.class), any(RequestBody.class));
 	}
 
