@@ -8,6 +8,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -64,15 +65,19 @@ public class TradesServiceTest {
 	private CurrentUserServiceImpl currentUserService;
 
 	@Mock
-	private AwsS3Service awsS3Service;
-
-	@Mock
 	private ChatNotificationService chatNotificationService;
 
 	@Mock
 	private NotificationEventPublisher notificationEventPublisher;
 
 	private TradesRequestDto dto;
+
+	private final String testCdnUrl = "http://example.com/";
+
+	@BeforeEach
+	void setUp() {
+		ReflectionTestUtils.setField(tradesService, "cdnUrl", testCdnUrl);
+	}
 
 	@Test
 	@DisplayName("거래 요청 성공")
@@ -532,7 +537,6 @@ public class TradesServiceTest {
 
 		GoodsImages goodsImages = GoodsImages.builder().s3Key("s3Key123").build();
 		when(goodsImagesRepository.findFirstByGoodOrderByIdAsc(goods)).thenReturn(Optional.of(goodsImages));
-		when(awsS3Service.generatePreSignedImageUrl("s3Key123")).thenReturn("http://image.url/123");
 
 		// when
 		List<MyGoodsDto> result = tradesService.getMyGoods();
@@ -543,7 +547,7 @@ public class TradesServiceTest {
 		assertEquals("Item", dto.getTitle());
 		assertEquals(10000L, dto.getPrice());
 		assertEquals("MISC", dto.getCategory());
-		assertEquals("http://image.url/123", dto.getPhotoUrl());
+		assertEquals(testCdnUrl + goodsImages.getS3Key(), dto.getPhotoUrl());
 		assertEquals(5L, dto.getRequestCount());
 	}
 
@@ -569,10 +573,9 @@ public class TradesServiceTest {
 		when(tradesRepository.findGoodsRequests(goodsId)).thenReturn(goodsList);
 
 		GoodsImages goodsImages = GoodsImages.builder()
-			.s3Key("s3Key200")
+			.s3Key("s3Key")
 			.build();
 		when(goodsImagesRepository.findFirstByGoodOrderByIdAsc(myGoods)).thenReturn(Optional.of(goodsImages));
-		when(awsS3Service.generatePreSignedImageUrl("s3Key200")).thenReturn("http://image.url/200");
 
 		// when
 		TradeMyGoodsRequestDto result = tradesService.getGoodsRequests(goodsId);
@@ -587,7 +590,7 @@ public class TradesServiceTest {
 		assertEquals("Item", dto.getTitle());
 		assertEquals(10000L, dto.getPrice());
 		assertEquals("MISC", dto.getCategory());
-		assertEquals("http://image.url/200", dto.getPhotoUrl());
+		assertEquals(testCdnUrl + goodsImages.getS3Key(), dto.getPhotoUrl());
 	}
 
 	@Test
@@ -613,18 +616,13 @@ public class TradesServiceTest {
 		Users dummyUser = Users.builder().usersId(1L).build();
 		when(currentUserService.getCurrentUser()).thenReturn(dummyUser);
 
-		GoodsImages requestedGoodsImage = GoodsImages.builder().s3Key("s3Key300").build();
+		GoodsImages requestedGoodsImage = GoodsImages.builder().s3Key("s3Key3").build();
 		when(goodsImagesRepository.findFirstByGoodOrderByIdAsc(requestedGoods))
 			.thenReturn(Optional.of(requestedGoodsImage));
-		when(awsS3Service.generatePreSignedImageUrl("s3Key300"))
-			.thenReturn("http://image.url/300");
 
-		GoodsImages myGoodsImage = GoodsImages.builder().s3Key("s3Key400").build();
+		GoodsImages myGoodsImage = GoodsImages.builder().s3Key("s3Key4").build();
 		when(goodsImagesRepository.findFirstByGoodOrderByIdAsc(myGoods))
 			.thenReturn(Optional.of(myGoodsImage));
-		when(awsS3Service.generatePreSignedImageUrl("s3Key400"))
-			.thenReturn("http://image.url/400");
-
 		// when
 		List<MyRequestDto> result = tradesService.getMyRequests();
 
@@ -633,7 +631,7 @@ public class TradesServiceTest {
 		MyRequestDto dto = result.get(0);
 		assertEquals("Requested Item", dto.getTitle());
 		assertEquals(3000L, dto.getPrice());
-		assertEquals("http://image.url/400", dto.getMyGoodsPhotoUrl());
-		assertEquals("http://image.url/300", dto.getTargetGoodsPhotoUrl());
+		assertEquals(testCdnUrl + myGoodsImage.getS3Key(), dto.getMyGoodsPhotoUrl());
+		assertEquals(testCdnUrl + requestedGoodsImage.getS3Key(), dto.getTargetGoodsPhotoUrl());
 	}
 }
