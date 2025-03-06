@@ -3,6 +3,7 @@ package com.example.swapit.service;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -47,7 +48,9 @@ public class ChatServiceImpl implements ChatService {
 	private final ChatsRepository chatRepository;
 	private final GoodsImagesRepository goodsImagesRepository;
 	private final NotificationEventPublisher notificationEventPublisher;
-	private final AwsS3Service awsS3Service;
+
+	@Value("${cloud.aws.cloudfront.url}")
+	private String cdnUrl;
 
 	private static final int size = 30;
 
@@ -120,12 +123,14 @@ public class ChatServiceImpl implements ChatService {
 
 				Users counterpart = usersRepository.findById(counterpartId)
 					.orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+				String userProfileImageUrl = counterpart.getProfileImageUrl().trim().startsWith("http")
+					? counterpart.getProfileImageUrl() : cdnUrl + counterpart.getProfileImageUrl();
 
 				Chats chats = chatRepository.findTopByChatRoomsIdOrderByCreatedAtDesc(chatRoom.getId());
 
 				return ChatRoomResponseDto.builder()
 					.usersId(counterpartId)
-					.profileImageUrl(counterpart.getProfileImageUrl())
+					.profileImageUrl(userProfileImageUrl)
 					.nickname(counterpart.getNickname())
 					.recentChat(chats.getContent())
 					.recentChatTime(chats.getCreatedAt())
@@ -207,7 +212,7 @@ public class ChatServiceImpl implements ChatService {
 		Goods goods = chatRooms.getGoods();
 		String firstImageUrl = goodsImagesRepository.findFirstByGoodOrderByIdAsc(goods)
 			.map(GoodsImages::getS3Key)
-			.map(awsS3Service::generatePreSignedImageUrl)
+			.map(s3Key -> cdnUrl + s3Key)
 			.orElse(null);
 
 		return new ChatRoomGoodsDto(
