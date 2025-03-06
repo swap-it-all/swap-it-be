@@ -1,8 +1,9 @@
-package com.example.swapit.domain.dto;
+package com.example.swapit.domain.dto.chat;
 
 import java.time.LocalDateTime;
 
 import com.example.swapit.domain.ChatType;
+import com.example.swapit.domain.dto.RequesterGoodsDto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

@@ -5,8 +5,8 @@ import org.springframework.stereotype.Service;
 
 import com.example.swapit.domain.ChatType;
 import com.example.swapit.domain.Goods;
-import com.example.swapit.domain.dto.ChatStompRequestDto;
-import com.example.swapit.domain.dto.ChatStompResponseDto;
+import com.example.swapit.domain.dto.chat.ChatStompRequestDto;
+import com.example.swapit.domain.dto.chat.ChatStompResponseDto;
 
 import lombok.RequiredArgsConstructor;
 

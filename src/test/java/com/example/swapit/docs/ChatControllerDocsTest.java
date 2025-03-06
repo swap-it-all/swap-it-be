@@ -22,12 +22,12 @@ import com.epages.restdocs.apispec.ResourceSnippetParameters;
 import com.epages.restdocs.apispec.Schema;
 import com.example.swapit.controller.ChatController;
 import com.example.swapit.domain.ChatType;
-import com.example.swapit.domain.dto.ChatDto;
-import com.example.swapit.domain.dto.ChatListDto;
-import com.example.swapit.domain.dto.ChatRoomAddRequestFromGoodDto;
-import com.example.swapit.domain.dto.ChatRoomAddRequestFromTradeDto;
-import com.example.swapit.domain.dto.ChatRoomGoodsDto;
-import com.example.swapit.domain.dto.ChatRoomResponseDto;
+import com.example.swapit.domain.dto.chat.ChatDto;
+import com.example.swapit.domain.dto.chat.ChatListDto;
+import com.example.swapit.domain.dto.chat.ChatRoomAddRequestFromGoodDto;
+import com.example.swapit.domain.dto.chat.ChatRoomAddRequestFromTradeDto;
+import com.example.swapit.domain.dto.chat.ChatRoomGoodsDto;
+import com.example.swapit.domain.dto.chat.ChatRoomResponseDto;
 import com.example.swapit.service.ChatServiceImpl;
 
 public class ChatControllerDocsTest extends RestDocsTest {
