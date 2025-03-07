@@ -279,7 +279,8 @@ public class TradesControllerTest {
 			"http://example.com/mygoods-image.jpg",
 			"http://example.com/requestedgoods-image.jpg",
 			200,
-			LocalDateTime.now()
+			LocalDateTime.now(),
+			2L
 		);
 		requestList.add(dummyMyRequest);
 		when(tradesService.getMyRequests()).thenReturn(requestList);

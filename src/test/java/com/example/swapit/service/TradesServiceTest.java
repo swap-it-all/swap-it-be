@@ -609,7 +609,7 @@ public class TradesServiceTest {
 			.category(categories2)
 			.price(4000L).build();
 
-		TradeGoodsDao requestDto = new TradeGoodsDao(requestedGoods, myGoods);
+		TradeGoodsDao requestDto = new TradeGoodsDao(requestedGoods, myGoods, 1L);
 
 		List<TradeGoodsDao> dtoList = List.of(requestDto);
 		when(tradesRepository.findMyRequests(anyLong())).thenReturn(dtoList);

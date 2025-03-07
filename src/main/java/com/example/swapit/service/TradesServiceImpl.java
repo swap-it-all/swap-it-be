@@ -5,8 +5,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.hibernate.exception.ConstraintViolationException;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -309,7 +309,8 @@ public class TradesServiceImpl implements TradesService {
 					myGoodsPhotoUrl,
 					targetGoodsPhotoUrl,
 					dao.getTargetGoods().getViewCount(),
-					dao.getTargetGoods().getCreatedAt()
+					dao.getTargetGoods().getCreatedAt(),
+					dao.getTradesId()
 				);
 			})
 			.toList();
