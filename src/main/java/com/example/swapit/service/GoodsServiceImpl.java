@@ -13,13 +13,16 @@ import com.example.swapit.common.exception.ErrorCode;
 import com.example.swapit.domain.Categories;
 import com.example.swapit.domain.Goods;
 import com.example.swapit.domain.GoodsImages;
+import com.example.swapit.domain.GoodsTradeStatus;
 import com.example.swapit.domain.Users;
-import com.example.swapit.domain.dto.GoodsDetailDto;
-import com.example.swapit.domain.dto.GoodsDto;
-import com.example.swapit.domain.dto.GoodsImageDto;
-import com.example.swapit.domain.dto.GoodsListDto;
-import com.example.swapit.domain.dto.GoodsRequestDto;
+import com.example.swapit.domain.dto.Dto;
 import com.example.swapit.domain.dto.UserProfileDto;
+import com.example.swapit.domain.dto.good.GoodsDetailDto;
+import com.example.swapit.domain.dto.good.GoodsDto;
+import com.example.swapit.domain.dto.good.GoodsImageDto;
+import com.example.swapit.domain.dto.good.GoodsListDto;
+import com.example.swapit.domain.dto.good.GoodsRequestDto;
+import com.example.swapit.domain.dto.good.MyGoodDto;
 import com.example.swapit.repository.CategoriesRepository;
 import com.example.swapit.repository.GoodsImagesRepository;
 import com.example.swapit.repository.GoodsRepository;
@@ -77,21 +80,32 @@ public class GoodsServiceImpl implements GoodsService {
 	}
 
 	@Override
-	public List<GoodsDto> getMyGoods() {
+	public Dto<List<MyGoodDto>> getMyGoods(String goodTradeStatus) {
 		Users user = currentUserService.getCurrentUser();
-		log.debug("사용자 ID ({}) 가 내 물건 목록 조회.", user.getUsersId());
+		log.debug("사용자 ID ({}) 가 내 물건 목록 조회 : status {}.", user.getUsersId(), goodTradeStatus);
 
-		List<Goods> findGoods = goodsRepository.findByUserOrderByCreatedAtDesc(user);
+		List<Goods> findGoods;
+		if (goodTradeStatus.equals("soldout")) {
+			findGoods = goodsRepository.findByUserAndGoodsTradeStatusInOrderByCreatedAtDesc(
+				user, List.of(GoodsTradeStatus.SOLDOUT));
+		} else if (goodTradeStatus.equals("onsale")) {
+			findGoods = goodsRepository.findByUserAndGoodsTradeStatusInOrderByCreatedAtDesc(
+				user, List.of(GoodsTradeStatus.AVAILABLE, GoodsTradeStatus.RESERVED));
+		} else {
+			findGoods = List.of();
+		}
 
 		// todo : 트래픽이 많아지면 Goods 엔티티에 "대표 이미지" 필드 추가
-		return findGoods.stream()
-			.map(good -> GoodsDto.of(
-				good,
-				goodsImagesRepository.findFirstByGoodOrderByIdAsc(good)
-					.map(GoodsImages::getS3Key)
-					.map(s3Key -> cdnUrl + s3Key)
-					.orElse(null)
-			)).toList();
+		return new Dto<>(
+			findGoods.stream()
+				.map(good -> MyGoodDto.of(
+					good,
+					goodsImagesRepository.findFirstByGoodOrderByIdAsc(good)
+						.map(GoodsImages::getS3Key)
+						.map(s3Key -> cdnUrl + s3Key)
+						.orElse(null)
+				))
+				.toList());
 	}
 
 	@Override

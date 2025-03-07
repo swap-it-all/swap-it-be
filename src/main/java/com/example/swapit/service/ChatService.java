@@ -3,13 +3,13 @@ package com.example.swapit.service;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import com.example.swapit.domain.dto.ChatListDto;
-import com.example.swapit.domain.dto.ChatRoomAddRequestFromGoodDto;
-import com.example.swapit.domain.dto.ChatRoomAddRequestFromTradeDto;
-import com.example.swapit.domain.dto.ChatRoomGoodsDto;
-import com.example.swapit.domain.dto.ChatRoomResponseDto;
-import com.example.swapit.domain.dto.ChatStompRequestDto;
-import com.example.swapit.domain.dto.ChatStompResponseDto;
+import com.example.swapit.domain.dto.chat.ChatListDto;
+import com.example.swapit.domain.dto.chat.ChatRoomAddRequestFromGoodDto;
+import com.example.swapit.domain.dto.chat.ChatRoomAddRequestFromTradeDto;
+import com.example.swapit.domain.dto.chat.ChatRoomGoodsDto;
+import com.example.swapit.domain.dto.chat.ChatRoomResponseDto;
+import com.example.swapit.domain.dto.chat.ChatStompRequestDto;
+import com.example.swapit.domain.dto.chat.ChatStompResponseDto;
 
 public interface ChatService {
 	Long addChatRoomFromGood(ChatRoomAddRequestFromGoodDto chatRoomAddRequestFromGoodDto);

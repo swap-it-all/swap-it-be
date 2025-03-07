@@ -1,9 +1,10 @@
-package com.example.swapit.domain.dto;
+package com.example.swapit.domain.dto.good;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 import com.example.swapit.domain.Goods;
+import com.example.swapit.domain.dto.UserProfileDto;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;

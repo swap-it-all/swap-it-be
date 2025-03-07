@@ -1,8 +1,8 @@
 package com.example.swapit.controller;
 
 import static org.hamcrest.Matchers.*;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.*;
@@ -24,12 +24,15 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-import com.example.swapit.domain.dto.GoodsDetailDto;
-import com.example.swapit.domain.dto.GoodsDto;
-import com.example.swapit.domain.dto.GoodsImageDto;
-import com.example.swapit.domain.dto.GoodsListDto;
-import com.example.swapit.domain.dto.GoodsRequestDto;
+import com.example.swapit.domain.GoodsTradeStatus;
+import com.example.swapit.domain.dto.Dto;
 import com.example.swapit.domain.dto.UserProfileDto;
+import com.example.swapit.domain.dto.good.GoodsDetailDto;
+import com.example.swapit.domain.dto.good.GoodsDto;
+import com.example.swapit.domain.dto.good.GoodsImageDto;
+import com.example.swapit.domain.dto.good.GoodsListDto;
+import com.example.swapit.domain.dto.good.GoodsRequestDto;
+import com.example.swapit.domain.dto.good.MyGoodDto;
 import com.example.swapit.service.GoodsService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -126,24 +129,49 @@ class GoodsControllerTest {
 	}
 
 	@Test
-	@DisplayName("내 물건 목록 조회 API 테스트")
-	void getMyAllGoods() throws Exception {
+	@DisplayName("내 물건 목록 (거래가능/예약중) 조회 API 테스트")
+	void getMyGoods_onsale() throws Exception {
 		// given
-		List<GoodsDto> mockGoodsList = List.of(
-			new GoodsDto(1L, "Laptop", 1000L, "Electronics", "/images/1", null, 100, LocalDateTime.now()),
-			new GoodsDto(2L, "Phone", 500L, "Mobile", "/images/2", null, 100, LocalDateTime.now())
+		List<MyGoodDto> mockGoodsList = List.of(
+			new MyGoodDto(1L, "Laptop", 1000L, "Electronics", GoodsTradeStatus.AVAILABLE.name(),
+				"image", "place", 100L, LocalDateTime.now()),
+			new MyGoodDto(2L, "Phone", 500L, "Mobile", GoodsTradeStatus.RESERVED.name(),
+				"image2", "place", 200L, LocalDateTime.now())
 		);
-		when(goodsService.getMyGoods()).thenReturn(mockGoodsList);
+		when(goodsService.getMyGoods("onsale")).thenReturn(new Dto<>(mockGoodsList));
 
 		// When & Then
-		mockMvc.perform(get("/api/user/goods/my")
+		mockMvc.perform(get("/api/user/goods/my/onsale")
 				.contentType(MediaType.APPLICATION_JSON))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.success").value(true))
 			.andExpect(jsonPath("$.message").value("요청에 성공하였습니다."))
-			.andExpect(jsonPath("$.results", hasSize(2)))
-			.andExpect(jsonPath("$.results[0].title").value("Laptop"))
-			.andExpect(jsonPath("$.results[1].title").value("Phone"));
+			.andExpect(jsonPath("$.results.data", hasSize(2)))
+			.andExpect(jsonPath("$.results.data[0].title").value("Laptop"))
+			.andExpect(jsonPath("$.results.data[1].title").value("Phone"));
+	}
+
+	@Test
+	@DisplayName("내 물건 목록 (거래 완료) 조회 API 테스트")
+	void getMyGoods_soldout() throws Exception {
+		// given
+		List<MyGoodDto> mockGoodsList = List.of(
+			new MyGoodDto(1L, "Laptop", 1000L, "Electronics", GoodsTradeStatus.SOLDOUT.name(),
+				"/images/1", "place", 100L, LocalDateTime.now()),
+			new MyGoodDto(2L, "Phone", 500L, "Mobile", GoodsTradeStatus.SOLDOUT.name(),
+				"/images/2", null, 100, LocalDateTime.now())
+		);
+		when(goodsService.getMyGoods("soldout")).thenReturn(new Dto<>(mockGoodsList));
+
+		// When & Then
+		mockMvc.perform(get("/api/user/goods/my/soldout")
+				.contentType(MediaType.APPLICATION_JSON))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.success").value(true))
+			.andExpect(jsonPath("$.message").value("요청에 성공하였습니다."))
+			.andExpect(jsonPath("$.results.data", hasSize(2)))
+			.andExpect(jsonPath("$.results.data[0].title").value("Laptop"))
+			.andExpect(jsonPath("$.results.data[1].title").value("Phone"));
 	}
 
 	@Test

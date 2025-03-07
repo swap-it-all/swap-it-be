@@ -3,11 +3,10 @@ package com.example.swapit.domain;
 import java.util.ArrayList;
 import java.util.List;
 
-import lombok.*;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
-import com.example.swapit.domain.dto.GoodsRequestDto;
+import com.example.swapit.domain.dto.good.GoodsRequestDto;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -21,6 +20,12 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)

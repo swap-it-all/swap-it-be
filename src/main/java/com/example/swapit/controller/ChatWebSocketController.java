@@ -11,8 +11,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.swapit.common.exception.CustomException;
 import com.example.swapit.common.exception.ErrorCode;
 import com.example.swapit.config.websocket.StompPrincipal;
-import com.example.swapit.domain.dto.ChatStompRequestDto;
-import com.example.swapit.domain.dto.ChatStompResponseDto;
+import com.example.swapit.domain.dto.chat.ChatStompRequestDto;
+import com.example.swapit.domain.dto.chat.ChatStompResponseDto;
 import com.example.swapit.service.ChatService;
 
 import lombok.RequiredArgsConstructor;

@@ -1,8 +1,8 @@
 package com.example.swapit.controller;
 
 import static org.hamcrest.Matchers.*;
-import static org.mockito.BDDMockito.any;
 import static org.mockito.BDDMockito.*;
+import static org.mockito.BDDMockito.any;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -20,12 +20,12 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import com.example.swapit.domain.ChatType;
-import com.example.swapit.domain.dto.ChatDto;
-import com.example.swapit.domain.dto.ChatListDto;
-import com.example.swapit.domain.dto.ChatRoomAddRequestFromGoodDto;
-import com.example.swapit.domain.dto.ChatRoomAddRequestFromTradeDto;
-import com.example.swapit.domain.dto.ChatRoomGoodsDto;
-import com.example.swapit.domain.dto.ChatRoomResponseDto;
+import com.example.swapit.domain.dto.chat.ChatDto;
+import com.example.swapit.domain.dto.chat.ChatListDto;
+import com.example.swapit.domain.dto.chat.ChatRoomAddRequestFromGoodDto;
+import com.example.swapit.domain.dto.chat.ChatRoomAddRequestFromTradeDto;
+import com.example.swapit.domain.dto.chat.ChatRoomGoodsDto;
+import com.example.swapit.domain.dto.chat.ChatRoomResponseDto;
 import com.example.swapit.service.ChatService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 

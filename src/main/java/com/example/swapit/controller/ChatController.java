@@ -10,11 +10,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.swapit.common.api.ApiResponse;
-import com.example.swapit.domain.dto.ChatListDto;
-import com.example.swapit.domain.dto.ChatRoomAddRequestFromGoodDto;
-import com.example.swapit.domain.dto.ChatRoomAddRequestFromTradeDto;
-import com.example.swapit.domain.dto.ChatRoomGoodsDto;
-import com.example.swapit.domain.dto.ChatRoomListResponseDto;
+import com.example.swapit.domain.dto.chat.ChatListDto;
+import com.example.swapit.domain.dto.chat.ChatRoomAddRequestFromGoodDto;
+import com.example.swapit.domain.dto.chat.ChatRoomAddRequestFromTradeDto;
+import com.example.swapit.domain.dto.chat.ChatRoomGoodsDto;
+import com.example.swapit.domain.dto.chat.ChatRoomListResponseDto;
 import com.example.swapit.service.ChatService;
 
 import jakarta.validation.Valid;
