@@ -12,4 +12,5 @@ import lombok.Setter;
 public class TradeGoodsDao {
 	private Goods targetGoods;
 	private Goods myGoods;
+	private Long tradesId;
 }
