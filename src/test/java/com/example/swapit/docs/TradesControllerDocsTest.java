@@ -330,7 +330,8 @@ public class TradesControllerDocsTest extends RestDocsTest {
 			"http://example.com/my-goods.jpg",
 			"http://example.com/requested-goods.jpg",
 			100,
-			LocalDateTime.now()
+			LocalDateTime.now(),
+			1L
 		);
 		requestList.add(dummyGoods);
 		when(tradesService.getMyRequests()).thenReturn(requestList);
@@ -365,7 +366,9 @@ public class TradesControllerDocsTest extends RestDocsTest {
 						fieldWithPath("results.goodsList[].targetGoodsViewCount").type(JsonFieldType.NUMBER)
 							.description("요청한 물건 이미지 조회 수"),
 						fieldWithPath("results.goodsList[].createdAt").type(JsonFieldType.STRING)
-							.description("신청한 물건 등록 시간")
+							.description("신청한 물건 등록 시간"),
+						fieldWithPath("results.goodsList[].tradesId").type(JsonFieldType.NUMBER)
+							.description("스왑 ID")
 					)
 					.responseSchema(Schema.schema("ApiResponse<TradesGoodsListResponseDto<MyRequestDto>>"))
 					.build()
