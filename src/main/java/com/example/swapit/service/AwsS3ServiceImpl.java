@@ -1,6 +1,8 @@
 package com.example.swapit.service;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.UUID;
 
@@ -32,9 +34,10 @@ public class AwsS3ServiceImpl implements AwsS3Service {
 	@Value("${cloud.aws.s3.bucket}")
 	private String bucketName;
 
-	private static final List<String> ALLOWED_EXTENSIONS = List.of("jpg", "jpeg", "png"); // 이미지 가능 확장자
 	private final String baseUrl = "images/";
 	private final S3Client s3Client;
+	private static final List<String> ALLOWED_EXTENSIONS = List.of("jpg", "jpeg", "png"); // 이미지 가능 확장자
+	private static final List<String> ALLOWED_MIME_TYPES = List.of("image/jpg", "image/jpeg", "image/png");
 
 	/**
 	 * 이미지 업로드
@@ -46,7 +49,8 @@ public class AwsS3ServiceImpl implements AwsS3Service {
 				if (!isValidImageFile(file.getOriginalFilename())) {
 					throw new CustomException(ErrorCode.INVALID_IMAGE_FORMAT);
 				}
-				String s3Key = uploadFileToS3(file, "goods/" + good.getId());
+				String contentType = detectMimeType(file);
+				String s3Key = uploadFileToS3(file, "goods/" + good.getId(), contentType);
 				return Pair.of(s3Key, file.getContentType());
 			}).toList();
 	}
@@ -61,13 +65,15 @@ public class AwsS3ServiceImpl implements AwsS3Service {
 	public String updateUserProfileImage(Users user, MultipartFile file) {
 		isValidImageFile(file.getOriginalFilename());
 		deleteFileFromS3(user.getProfileImageUrl()); // 기존 이미지 삭제
-		return uploadFileToS3(file, "users/" + user.getUsersId());
+
+		String contentType = detectMimeType(file);
+		return uploadFileToS3(file, "users/" + user.getUsersId(), contentType);
 	}
 
 	/**
 	 *  S3에 파일 업로드 후 S3 key 반환
 	 */
-	private String uploadFileToS3(MultipartFile file, String path) {
+	private String uploadFileToS3(MultipartFile file, String path, String contentType) {
 		String uniqueFileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
 		String s3Key = path + "/" + uniqueFileName;
 
@@ -75,7 +81,7 @@ public class AwsS3ServiceImpl implements AwsS3Service {
 			PutObjectRequest putRequest = PutObjectRequest.builder()
 				.bucket(bucketName)
 				.key(baseUrl + s3Key)
-				.contentType(file.getContentType())
+				.contentType(contentType)
 				.build();
 
 			s3Client.putObject(putRequest, RequestBody.fromBytes(file.getBytes()));
@@ -115,5 +121,37 @@ public class AwsS3ServiceImpl implements AwsS3Service {
 			originalFileName.lastIndexOf(".") + 1).toLowerCase();
 
 		return ALLOWED_EXTENSIONS.contains(fileExtension);
+	}
+
+	/**
+	 * MultipartFile에서 정확한 MIME 타입 감지하는 함수
+	 */
+	private String detectMimeType(MultipartFile file) {
+		try {
+			// Java에서 파일 MIME 타입을 직접 감지
+			Path tempFile = Files.createTempFile("upload", file.getOriginalFilename());
+			Files.copy(file.getInputStream(), tempFile, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+			String mimeType = Files.probeContentType(tempFile);
+			Files.delete(tempFile); // 임시 파일 삭제
+
+			if (mimeType == null) {
+				throw new CustomException(ErrorCode.INVALID_IMAGE_FORMAT);
+			}
+
+			if (ALLOWED_MIME_TYPES.contains(mimeType)) {
+				return mimeType; // 허용된 이미지 포맷이면 그대로 반환
+			}
+
+			// 이미지이지만 허용되지 않은 경우 예외 발생
+			if (mimeType.startsWith("image/")) {
+				throw new CustomException(ErrorCode.INVALID_IMAGE_FORMAT);
+			}
+			// 이미지가 아니면 예외 발생
+			throw new CustomException(ErrorCode.INVALID_IMAGE_FORMAT);
+
+		} catch (IOException e) {
+			log.error("MIME 타입 감지 실패: {}", e.getMessage());
+			throw new CustomException(ErrorCode.IMAGE_READ_FAILED);
+		}
 	}
 }
