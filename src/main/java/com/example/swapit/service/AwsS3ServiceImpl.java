@@ -1,9 +1,12 @@
 package com.example.swapit.service;
 
+import static com.google.common.io.Files.*;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -37,7 +40,7 @@ public class AwsS3ServiceImpl implements AwsS3Service {
 	private final String baseUrl = "images/";
 	private final S3Client s3Client;
 	private static final List<String> ALLOWED_EXTENSIONS = List.of("jpg", "jpeg", "png"); // 이미지 가능 확장자
-	private static final List<String> ALLOWED_MIME_TYPES = List.of("image/jpg", "image/jpeg", "image/png");
+	private static final List<String> ALLOWED_MIME_TYPES = List.of("image/jpeg", "image/png");
 
 	/**
 	 * 이미지 업로드
@@ -51,7 +54,7 @@ public class AwsS3ServiceImpl implements AwsS3Service {
 				}
 				String contentType = detectMimeType(file);
 				String s3Key = uploadFileToS3(file, "goods/" + good.getId(), contentType);
-				return Pair.of(s3Key, file.getContentType());
+				return Pair.of(s3Key, contentType);
 			}).toList();
 	}
 
@@ -133,9 +136,17 @@ public class AwsS3ServiceImpl implements AwsS3Service {
 			Files.copy(file.getInputStream(), tempFile, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
 			String mimeType = Files.probeContentType(tempFile);
 			Files.delete(tempFile); // 임시 파일 삭제
+			log.debug("[이미지 업로드 감지] 이미지 확장자 확인 : {}", mimeType);
 
-			if (mimeType == null) {
-				throw new CustomException(ErrorCode.INVALID_IMAGE_FORMAT);
+			if (mimeType == null || mimeType.equals("application/octet-stream")) {
+				// MIME 타입을 감지하지 못하면 확장자로 결정
+				String fileExtension = getFileExtension(Objects.requireNonNull(file.getOriginalFilename()));
+
+				return switch (fileExtension) {
+					case "jpg", "jpeg" -> "image/jpeg";
+					case "png" -> "image/png";
+					default -> throw new CustomException(ErrorCode.INVALID_IMAGE_FORMAT);
+				};
 			}
 
 			if (ALLOWED_MIME_TYPES.contains(mimeType)) {
