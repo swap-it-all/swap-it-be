@@ -3,6 +3,7 @@ package com.example.swapit.service;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.List;
 
@@ -50,7 +51,7 @@ class AwsS3ServiceTest {
 	private static final String preSignedUrl = "https://s3.test-bucket.com/sample.jpg";
 	private static final String INVALID_FILE_NAME = "test-document.pdf";
 	private static final Long goodsId = 1L;
-	private static final String VALID_FILE_NAME = "test-image.jpg";
+	private static final String VALID_FILE_NAME = "test-image.jpeg";
 	private static final String CONTENT_TYPE = "image/jpeg";
 
 	@Test
@@ -60,8 +61,8 @@ class AwsS3ServiceTest {
 		Goods mockGoods = mock(Goods.class);
 		when(mockGoods.getId()).thenReturn(goodsId);
 		when(mockFile.getOriginalFilename()).thenReturn(VALID_FILE_NAME);
-		when(mockFile.getContentType()).thenReturn(CONTENT_TYPE);
 		when(mockFile.getBytes()).thenReturn(new byte[10]);
+		when(mockFile.getInputStream()).thenReturn(new ByteArrayInputStream(new byte[10]));
 
 		when(s3Client.putObject(any(PutObjectRequest.class), any(RequestBody.class))).thenReturn(null);
 
@@ -72,7 +73,7 @@ class AwsS3ServiceTest {
 		assertFalse(uploadedFiles.isEmpty());
 		assertEquals(1, uploadedFiles.size());
 		assertTrue(uploadedFiles.get(0).getFirst().contains("goods/1/"));
-		assertEquals("image/jpeg", uploadedFiles.get(0).getSecond());
+		assertEquals(CONTENT_TYPE, uploadedFiles.get(0).getSecond());
 
 		verify(s3Client, times(1)).putObject(any(PutObjectRequest.class), any(RequestBody.class));
 	}
@@ -99,10 +100,9 @@ class AwsS3ServiceTest {
 		// given
 		Users mockUser = mock(Users.class);
 		when(mockUser.getUsersId()).thenReturn(1L);
-		when(mockUser.getProfileImageUrl()).thenReturn(null);
 		when(mockFile.getOriginalFilename()).thenReturn(VALID_FILE_NAME);
-		when(mockFile.getContentType()).thenReturn(CONTENT_TYPE);
 		when(mockFile.getBytes()).thenReturn(new byte[10]);
+		when(mockFile.getInputStream()).thenReturn(new ByteArrayInputStream(new byte[10]));
 
 		when(s3Client.putObject(any(PutObjectRequest.class), any(RequestBody.class))).thenReturn(null);
 
@@ -132,8 +132,8 @@ class AwsS3ServiceTest {
 		Goods mockGoods = mock(Goods.class);
 		when(mockGoods.getId()).thenReturn(1L);
 		when(mockFile.getOriginalFilename()).thenReturn(VALID_FILE_NAME);
-		when(mockFile.getContentType()).thenReturn(CONTENT_TYPE);
 		when(mockFile.getBytes()).thenReturn(new byte[10]);
+		when(mockFile.getInputStream()).thenReturn(new ByteArrayInputStream(new byte[10]));
 
 		doThrow(new RuntimeException("S3 upload failed"))
 			.when(s3Client).putObject(any(PutObjectRequest.class), any(RequestBody.class));

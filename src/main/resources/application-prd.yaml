@@ -28,3 +28,7 @@ cloud:
 
 firebase:
   config-env: ${FIREBASE_CONFIG}
+
+logging:
+  level:
+    com.example.swapit: debug
