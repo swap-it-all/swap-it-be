@@ -151,12 +151,16 @@ class ChatServiceTest {
 	@DisplayName("채팅방 목록 조회 성공")
 	void getChatRoomListTest() {
 		// Given
-		Users currentUser = Users.builder().usersId(1L).email("current@example.com").build();
+		Users currentUser = Users.builder()
+			.usersId(1L)
+			.email("current@example.com")
+			.profileImageUrl(testCdnUrl + "profileImage.jpg")
+			.build();
 		when(currentUserService.getCurrentUser()).thenReturn(currentUser);
 
 		Users owner = Users.builder()
 			.usersId(2L)
-			.profileImageUrl("profile.jpg")
+			.profileImageUrl(testCdnUrl + "profile.jpg")
 			.nickname("ownerNick")
 			.build();
 		Goods goods = Goods.builder()
@@ -167,6 +171,7 @@ class ChatServiceTest {
 			.id(1L)
 			.inviter(currentUser)
 			.goods(goods)
+			.trade(null)
 			.build();
 
 		when(chatRoomsRepository.findMyChatRooms(1L)).thenReturn(List.of(chatRoom));
@@ -178,8 +183,6 @@ class ChatServiceTest {
 			.build();
 
 		when(chatRepository.findTopByChatRoomsIdOrderByCreatedAtDesc(1L)).thenReturn(latestChat);
-
-		when(usersRepository.findById(2L)).thenReturn(Optional.of(owner));
 
 		// When
 		List<ChatRoomResponseDto> result = chatService.getChatRoomList();
@@ -304,11 +307,22 @@ class ChatServiceTest {
 		Categories category = Categories.builder()
 			.name("ELECTRONIC").build();
 
+		Users currentUser = Users.builder()
+			.usersId(2L)
+			.nickname("nickname")
+			.build();
+
+		Users counterpart = Users.builder()
+			.usersId(1L)
+			.nickname("닉네임")
+			.build();
+
 		Goods goods = Goods.builder()
 			.title("Test Good")
 			.price(1000L)
 			.category(category)
 			.placeName("TestPlace")
+			.user(currentUser)
 			.build();
 
 		ChatRooms chatRooms = ChatRooms.builder()
@@ -325,6 +339,9 @@ class ChatServiceTest {
 			.thenReturn(Optional.of(goodsImages));
 
 		String expectedImageUrl = testCdnUrl + goodsImages.getS3Key();
+
+		when(currentUserService.getCurrentUser()).thenReturn(currentUser);
+		when(chatService.getCounterpart(chatRooms)).thenReturn(counterpart);
 
 		// when
 		ChatRoomInfoDto result = chatService.getChatRoomGoods(chatroomId);
