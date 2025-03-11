@@ -13,7 +13,7 @@ import com.example.swapit.common.api.ApiResponse;
 import com.example.swapit.domain.dto.chat.ChatListDto;
 import com.example.swapit.domain.dto.chat.ChatRoomAddRequestFromGoodDto;
 import com.example.swapit.domain.dto.chat.ChatRoomAddRequestFromTradeDto;
-import com.example.swapit.domain.dto.chat.ChatRoomGoodsDto;
+import com.example.swapit.domain.dto.chat.ChatRoomInfoDto;
 import com.example.swapit.domain.dto.chat.ChatRoomListResponseDto;
 import com.example.swapit.service.ChatService;
 
@@ -57,7 +57,7 @@ public class ChatController {
 	}
 
 	@GetMapping("/api/user/chatroom/{chatroomId}/goods")
-	public ApiResponse<ChatRoomGoodsDto> getChatRoomGoods(@PathVariable Long chatroomId) {
+	public ApiResponse<ChatRoomInfoDto> getChatRoomGoods(@PathVariable Long chatroomId) {
 		return ApiResponse.success(chatService.getChatRoomGoods(chatroomId));
 	}
 }
