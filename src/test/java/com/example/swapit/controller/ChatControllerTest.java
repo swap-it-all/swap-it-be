@@ -1,8 +1,8 @@
 package com.example.swapit.controller;
 
 import static org.hamcrest.Matchers.*;
-import static org.mockito.BDDMockito.*;
 import static org.mockito.BDDMockito.any;
+import static org.mockito.BDDMockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -24,7 +24,7 @@ import com.example.swapit.domain.dto.chat.ChatDto;
 import com.example.swapit.domain.dto.chat.ChatListDto;
 import com.example.swapit.domain.dto.chat.ChatRoomAddRequestFromGoodDto;
 import com.example.swapit.domain.dto.chat.ChatRoomAddRequestFromTradeDto;
-import com.example.swapit.domain.dto.chat.ChatRoomGoodsDto;
+import com.example.swapit.domain.dto.chat.ChatRoomInfoDto;
 import com.example.swapit.domain.dto.chat.ChatRoomResponseDto;
 import com.example.swapit.service.ChatService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -167,8 +167,8 @@ class ChatControllerTest {
 	@DisplayName("채팅방 물건 조회 성공")
 	void getChatRoomGoods() throws Exception {
 		// given
-		ChatRoomGoodsDto dto = new ChatRoomGoodsDto(
-			1L, "아이폰 15", "ELECTRONICS", 2500L, null);
+		ChatRoomInfoDto dto = new ChatRoomInfoDto(
+			1L, "아이폰 15", "ELECTRONICS", 2500L, null, "닉네임");
 
 		given(chatService.getChatRoomGoods(any())).willReturn(dto);
 

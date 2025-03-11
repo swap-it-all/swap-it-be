@@ -5,10 +5,11 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public class ChatRoomGoodsDto {
+public class ChatRoomInfoDto {
 	private Long goodsId;
 	private String title;
 	private String category;
 	private long price;
 	private String imageUrl;
+	private String nickname;
 }

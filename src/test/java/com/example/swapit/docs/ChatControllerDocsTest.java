@@ -26,7 +26,7 @@ import com.example.swapit.domain.dto.chat.ChatDto;
 import com.example.swapit.domain.dto.chat.ChatListDto;
 import com.example.swapit.domain.dto.chat.ChatRoomAddRequestFromGoodDto;
 import com.example.swapit.domain.dto.chat.ChatRoomAddRequestFromTradeDto;
-import com.example.swapit.domain.dto.chat.ChatRoomGoodsDto;
+import com.example.swapit.domain.dto.chat.ChatRoomInfoDto;
 import com.example.swapit.domain.dto.chat.ChatRoomResponseDto;
 import com.example.swapit.service.ChatServiceImpl;
 
@@ -231,8 +231,8 @@ public class ChatControllerDocsTest extends RestDocsTest {
 	void getChatRoomGoods() throws Exception {
 		// Given
 		Long chatroomId = 1L;
-		ChatRoomGoodsDto dto = new ChatRoomGoodsDto(
-			1L, "아이폰 15", "ELECTRONICS", 1000000L, "http://example.com/image.jpg");
+		ChatRoomInfoDto dto = new ChatRoomInfoDto(
+			1L, "아이폰 15", "ELECTRONICS", 1000000L, "http://example.com/image.jpg", "닉네임");
 
 		given(chatService.getChatRoomGoods(any())).willReturn(dto);
 
@@ -256,7 +256,8 @@ public class ChatControllerDocsTest extends RestDocsTest {
 						fieldWithPath("results.title").type(JsonFieldType.STRING).description("물건 제목"),
 						fieldWithPath("results.category").type(JsonFieldType.STRING).description("물건 카테고리"),
 						fieldWithPath("results.price").type(JsonFieldType.NUMBER).description("물건 예상 가격"),
-						fieldWithPath("results.imageUrl").type(JsonFieldType.STRING).description("물건 이미지 URL")
+						fieldWithPath("results.imageUrl").type(JsonFieldType.STRING).description("물건 이미지 URL"),
+						fieldWithPath("results.nickname").type(JsonFieldType.STRING).description("채팅방 상대 닉네임")
 					)
 					.responseSchema(Schema.schema("ChatRoomGoodsDto"))
 					.build()

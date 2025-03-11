@@ -29,7 +29,7 @@ import com.example.swapit.domain.dto.chat.ChatDto;
 import com.example.swapit.domain.dto.chat.ChatListDto;
 import com.example.swapit.domain.dto.chat.ChatRoomAddRequestFromGoodDto;
 import com.example.swapit.domain.dto.chat.ChatRoomAddRequestFromTradeDto;
-import com.example.swapit.domain.dto.chat.ChatRoomGoodsDto;
+import com.example.swapit.domain.dto.chat.ChatRoomInfoDto;
 import com.example.swapit.domain.dto.chat.ChatRoomResponseDto;
 import com.example.swapit.domain.dto.chat.ChatStompRequestDto;
 import com.example.swapit.domain.dto.chat.ChatStompResponseDto;
@@ -327,7 +327,7 @@ class ChatServiceTest {
 		String expectedImageUrl = testCdnUrl + goodsImages.getS3Key();
 
 		// when
-		ChatRoomGoodsDto result = chatService.getChatRoomGoods(chatroomId);
+		ChatRoomInfoDto result = chatService.getChatRoomGoods(chatroomId);
 
 		// then
 		assertNotNull(result);
