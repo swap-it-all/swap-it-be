@@ -105,12 +105,17 @@ public class ChatServiceImpl implements ChatService {
 
 				Chats chats = chatRepository.findTopByChatRoomsIdOrderByCreatedAtDesc(chatRoom.getId());
 
+				boolean isInviter = chatRoom.getInviter().getUsersId().equals(loggedInUserId);
+				long lastReadId = isInviter ? chatRoom.getInviterLastReadId() : chatRoom.getNotInviterLastReadId();
+				long unreadChatCount = chatRepository.findUnreadChatCount(chatRoom.getId(), lastReadId);
+
 				return ChatRoomResponseDto.builder()
 					.usersId(counterpart.getUsersId())
 					.profileImageUrl(userProfileImageUrl)
 					.nickname(counterpart.getNickname())
 					.recentChat(chats.getContent())
 					.recentChatTime(chats.getCreatedAt())
+					.unReadChatCount(unreadChatCount)
 					.build();
 			}).toList();
 	}
@@ -201,6 +206,22 @@ public class ChatServiceImpl implements ChatService {
 			firstImageUrl,
 			counterpart.getNickname()
 		);
+	}
+
+	@Override
+	@Transactional
+	public void updateReadReceipt(Long chatroomId, Long userId, Long lastReadChatId) {
+		ChatRooms chatRooms = chatRoomsRepository.findById(chatroomId)
+			.orElseThrow(() -> new CustomException(ErrorCode.CHATROOMS_NOT_FOUND));
+
+		boolean isInviter = chatRooms.getInviter().getUsersId().equals(userId);
+		if (isInviter) {
+			chatRooms.setInviterLastReadId(lastReadChatId);
+		} else {
+			chatRooms.setNotInviterLastReadId(lastReadChatId);
+		}
+
+		chatRoomsRepository.save(chatRooms);
 	}
 
 	public Users getCounterpart(ChatRooms chatRoom) {

@@ -13,4 +13,5 @@ public class ChatRoomResponseDto {
 	private String nickname;
 	private String recentChat;
 	private LocalDateTime recentChatTime;
+	private long unReadChatCount;
 }

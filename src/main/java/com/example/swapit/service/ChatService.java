@@ -23,4 +23,6 @@ public interface ChatService {
 	ChatStompResponseDto saveChat(Long chatroomId, ChatStompRequestDto chatDto, Long userId);
 
 	ChatRoomInfoDto getChatRoomGoods(Long chatroomId);
+
+	void updateReadReceipt(Long chatroomId, Long userId, Long lastReadChatId);
 }

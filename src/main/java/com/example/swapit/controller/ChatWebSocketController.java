@@ -13,6 +13,7 @@ import com.example.swapit.common.exception.ErrorCode;
 import com.example.swapit.config.websocket.StompPrincipal;
 import com.example.swapit.domain.dto.chat.ChatStompRequestDto;
 import com.example.swapit.domain.dto.chat.ChatStompResponseDto;
+import com.example.swapit.domain.dto.chat.ReadReceiptRequestDto;
 import com.example.swapit.service.ChatService;
 
 import lombok.RequiredArgsConstructor;
@@ -41,5 +42,17 @@ public class ChatWebSocketController {
 		} else {
 			throw new CustomException(ErrorCode.UNAUTHORIZED_ACCESS);
 		}
+	}
+
+	@MessageMapping("/chat/read/{chatroomId}")
+	public void updateReadReceipt(@DestinationVariable Long chatroomId, ReadReceiptRequestDto receipt,
+		Principal principal) {
+		if (principal == null) {
+			log.error("[ERROR] WebSocket 읽음 이벤트 처리 실패: Principal이 null입니다.");
+			throw new CustomException(ErrorCode.UNAUTHORIZED_ACCESS);
+		}
+
+		Long userId = Long.parseLong(principal.getName());
+		chatService.updateReadReceipt(chatroomId, userId, receipt.getLastReadChatId());
 	}
 }
