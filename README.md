@@ -1,4 +1,4 @@
-# 🔁Swap It! 물물교환 앱 서비스
+![wire](https://github.com/user-attachments/assets/065ab4da-3885-4a42-b4db-3bc0c11f811e)# 🔁Swap It! 물물교환 앱 서비스
 
 ## 1. 프로젝트 소개
 
@@ -69,7 +69,7 @@
 </tr>
 </tbody>
 </table>
-
+<br><br>
 
 ## 2. 개발환경
 
@@ -116,7 +116,7 @@
 
 ### 2.2 시스템 아키텍처
 <div align="center">
-  <img src="https://github.com/user-attachments/assets/5b770adc-fd68-4f76-97c3-ed8f9b335ad2" width="700" height="400" style="margin-bottom: 20px;">
+  <img src="https://github.com/user-attachments/assets/5e6f861a-d396-401c-8746-fb24866ceaf9" width="700" height="400" style="margin-bottom: 20px;">
   <br>
   <img src="https://github.com/user-attachments/assets/48382cfb-bffa-4a61-8aea-895b542d0997" width="700" height="400">
 </div>
@@ -344,23 +344,33 @@
 
 </div>
 </details>
+<br><br>
 
 ## 3. UI
 
 ### 3.1 와이어프레임
 #### 물건등록
-![wire](https://github.com/user-attachments/assets/d70b4eb8-14f1-4ab7-8f11-5e75249f214b)
+![wire](https://github.com/user-attachments/assets/5d24dd2d-8c4f-4993-9bb9-4b64669d52cf)
+
 
 #### 거래
-![wire2](https://github.com/user-attachments/assets/b2bddb17-7011-4e4e-8fed-210bd2d008a3)
+![wire2](https://github.com/user-attachments/assets/7dc85854-6044-4c60-a367-cb37c1e50edf)
+
 
 #### 채팅
-![wire3](https://github.com/user-attachments/assets/c1f955b2-2b30-440e-992a-4ecbc25e380e)
+![wire3](https://github.com/user-attachments/assets/873fac33-a3bf-4df9-8f33-a9c92c07b3d6)
+
 
 
 ### 3.2 안드로이드 앱 화면
 
+<br><br>
+
+
 ## 4. 트러블슈팅
+
+<br><br>
+
 
 ## 5. 요구사항 명세서
 
