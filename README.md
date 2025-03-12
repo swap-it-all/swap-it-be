@@ -1,4 +1,4 @@
-![wire](https://github.com/user-attachments/assets/065ab4da-3885-4a42-b4db-3bc0c11f811e)# 🔁Swap It! 물물교환 앱 서비스
+# 🔁Swap It! 물물교환 앱 서비스
 
 ## 1. 프로젝트 소개
 
