@@ -10,7 +10,6 @@ import org.springframework.data.jpa.repository.Query;
 import com.example.swapit.domain.Goods;
 import com.example.swapit.domain.TradeStatus;
 import com.example.swapit.domain.Trades;
-import com.example.swapit.domain.Users;
 import com.example.swapit.domain.dao.TradeGoodsDao;
 import com.example.swapit.domain.dto.trade.InProgressCountDto;
 import com.example.swapit.domain.dto.trade.TradeCountProjection;
@@ -25,27 +24,32 @@ public interface TradesRepository extends JpaRepository<Trades, Long> {
 	void rejectOtherTrades(@Param("targetGoods") Goods targetGoods, @Param("acceptedTradeId") Long acceptedTradeId);
 
 	@Query("SELECT t.targetGoods.id AS goodsId, COALESCE(COUNT(t), 0) AS tradeCount "
-		   + "FROM Trades t "
-		   + "WHERE t.targetGoods.id IN :goodsIds "
-		   + "GROUP BY t.targetGoods.id")
+		+ "FROM Trades t "
+		+ "WHERE t.targetGoods.id IN :goodsIds "
+		+ "GROUP BY t.targetGoods.id")
 	List<TradeCountProjection> findTradeCountByGoodsIds(@Param("goodsIds") List<Long> goodsIds);
 
 	@Query("SELECT new com.example.swapit.domain.dao.TradeGoodsDao(t.targetGoods, t.requestedGoods, t.id) "
-		   + "FROM Trades t "
-		   + "WHERE t.requestedGoods.user.usersId = :userId")
+		+ "FROM Trades t "
+		+ "WHERE t.requestedGoods.user.usersId = :userId")
 	List<TradeGoodsDao> findMyRequests(@Param("userId") Long userId);
 
 	@Query("SELECT t.requestedGoods FROM Trades t WHERE t.targetGoods.id = :goodsId ORDER BY t.createdAt DESC")
 	List<Goods> findGoodsRequests(@Param("goodsId") Long goodsId);
 
-	Optional<Trades> findByRequestedGoodsUserAndTargetGoods(Users requester, Goods targetGoods);
-
-	boolean existsByTargetGoodsAndStatusNot(Goods targetGoods, TradeStatus status);
-
 	@Query("SELECT new com.example.swapit.domain.dto.trade.InProgressCountDto(t.targetGoods.id, COUNT(t)) "
-		   + "FROM Trades t "
-		   + "WHERE t.targetGoods.id IN :goodsIds AND t.status = 'INPROGRESS' "
-		   + "GROUP BY t.targetGoods.id")
+		+ "FROM Trades t "
+		+ "WHERE t.targetGoods.id IN :goodsIds AND t.status = 'INPROGRESS' "
+		+ "GROUP BY t.targetGoods.id")
 	List<InProgressCountDto> findInProgressCountByGoodsIds(@Param("goodsIds") List<Long> goodsIds);
 
+	boolean existsByRequestedGoodsAndTargetGoodsAndStatusNot(Goods requestedGoods, Goods targetGoods,
+		TradeStatus status);
+
+	@Query(""" 
+		SELECT t FROM Trades t
+		WHERE (t.targetGoods.id = :goodsId AND t.requestedGoods.user.usersId = :userId)
+		   OR (t.requestedGoods.id = :goodsId AND t.targetGoods.user.usersId = :userId)
+		ORDER BY t.updatedAt DESC""")
+	Optional<Trades> findUserRelatedTrade(@Param("goodsId") Long goodsId, @Param("userId") Long userId);
 }

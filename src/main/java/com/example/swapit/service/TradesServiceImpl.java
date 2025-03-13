@@ -64,6 +64,12 @@ public class TradesServiceImpl implements TradesService {
 		Goods targetGoods = goodsRepository.findById(tradesRequestDto.getTargetGoodsId())
 			.orElseThrow(() -> new CustomException(ErrorCode.GOOD_NOT_FOUND));
 
+		// requestedGoods <-> targetGoods가 바뀌어서 요청된 건은 없는지 검증
+		if (tradesRepository.existsByRequestedGoodsAndTargetGoodsAndStatusNot(targetGoods, requestedGoods,
+			TradeStatus.REJECTED)) {
+			return Result.fail(ErrorCode.TRADE_ALREADY_REQUESTED.getMessage());
+		}
+
 		// 최대 PENDING 요청 제한 체크
 		long count = tradesRepository.countByTargetGoodsIdAndStatus(tradesRequestDto.getTargetGoodsId(),
 			TradeStatus.PENDING);

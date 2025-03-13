@@ -1,5 +1,7 @@
 package com.example.swapit.service;
 
+import java.util.Optional;
+
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
@@ -28,5 +30,15 @@ public class CurrentUserServiceImpl implements CurrentUserService {
 		} else { // principal이 "anonymousUser" 또는 null일 수 있음.
 			throw new CustomException(ErrorCode.UNAUTHORIZED_ACCESS);
 		}
+	}
+
+	public Optional<Users> getCurrentUserOptional() {
+		Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+		if (principal instanceof UserDetails) {
+			String email = ((UserDetails)principal).getUsername();
+			return usersRepository.findByEmail(email); // Optional 반환
+		}
+		return Optional.empty(); // 인증되지 않은 경우 빈 Optional 반환
 	}
 }

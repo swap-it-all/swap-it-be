@@ -15,7 +15,6 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public class GoodsDetailDto {
-
 	private Long goodsId;
 	private UserProfileDto user;
 	private String category;
@@ -27,9 +26,11 @@ public class GoodsDetailDto {
 	private String placeName;
 	private long viewCount;
 	private List<GoodsImageDto> images;
+	private TradeInGoodDetailDto trade;
 	private LocalDateTime createdAt;
 
-	public static GoodsDetailDto of(Goods good, UserProfileDto userProfileDto, List<GoodsImageDto> images) {
+	public static GoodsDetailDto of(Goods good, UserProfileDto userProfileDto, List<GoodsImageDto> images,
+		TradeInGoodDetailDto trade) {
 		return GoodsDetailDto.builder()
 			.goodsId(good.getId())
 			.user(userProfileDto)
@@ -42,6 +43,7 @@ public class GoodsDetailDto {
 			.placeName(good.getPlaceName())
 			.viewCount(good.getViewCount())
 			.images(images)
+			.trade(trade)
 			.createdAt(good.getCreatedAt())
 			.build();
 	}

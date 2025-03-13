@@ -25,6 +25,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import com.example.swapit.domain.GoodsTradeStatus;
+import com.example.swapit.domain.TradeStatus;
 import com.example.swapit.domain.dto.Dto;
 import com.example.swapit.domain.dto.UserProfileDto;
 import com.example.swapit.domain.dto.good.GoodsDetailDto;
@@ -33,6 +34,7 @@ import com.example.swapit.domain.dto.good.GoodsImageDto;
 import com.example.swapit.domain.dto.good.GoodsListDto;
 import com.example.swapit.domain.dto.good.GoodsRequestDto;
 import com.example.swapit.domain.dto.good.MyGoodDto;
+import com.example.swapit.domain.dto.good.TradeInGoodDetailDto;
 import com.example.swapit.service.GoodsService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -89,6 +91,7 @@ class GoodsControllerTest {
 	@DisplayName("물건 상세 조회 테스트")
 	void getDetailGood() throws Exception {
 		// given
+		TradeInGoodDetailDto trade = new TradeInGoodDetailDto(2L, true, TradeStatus.PENDING.name(), 2L);
 		GoodsDetailDto mockGoodsDetail = new GoodsDetailDto(
 			1L,
 			new UserProfileDto(1L, "testUser", "profileImage", 4.8),
@@ -101,10 +104,10 @@ class GoodsControllerTest {
 			"서울 강남구",
 			120,
 			List.of(new GoodsImageDto(1L, "imageUrl")),
+			trade,
 			LocalDateTime.now()
 		);
 
-		// given(goodsService.getGoodDetail(anyLong())).willReturn(mockGoodsDetail);
 		given(goodsService.getGoodDetail(1L)).willReturn(mockGoodsDetail);
 
 		mockMvc.perform(get("/api/all/goods/{goodsId}", 1L))
@@ -125,7 +128,12 @@ class GoodsControllerTest {
 			.andExpect(jsonPath("$.results.goodsTradeStatus").value("판매 중"))
 			.andExpect(jsonPath("$.results.placeName").value("서울 강남구"))
 			.andExpect(jsonPath("$.results.viewCount").value(120))
-			.andExpect(jsonPath("$.results.images").isArray());
+			.andExpect(jsonPath("$.results.images").isArray())
+			.andExpect(jsonPath("$.results.trade.tradesId").value(2L))
+			.andExpect(jsonPath("$.results.trade.isRequester").value(true))
+			.andExpect(jsonPath("$.results.trade.status").value("PENDING"))
+			.andExpect(jsonPath("$.results.trade.relatedGoodsId").value(2L));
+
 	}
 
 	@Test
