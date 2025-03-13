@@ -205,6 +205,43 @@ public class TradesServiceTest {
 	}
 
 	@Test
+	@DisplayName("거래 요청 실패 - requestedGoods <-> targetGoods 반대로 이미 있을 때 요청 실패")
+	void requestTrade_ShouldThrowException_WhenTradeAlreadyRequested() {
+		// given
+		Users requester = Users.builder()
+			.email("email")
+			.build();
+		Goods requestedGoods = Goods.builder()
+			.user(requester)
+			.build();
+
+		Users target = Users.builder()
+			.email("email")
+			.build();
+		Goods targetGoods = Goods.builder()
+			.user(target)
+			.build();
+
+		Long requestedGoodsId = 1L;
+		Long targetGoodsId = 2L;
+
+		TradesRequestDto tradesRequestDto = new TradesRequestDto(requestedGoodsId, targetGoodsId);
+
+		when(goodsRepository.findById(requestedGoodsId)).thenReturn(Optional.of(requestedGoods));
+		when(goodsRepository.findById(targetGoodsId)).thenReturn(Optional.of(targetGoods));
+		when(tradesRepository.existsByRequestedGoodsAndTargetGoodsAndStatusNot(targetGoods, requestedGoods,
+			TradeStatus.REJECTED))
+			.thenReturn(true);
+
+		// when
+		Result<Long> result = tradesService.requestTrade(tradesRequestDto);
+
+		// when & then
+		assertFalse(result.isSuccess());
+		assertEquals(ErrorCode.TRADE_ALREADY_REQUESTED.getMessage(), result.getMessage());
+	}
+
+	@Test
 	@DisplayName("거래 요청 취소 성공")
 	void cancelTradeSuccess() {
 		// Given
