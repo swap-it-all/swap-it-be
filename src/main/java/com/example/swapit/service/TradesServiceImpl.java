@@ -67,7 +67,7 @@ public class TradesServiceImpl implements TradesService {
 		// requestedGoods <-> targetGoods가 바뀌어서 요청된 건은 없는지 검증
 		if (tradesRepository.existsByRequestedGoodsAndTargetGoodsAndStatusNot(targetGoods, requestedGoods,
 			TradeStatus.REJECTED)) {
-			throw new CustomException(ErrorCode.TRADE_ALREADY_REQUESTED);
+			return Result.fail(ErrorCode.TRADE_ALREADY_REQUESTED.getMessage());
 		}
 
 		// 최대 PENDING 요청 제한 체크
