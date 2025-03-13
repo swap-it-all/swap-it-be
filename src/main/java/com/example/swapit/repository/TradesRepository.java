@@ -47,8 +47,8 @@ public interface TradesRepository extends JpaRepository<Trades, Long> {
 		TradeStatus status);
 
 	@Query(""" 
-		SELECT t FROM Trades t 
-		WHERE (t.targetGoods.id = :goodsId AND t.requestedGoods.user.usersId = :userId) 
+		SELECT t FROM Trades t
+		WHERE (t.targetGoods.id = :goodsId AND t.requestedGoods.user.usersId = :userId)
 		   OR (t.requestedGoods.id = :goodsId AND t.targetGoods.user.usersId = :userId)
 		ORDER BY t.updatedAt DESC""")
 	Optional<Trades> findUserRelatedTrade(@Param("goodsId") Long goodsId, @Param("userId") Long userId);
