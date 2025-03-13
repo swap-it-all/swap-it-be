@@ -110,6 +110,7 @@ public class ChatServiceImpl implements ChatService {
 				long unreadChatCount = chatRepository.findUnreadChatCount(chatRoom.getId(), lastReadId);
 
 				return ChatRoomResponseDto.builder()
+					.chatroomId(chatRoom.getId())
 					.profileImageUrl(userProfileImageUrl)
 					.nickname(counterpart.getNickname())
 					.recentChat(chats.getContent())

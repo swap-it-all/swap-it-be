@@ -113,6 +113,7 @@ public class ChatControllerDocsTest extends RestDocsTest {
 		// Given
 		List<ChatRoomResponseDto> dtoList = new ArrayList<>();
 		ChatRoomResponseDto dto = ChatRoomResponseDto.builder()
+			.chatroomId(1L)
 			.profileImageUrl("http://example.com/image.jpg")
 			.nickname("testUser")
 			.recentChat("안녕하세요!")
@@ -138,6 +139,8 @@ public class ChatControllerDocsTest extends RestDocsTest {
 						fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지"),
 						fieldWithPath("results").type(JsonFieldType.OBJECT).description("응답 결과 데이터"),
 						fieldWithPath("results.chatRoomList").type(JsonFieldType.ARRAY).description("채팅방 목록"),
+						fieldWithPath("results.chatRoomList[].chatroomId").type(JsonFieldType.NUMBER)
+							.description("채팅방 ID"),
 						fieldWithPath("results.chatRoomList[].profileImageUrl").type(JsonFieldType.STRING)
 							.description("프로필 이미지 URL"),
 						fieldWithPath("results.chatRoomList[].nickname").type(JsonFieldType.STRING).description("닉네임"),
