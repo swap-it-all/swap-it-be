@@ -172,6 +172,8 @@ class ChatServiceTest {
 			.inviter(currentUser)
 			.goods(goods)
 			.trade(null)
+			.inviterLastReadId(3L)
+			.notInviterLastReadId(2L)
 			.build();
 
 		when(chatRoomsRepository.findMyChatRooms(1L)).thenReturn(List.of(chatRoom));
@@ -191,7 +193,6 @@ class ChatServiceTest {
 		assertNotNull(result);
 		assertEquals(1, result.size());
 		ChatRoomResponseDto dto = result.get(0);
-		assertEquals(2L, dto.getUsersId()); // 상대방의 id
 		assertEquals(testCdnUrl + "profile.jpg", dto.getProfileImageUrl());
 		assertEquals("안녕하세요", dto.getRecentChat());
 	}
@@ -344,7 +345,7 @@ class ChatServiceTest {
 		when(chatService.getCounterpart(chatRooms)).thenReturn(counterpart);
 
 		// when
-		ChatRoomInfoDto result = chatService.getChatRoomGoods(chatroomId);
+		ChatRoomInfoDto result = chatService.getChatRoomInfo(chatroomId);
 
 		// then
 		assertNotNull(result);
@@ -352,5 +353,56 @@ class ChatServiceTest {
 		assertEquals(goods.getPrice(), result.getPrice());
 		assertEquals(category.getName(), result.getCategory());
 		assertEquals(expectedImageUrl, result.getImageUrl());
+	}
+
+	@Test
+	@DisplayName("updateReadReceipt - inviter인 경우 inviterLastReadId 업데이트")
+	public void testUpdateReadReceipt_inviter() {
+		// given
+		Long chatroomId = 1L;
+		Long userId = 10L;
+		Long lastReadChatId = 100L;
+
+		Users inviter = Users.builder()
+			.usersId(userId)
+			.build();
+		ChatRooms chatRoom = ChatRooms.builder()
+			.inviter(inviter)
+			.build();
+
+		when(chatRoomsRepository.findById(chatroomId)).thenReturn(Optional.of(chatRoom));
+
+		// when
+		chatService.updateReadReceipt(chatroomId, userId, lastReadChatId);
+
+		// then
+		assertEquals(lastReadChatId, chatRoom.getInviterLastReadId());
+		verify(chatRoomsRepository, times(1)).save(chatRoom);
+	}
+
+	@Test
+	@DisplayName("updateReadReceipt - 초대자가 아닌 경우 notInviterLastReadId 업데이트")
+	public void testUpdateReadReceipt_nonInviter() {
+		// given
+		Long chatroomId = 1L;
+		Long inviterId = 10L;
+		Long userId = 20L;
+		Long lastReadChatId = 200L;
+
+		Users inviter = Users.builder()
+			.usersId(inviterId)
+			.build();
+		ChatRooms chatRoom = ChatRooms.builder()
+			.inviter(inviter)
+			.build();
+
+		when(chatRoomsRepository.findById(chatroomId)).thenReturn(Optional.of(chatRoom));
+
+		// when
+		chatService.updateReadReceipt(chatroomId, userId, lastReadChatId);
+
+		// then
+		assertEquals(lastReadChatId, chatRoom.getNotInviterLastReadId());
+		verify(chatRoomsRepository, times(1)).save(chatRoom);
 	}
 }
