@@ -49,7 +49,7 @@ public class ChatWebSocketController {
 		Principal principal) {
 		if (principal == null) {
 			log.error("[ERROR] WebSocket 읽음 이벤트 처리 실패: Principal이 null입니다.");
-			throw new CustomException(ErrorCode.UNAUTHORIZED_ACCESS);
+			return;
 		}
 
 		Long userId = Long.parseLong(principal.getName());
