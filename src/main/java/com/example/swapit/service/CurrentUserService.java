@@ -1,7 +1,11 @@
 package com.example.swapit.service;
 
+import java.util.Optional;
+
 import com.example.swapit.domain.Users;
 
 public interface CurrentUserService {
-	public Users getCurrentUser();
+	Users getCurrentUser();
+
+	Optional<Users> getCurrentUserOptional();
 }
