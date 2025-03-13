@@ -65,7 +65,7 @@ public class TradesServiceTest {
 	private CurrentUserServiceImpl currentUserService;
 
 	@Mock
-	private ChatNotificationService chatNotificationService;
+	private ChatSendService chatSendService;
 
 	@Mock
 	private NotificationEventPublisher notificationEventPublisher;
@@ -109,7 +109,7 @@ public class TradesServiceTest {
 
 		doNothing().when(notificationEventPublisher)
 			.publishNotification(eq(target.getUsersId()), eq(NotificationType.REQUESTED), eq(targetGoods.getId()));
-		doNothing().when(chatNotificationService)
+		doNothing().when(chatSendService)
 			.sendTradeRequestChat(eq(chatRoom.getId()), eq(ChatType.REQUEST), eq(requestedGoods));
 
 		// When
@@ -123,7 +123,7 @@ public class TradesServiceTest {
 		verify(notificationEventPublisher).publishNotification(eq(target.getUsersId()), eq(NotificationType.REQUESTED),
 			eq(targetGoods.getId()));
 		verify(chatRoomsRepository).findByGoodsAndInviter(targetGoods, requester);
-		verify(chatNotificationService).sendTradeRequestChat(eq(chatRoom.getId()), eq(ChatType.REQUEST),
+		verify(chatSendService).sendTradeRequestChat(eq(chatRoom.getId()), eq(ChatType.REQUEST),
 			eq(requestedGoods));
 
 		assertThat(returnedTradeId).isEqualTo(100L);
@@ -216,14 +216,14 @@ public class TradesServiceTest {
 		ChatRooms chatRoom = new ChatRooms();
 		ReflectionTestUtils.setField(chatRoom, "id", 200L);
 		when(chatRoomsRepository.findByTrade(trade)).thenReturn(Optional.of(chatRoom));
-		doNothing().when(chatNotificationService)
+		doNothing().when(chatSendService)
 			.sendTradeRequestChat(eq(chatRoom.getId()), eq(ChatType.CANCEL), any());
 
 		// When & Then
 		assertDoesNotThrow(() -> tradesService.cancelTrade(tradeId));
 		verify(tradesRepository).delete(trade);
 		verify(chatRoomsRepository).findByTrade(trade);
-		verify(chatNotificationService).sendTradeRequestChat(eq(chatRoom.getId()), eq(ChatType.CANCEL), any());
+		verify(chatSendService).sendTradeRequestChat(eq(chatRoom.getId()), eq(ChatType.CANCEL), any());
 	}
 
 	@Test
@@ -250,7 +250,7 @@ public class TradesServiceTest {
 		ChatRooms chatRoom = new ChatRooms(targetGood, requester, trade);
 		ReflectionTestUtils.setField(chatRoom, "id", 300L);
 		when(chatRoomsRepository.findByTrade(trade)).thenReturn(Optional.of(chatRoom));
-		doNothing().when(chatNotificationService)
+		doNothing().when(chatSendService)
 			.sendTradeRequestChat(eq(chatRoom.getId()), eq(ChatType.ACCEPT), eq(requestedGood));
 
 		// When
@@ -261,7 +261,7 @@ public class TradesServiceTest {
 		assertThat(trade.getStatus()).isEqualTo(TradeStatus.INPROGRESS);
 		verify(tradesRepository).rejectOtherTrades(targetGood, tradesId);
 		verify(chatRoomsRepository).findByTrade(trade);
-		verify(chatNotificationService).sendTradeRequestChat(eq(chatRoom.getId()), eq(ChatType.ACCEPT),
+		verify(chatSendService).sendTradeRequestChat(eq(chatRoom.getId()), eq(ChatType.ACCEPT),
 			eq(requestedGood));
 		// goods 상태도 변경되었는지 (RESERVED) – 실제 setter 호출 후 goodsRepository.save() 호출 여부를 검증
 		verify(goodsRepository).save(targetGood);
@@ -395,7 +395,7 @@ public class TradesServiceTest {
 		ChatRooms chatRoom = new ChatRooms(targetGood, requester, trade);
 		ReflectionTestUtils.setField(chatRoom, "id", 400L);
 		when(chatRoomsRepository.findByTrade(trade)).thenReturn(Optional.of(chatRoom));
-		doNothing().when(chatNotificationService)
+		doNothing().when(chatSendService)
 			.sendTradeRequestChat(eq(chatRoom.getId()), eq(ChatType.REJECT), eq(requestedGood));
 
 		// When
@@ -404,7 +404,7 @@ public class TradesServiceTest {
 		// Then
 		assertThat(trade.getStatus()).isEqualTo(TradeStatus.REJECTED);
 		verify(chatRoomsRepository).findByTrade(trade);
-		verify(chatNotificationService).sendTradeRequestChat(eq(chatRoom.getId()), eq(ChatType.REJECT),
+		verify(chatSendService).sendTradeRequestChat(eq(chatRoom.getId()), eq(ChatType.REJECT),
 			eq(requestedGood));
 		verify(notificationEventPublisher).publishNotification(eq(requestedGood.getUser().getUsersId()),
 			eq(NotificationType.REJECTED), eq(targetGood.getId()));

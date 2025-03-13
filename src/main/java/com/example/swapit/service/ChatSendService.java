@@ -12,7 +12,7 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-public class ChatNotificationService {
+public class ChatSendService {
 	private final SimpMessagingTemplate messagingTemplate;
 	private final ChatService chatService;
 	private final CurrentUserService currentUserService;
