@@ -54,6 +54,7 @@ public enum ErrorCode {
 	TRADES_NOT_FOUND(HttpStatus.NOT_FOUND, "거래를 찾을 수 없습니다."),
 	TRADE_UNAUTHORIZED(HttpStatus.FORBIDDEN, "거래에 대한 권한이 없습니다."),
 	DUPLICATE_TRADE_REQUEST(HttpStatus.BAD_REQUEST, "이미 해당 물건에 스왑 요청한 내역이 있습니다."),
+	TRADE_ALREADY_REQUESTED(HttpStatus.BAD_REQUEST, "이미 해당 거래에 대해 요청을 받은 건이 존재합니다."),
 	MAXIMUM_TRADE_REQUEST(HttpStatus.BAD_REQUEST, "가능한 스왑 요청 횟수를 초과하였습니다."),
 
 	// chat error
