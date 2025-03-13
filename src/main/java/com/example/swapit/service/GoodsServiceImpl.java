@@ -2,6 +2,7 @@ package com.example.swapit.service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.util.Pair;
@@ -14,6 +15,7 @@ import com.example.swapit.domain.Categories;
 import com.example.swapit.domain.Goods;
 import com.example.swapit.domain.GoodsImages;
 import com.example.swapit.domain.GoodsTradeStatus;
+import com.example.swapit.domain.Trades;
 import com.example.swapit.domain.Users;
 import com.example.swapit.domain.dto.Dto;
 import com.example.swapit.domain.dto.UserProfileDto;
@@ -23,10 +25,12 @@ import com.example.swapit.domain.dto.good.GoodsImageDto;
 import com.example.swapit.domain.dto.good.GoodsListDto;
 import com.example.swapit.domain.dto.good.GoodsRequestDto;
 import com.example.swapit.domain.dto.good.MyGoodDto;
+import com.example.swapit.domain.dto.good.TradeInGoodDetailDto;
 import com.example.swapit.repository.CategoriesRepository;
 import com.example.swapit.repository.GoodsImagesRepository;
 import com.example.swapit.repository.GoodsRepository;
 import com.example.swapit.repository.ReviewRepository;
+import com.example.swapit.repository.TradesRepository;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -44,6 +48,7 @@ public class GoodsServiceImpl implements GoodsService {
 	private final GoodsImagesRepository goodsImagesRepository;
 	private final ReviewRepository reviewRepository;
 	private final AwsS3Service awsS3Service;
+	private final TradesRepository tradesRepository;
 
 	@Value("${cloud.aws.cloudfront.url}")
 	private String cdnUrl;
@@ -130,7 +135,29 @@ public class GoodsServiceImpl implements GoodsService {
 			.stream()
 			.map(image -> new GoodsImageDto(image.getId(), cdnUrl + image.getS3Key()))
 			.toList();
-		return GoodsDetailDto.of(good, userProfileDto, photos);
+
+		// 현재 유저 확인 후, TradeInGoodDetailDto 구성.
+		TradeInGoodDetailDto tradeInGoodDetailDto = currentUserService.getCurrentUserOptional()
+			.map(user -> getTradeInDetail(goodsId, user.getUsersId()))
+			.orElse(null);
+
+		return GoodsDetailDto.of(good, userProfileDto, photos, tradeInGoodDetailDto);
+	}
+
+	/**
+	 *  현재 사용자가 관련된 거래가 있는지 확인
+	 */
+	private TradeInGoodDetailDto getTradeInDetail(Long goodsId, Long userId) {
+		Optional<Trades> tradesOpt = tradesRepository.findUserRelatedTrade(goodsId, userId);
+		if (tradesOpt.isEmpty()) {
+			return null;
+		}
+
+		Trades trade = tradesOpt.get();
+		// 현재 사용자가 거래 요청자인지 확인
+		boolean isRequester = trade.getRequestedGoods().getUser().getUsersId().equals(userId);
+
+		return new TradeInGoodDetailDto(trade.getId(), isRequester, trade.getStatus().name());
 	}
 
 	@Override

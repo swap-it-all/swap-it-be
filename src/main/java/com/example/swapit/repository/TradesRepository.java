@@ -1,6 +1,7 @@
 package com.example.swapit.repository;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -44,4 +45,11 @@ public interface TradesRepository extends JpaRepository<Trades, Long> {
 
 	boolean existsByRequestedGoodsAndTargetGoodsAndStatusNot(Goods requestedGoods, Goods targetGoods,
 		TradeStatus status);
+
+	@Query(""" 
+		SELECT t FROM Trades t 
+		WHERE (t.targetGoods.id = :goodsId AND t.requestedGoods.user.usersId = :userId) 
+		   OR (t.requestedGoods.id = :goodsId AND t.targetGoods.user.usersId = :userId)
+		ORDER BY t.updatedAt DESC""")
+	Optional<Trades> findUserRelatedTrade(@Param("goodsId") Long goodsId, @Param("userId") Long userId);
 }
