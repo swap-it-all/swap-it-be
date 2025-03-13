@@ -110,7 +110,6 @@ public class ChatServiceImpl implements ChatService {
 				long unreadChatCount = chatRepository.findUnreadChatCount(chatRoom.getId(), lastReadId);
 
 				return ChatRoomResponseDto.builder()
-					.usersId(counterpart.getUsersId())
 					.profileImageUrl(userProfileImageUrl)
 					.nickname(counterpart.getNickname())
 					.recentChat(chats.getContent())
@@ -188,7 +187,7 @@ public class ChatServiceImpl implements ChatService {
 	}
 
 	@Override
-	public ChatRoomInfoDto getChatRoomGoods(Long chatroomId) {
+	public ChatRoomInfoDto getChatRoomInfo(Long chatroomId) {
 		ChatRooms chatRooms = chatRoomsRepository.findById(chatroomId)
 			.orElseThrow(() -> new CustomException(ErrorCode.CHATROOMS_NOT_FOUND));
 		Goods goods = chatRooms.getGoods();
@@ -204,6 +203,7 @@ public class ChatServiceImpl implements ChatService {
 			goods.getCategory().getName(),
 			goods.getPrice(),
 			firstImageUrl,
+			counterpart.getUsersId(),
 			counterpart.getNickname()
 		);
 	}

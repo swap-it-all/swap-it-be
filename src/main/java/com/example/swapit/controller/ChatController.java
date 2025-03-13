@@ -56,8 +56,8 @@ public class ChatController {
 		return ApiResponse.success(chatService.getChatList(chatroomId, cursorId, createdAt));
 	}
 
-	@GetMapping("/api/user/chatroom/{chatroomId}/goods")
+	@GetMapping("/api/user/chatroom/{chatroomId}/info")
 	public ApiResponse<ChatRoomInfoDto> getChatRoomGoods(@PathVariable Long chatroomId) {
-		return ApiResponse.success(chatService.getChatRoomGoods(chatroomId));
+		return ApiResponse.success(chatService.getChatRoomInfo(chatroomId));
 	}
 }

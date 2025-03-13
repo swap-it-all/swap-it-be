@@ -11,5 +11,6 @@ public class ChatRoomInfoDto {
 	private String category;
 	private long price;
 	private String imageUrl;
+	private Long usersId;
 	private String nickname;
 }
