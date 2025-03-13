@@ -8,6 +8,7 @@ import lombok.Getter;
 @Builder
 @Getter
 public class ChatRoomResponseDto {
+	private Long chatroomId;
 	private String profileImageUrl;
 	private String nickname;
 	private String recentChat;
