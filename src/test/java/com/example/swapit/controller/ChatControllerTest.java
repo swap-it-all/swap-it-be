@@ -96,14 +96,12 @@ class ChatControllerTest {
 	void getChatRoomSuccess() throws Exception {
 		// given
 		ChatRoomResponseDto dto1 = ChatRoomResponseDto.builder()
-			.usersId(1L)
 			.profileImageUrl("http://example.com/image.jpg")
 			.nickname("testUser")
 			.recentChat("안녕하세요!")
 			.build();
 
 		ChatRoomResponseDto dto2 = ChatRoomResponseDto.builder()
-			.usersId(2L)
 			.profileImageUrl("http://example.com/image1.jpg")
 			.nickname("testUser2")
 			.recentChat("안녕하세요!!")
@@ -119,11 +117,9 @@ class ChatControllerTest {
 			.andExpect(jsonPath("$.success").value(true))
 			.andExpect(jsonPath("$.message").value("요청에 성공하였습니다."))
 			.andExpect(jsonPath("$.results.chatRoomList", hasSize(2)))
-			.andExpect(jsonPath("$.results.chatRoomList[0].usersId").value(1))
 			.andExpect(jsonPath("$.results.chatRoomList[0].profileImageUrl").value("http://example.com/image.jpg"))
 			.andExpect(jsonPath("$.results.chatRoomList[0].nickname").value("testUser"))
 			.andExpect(jsonPath("$.results.chatRoomList[0].recentChat").value("안녕하세요!"))
-			.andExpect(jsonPath("$.results.chatRoomList[1].usersId").value(2))
 			.andExpect(jsonPath("$.results.chatRoomList[1].profileImageUrl").value("http://example.com/image1.jpg"))
 			.andExpect(jsonPath("$.results.chatRoomList[1].nickname").value("testUser2"))
 			.andExpect(jsonPath("$.results.chatRoomList[1].recentChat").value("안녕하세요!!"));
@@ -168,17 +164,17 @@ class ChatControllerTest {
 	void getChatRoomGoods() throws Exception {
 		// given
 		ChatRoomInfoDto dto = new ChatRoomInfoDto(
-			1L, "아이폰 15", "ELECTRONICS", 2500L, null, "닉네임");
+			1L, "아이폰 15", "ELECTRONICS", 2500L, null, 2L, "닉네임");
 
-		given(chatService.getChatRoomGoods(any())).willReturn(dto);
+		given(chatService.getChatRoomInfo(any())).willReturn(dto);
 
 		// when & then
-		mockMvc.perform(get("/api/user/chatroom/1/goods"))
+		mockMvc.perform(get("/api/user/chatroom/1/info"))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.success").value(true))
 			.andExpect(jsonPath("$.message").value("요청에 성공하였습니다."))
 			.andExpect(jsonPath("$.results.title").value("아이폰 15"));
 
-		verify(chatService, times(1)).getChatRoomGoods(any());
+		verify(chatService, times(1)).getChatRoomInfo(any());
 	}
 }

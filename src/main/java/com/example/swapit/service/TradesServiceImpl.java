@@ -49,7 +49,7 @@ public class TradesServiceImpl implements TradesService {
 	private final GoodsImagesRepository goodsImagesRepository;
 	private final ChatRoomsRepository chatRoomsRepository;
 	private final CurrentUserService currentUserService;
-	private final ChatNotificationService chatNotificationService;
+	private final ChatSendService chatSendService;
 	private final NotificationEventPublisher notificationEventPublisher;
 
 	public static final int MAX_REQUEST_COUNT = 10;
@@ -325,6 +325,6 @@ public class TradesServiceImpl implements TradesService {
 	protected void updateChatroomAndSendChat(ChatRooms chatRooms, Trades trade, ChatType chatType,
 		Goods goodsForMessage) {
 		chatRooms.updateTrade(trade);
-		chatNotificationService.sendTradeRequestChat(chatRooms.getId(), chatType, goodsForMessage);
+		chatSendService.sendTradeRequestChat(chatRooms.getId(), chatType, goodsForMessage);
 	}
 }

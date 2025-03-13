@@ -113,7 +113,6 @@ public class ChatControllerDocsTest extends RestDocsTest {
 		// Given
 		List<ChatRoomResponseDto> dtoList = new ArrayList<>();
 		ChatRoomResponseDto dto = ChatRoomResponseDto.builder()
-			.usersId(1L)
 			.profileImageUrl("http://example.com/image.jpg")
 			.nickname("testUser")
 			.recentChat("안녕하세요!")
@@ -139,15 +138,15 @@ public class ChatControllerDocsTest extends RestDocsTest {
 						fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지"),
 						fieldWithPath("results").type(JsonFieldType.OBJECT).description("응답 결과 데이터"),
 						fieldWithPath("results.chatRoomList").type(JsonFieldType.ARRAY).description("채팅방 목록"),
-						fieldWithPath("results.chatRoomList[].usersId").type(JsonFieldType.NUMBER)
-							.description("사용자 ID"),
 						fieldWithPath("results.chatRoomList[].profileImageUrl").type(JsonFieldType.STRING)
 							.description("프로필 이미지 URL"),
 						fieldWithPath("results.chatRoomList[].nickname").type(JsonFieldType.STRING).description("닉네임"),
 						fieldWithPath("results.chatRoomList[].recentChat").type(JsonFieldType.STRING)
 							.description("최근 메세지"),
 						fieldWithPath("results.chatRoomList[].recentChatTime").type(JsonFieldType.STRING)
-							.description("최근 채팅 시각")
+							.description("최근 채팅 시각"),
+						fieldWithPath("results.chatRoomList[].unReadChatCount").type(JsonFieldType.NUMBER)
+							.description("읽지 않은 채팅 개수")
 					)
 					.responseSchema(Schema.schema("ChatRoomListResponseDto"))
 					.build()
@@ -227,24 +226,24 @@ public class ChatControllerDocsTest extends RestDocsTest {
 	}
 
 	@Test
-	@DisplayName("채팅방 물건 조회 성공")
+	@DisplayName("채팅방 정보 조회 성공")
 	void getChatRoomGoods() throws Exception {
 		// Given
 		Long chatroomId = 1L;
 		ChatRoomInfoDto dto = new ChatRoomInfoDto(
-			1L, "아이폰 15", "ELECTRONICS", 1000000L, "http://example.com/image.jpg", "닉네임");
+			1L, "아이폰 15", "ELECTRONICS", 1000000L, "http://example.com/image.jpg", 2L, "닉네임");
 
-		given(chatService.getChatRoomGoods(any())).willReturn(dto);
+		given(chatService.getChatRoomInfo(any())).willReturn(dto);
 
 		// When & Then
-		mockMvc.perform(get("/api/user/chatroom/{chatroomId}/goods", chatroomId))
+		mockMvc.perform(get("/api/user/chatroom/{chatroomId}/info", chatroomId))
 			.andExpect(status().isOk())
-			.andDo(document("get-chat-room-goods",
+			.andDo(document("get-chat-room-info",
 				preprocessRequest(prettyPrint()),
 				preprocessResponse(prettyPrint()),
 				resource(ResourceSnippetParameters.builder()
 					.tag("Chat")
-					.description("채팅 방의 물건을 조회하는 API")
+					.description("채팅방의 정보를 조회하는 API")
 					.pathParameters(
 						parameterWithName("chatroomId").description("조회할 채팅방 ID")
 					)
@@ -257,9 +256,10 @@ public class ChatControllerDocsTest extends RestDocsTest {
 						fieldWithPath("results.category").type(JsonFieldType.STRING).description("물건 카테고리"),
 						fieldWithPath("results.price").type(JsonFieldType.NUMBER).description("물건 예상 가격"),
 						fieldWithPath("results.imageUrl").type(JsonFieldType.STRING).description("물건 이미지 URL"),
+						fieldWithPath("results.usersId").type(JsonFieldType.NUMBER).description("채팅방 상대 ID"),
 						fieldWithPath("results.nickname").type(JsonFieldType.STRING).description("채팅방 상대 닉네임")
 					)
-					.responseSchema(Schema.schema("ChatRoomGoodsDto"))
+					.responseSchema(Schema.schema("ChatRoomInfoDto"))
 					.build()
 				)
 			));

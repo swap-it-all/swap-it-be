@@ -44,10 +44,20 @@ public class ChatRooms {
 	@JoinColumn(name = "inviter_id", nullable = false)
 	private Users inviter;
 
+	@Setter
+	@Column(name = "inviter_last_read_id", nullable = false)
+	private Long inviterLastReadId;
+
+	@Setter
+	@Column(name = "not_inviter_last_read_id", nullable = false)
+	private Long notInviterLastReadId;
+
 	public ChatRooms(Goods goods, Users inviter, Trades trade) {
 		this.goods = goods;
 		this.inviter = inviter;
 		this.trade = trade;
+		this.inviterLastReadId = 0L;
+		this.notInviterLastReadId = 0L;
 	}
 
 	public void updateTrade(Trades trade) {
