@@ -91,7 +91,7 @@ class GoodsControllerTest {
 	@DisplayName("물건 상세 조회 테스트")
 	void getDetailGood() throws Exception {
 		// given
-		TradeInGoodDetailDto trade = new TradeInGoodDetailDto(2L, true, TradeStatus.PENDING.name());
+		TradeInGoodDetailDto trade = new TradeInGoodDetailDto(2L, true, TradeStatus.PENDING.name(), 2L);
 		GoodsDetailDto mockGoodsDetail = new GoodsDetailDto(
 			1L,
 			new UserProfileDto(1L, "testUser", "profileImage", 4.8),
@@ -131,7 +131,8 @@ class GoodsControllerTest {
 			.andExpect(jsonPath("$.results.images").isArray())
 			.andExpect(jsonPath("$.results.trade.tradesId").value(2L))
 			.andExpect(jsonPath("$.results.trade.isRequester").value(true))
-			.andExpect(jsonPath("$.results.trade.status").value("PENDING"));
+			.andExpect(jsonPath("$.results.trade.status").value("PENDING"))
+			.andExpect(jsonPath("$.results.trade.relatedGoodsId").value(2L));
 
 	}
 

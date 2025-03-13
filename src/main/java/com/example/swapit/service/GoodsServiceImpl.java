@@ -157,7 +157,11 @@ public class GoodsServiceImpl implements GoodsService {
 		// 현재 사용자가 거래 요청자인지 확인
 		boolean isRequester = trade.getRequestedGoods().getUser().getUsersId().equals(userId);
 
-		return new TradeInGoodDetailDto(trade.getId(), isRequester, trade.getStatus().name());
+		Long relatedGoodsId = trade.getTargetGoods().getId().equals(goodsId)
+			? trade.getRequestedGoods().getId()
+			: trade.getTargetGoods().getId();
+
+		return new TradeInGoodDetailDto(trade.getId(), isRequester, trade.getStatus().name(), relatedGoodsId);
 	}
 
 	@Override

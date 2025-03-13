@@ -11,6 +11,7 @@ public class TradeInGoodDetailDto {
 	private Long tradesId;
 	private boolean isRequester;
 	private String status;
+	private Long relatedGoodsId;
 
 	@JsonProperty("isRequester")
 	public boolean getIsRequester() {
