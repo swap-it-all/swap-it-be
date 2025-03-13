@@ -391,7 +391,6 @@ public class TradesServiceTest {
 		when(tradesRepository.findById(tradesId)).thenReturn(Optional.of(trade));
 		when(currentUserService.getCurrentUser()).thenReturn(target);
 
-		// 모킹: 채팅방가 존재하는 경우
 		ChatRooms chatRoom = new ChatRooms(targetGood, requester, trade);
 		ReflectionTestUtils.setField(chatRoom, "id", 400L);
 		when(chatRoomsRepository.findByTrade(trade)).thenReturn(Optional.of(chatRoom));
