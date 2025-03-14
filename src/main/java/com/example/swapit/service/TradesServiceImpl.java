@@ -70,6 +70,12 @@ public class TradesServiceImpl implements TradesService {
 			return Result.fail(ErrorCode.TRADE_ALREADY_REQUESTED.getMessage());
 		}
 
+		// 동일 사용자가 targetGoods에 요청한 내역이 있는지 검사
+		if (tradesRepository.existsByTargetGoodsAndRequestedGoodsUserAndStatusNot(targetGoods, requestedGoods.getUser(),
+			TradeStatus.REJECTED)) {
+			return Result.fail(ErrorCode.DUPLICATE_TRADE_REQUEST.getMessage());
+		}
+
 		// 최대 PENDING 요청 제한 체크
 		long count = tradesRepository.countByTargetGoodsIdAndStatus(tradesRequestDto.getTargetGoodsId(),
 			TradeStatus.PENDING);
