@@ -10,3 +10,9 @@ spring:
       - aws
       - mail
       - doc
+
+  jpa:
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: Asia/Seoul
