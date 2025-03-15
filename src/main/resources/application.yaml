@@ -4,7 +4,7 @@ spring:
 
   profiles:
     active:
-      - dev   # 로컬에서는 dev로, 테스트할 때는 test로 변경해서 사용.
+      - prd   # 로컬에서는 dev로, 테스트할 때는 test로 변경해서 사용.
     include:
       - jwt
       - aws
