@@ -4,9 +4,15 @@ spring:
 
   profiles:
     active:
-      - prd   # 로컬에서는 dev로, 테스트할 때는 test로 변경해서 사용.
+      - dev   # 로컬에서는 dev로, 테스트할 때는 test로 변경해서 사용.
     include:
       - jwt
       - aws
       - mail
       - doc
+
+  jpa:
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: Asia/Seoul
