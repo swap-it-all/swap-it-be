@@ -8,7 +8,7 @@ pipeline {
         }
         stage('Build') {
             steps {
-                sh './gradlew clean bootJar'
+                sh './gradlew clean bootJar -Duser.timezone=Asia/Seoul'
             }
         }
         stage('Deploy') {
