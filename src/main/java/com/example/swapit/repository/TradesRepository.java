@@ -32,10 +32,10 @@ public interface TradesRepository extends JpaRepository<Trades, Long> {
 
 	@Query("SELECT new com.example.swapit.domain.dao.TradeGoodsDao(t.targetGoods, t.requestedGoods, t.id) "
 		   + "FROM Trades t "
-		   + "WHERE t.requestedGoods.user.usersId = :userId")
+		   + "WHERE t.requestedGoods.user.usersId = :userId AND t.status <> 'REJECTED'")
 	List<TradeGoodsDao> findMyRequests(@Param("userId") Long userId);
 
-	@Query("SELECT t.requestedGoods FROM Trades t WHERE t.targetGoods.id = :goodsId ORDER BY t.createdAt DESC")
+	@Query("SELECT t.requestedGoods FROM Trades t WHERE t.targetGoods.id = :goodsId AND t.status <> 'REJECTED' ORDER BY t.createdAt DESC")
 	List<Goods> findGoodsRequests(@Param("goodsId") Long goodsId);
 
 	@Query("SELECT new com.example.swapit.domain.dto.trade.InProgressCountDto(t.targetGoods.id, COUNT(t)) "
