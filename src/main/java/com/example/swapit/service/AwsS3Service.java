@@ -15,4 +15,6 @@ public interface AwsS3Service {
 	void deleteFile(GoodsImages image);
 
 	String updateUserProfileImage(Users user, MultipartFile file);
+
+	void deleteFilesFromS3(List<GoodsImages> images);
 }
