@@ -2,6 +2,8 @@ package com.example.swapit.domain;
 
 import java.time.LocalDateTime;
 
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
@@ -26,6 +28,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @EntityListeners(AuditingEntityListener.class)
+@SQLDelete(sql = "UPDATE chats SET is_deleted = true WHERE chats_id = ?")
+@SQLRestriction("is_deleted = false")
 @Table(name = "chats")
 public class Chats {
 
@@ -55,6 +59,9 @@ public class Chats {
 	@CreatedDate
 	@Column(name = "created_at", nullable = false, updatable = false)
 	private LocalDateTime createdAt;
+
+	@Column(nullable = false)
+	private boolean isDeleted = false;
 
 	@Builder
 	public Chats(ChatRooms chatRooms, Users sender, ChatType chatType, String content, Long goodsId) {

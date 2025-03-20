@@ -3,6 +3,9 @@ package com.example.swapit.domain;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -22,6 +25,8 @@ import lombok.Setter;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
+@SQLDelete(sql = "UPDATE users SET is_deleted = true WHERE users_id = ?")
+@SQLRestriction("is_deleted = false")
 @Table(name = "users")
 public class Users {
 	@Id
@@ -45,6 +50,9 @@ public class Users {
 
 	@Column(name = "role", columnDefinition = "VARCHAR(20)", nullable = false)
 	private String role;
+
+	@Column(nullable = false)
+	private boolean isDeleted = false;
 
 	@Builder.Default
 	@OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
