@@ -17,6 +17,7 @@ public interface ChatRoomsRepository extends JpaRepository<ChatRooms, Long> {
 	@Query("""
 		SELECT c
 		FROM ChatRooms c
+		  LEFT JOIN c.goods g
 		  LEFT JOIN c.trade t
 		  LEFT JOIN t.requestedGoods rg
 		  LEFT JOIN t.targetGoods tg
@@ -24,7 +25,10 @@ public interface ChatRoomsRepository extends JpaRepository<ChatRooms, Long> {
 		WHERE
 		  (
 		    c.trade IS NULL
-		    AND c.inviter.id = :myId
+		    AND (
+		      c.inviter.id = :myId
+		      OR g.user.id = :myId
+		    )
 		  )
 		  OR
 		  (
