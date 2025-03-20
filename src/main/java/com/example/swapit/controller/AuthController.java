@@ -2,6 +2,7 @@ package com.example.swapit.controller;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -9,6 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.swapit.common.api.ApiResponse;
 import com.example.swapit.domain.dto.TokenDTO;
 import com.example.swapit.domain.dto.UserResponseDTO;
+import com.example.swapit.domain.dto.WithdrawDto;
 import com.example.swapit.service.AuthService;
 
 import lombok.RequiredArgsConstructor;
@@ -43,6 +45,20 @@ public class AuthController {
 	@PostMapping("/user/auth/logout")
 	public ApiResponse<Void> logout(@RequestHeader("Authorization") String token) {
 		authService.deleteRefreshToken(token);
+		return ApiResponse.success();
+	}
+
+	@PostMapping("/user/auth/withdraw/google")
+	public ApiResponse<Void> withdrawGoogle(@RequestHeader("X-Google-Token") String googleToken,
+		@RequestBody WithdrawDto dto) {
+		authService.withdrawGoogleUser(googleToken, dto.getReason());
+		return ApiResponse.success();
+	}
+
+	@PostMapping("/user/auth/withdraw/kakao")
+	public ApiResponse<Void> withdrawKakao(@RequestHeader("X-Kakao-Token") String kakaoToken,
+		@RequestBody WithdrawDto dto) {
+		authService.withdrawKakaoUser(kakaoToken, dto.getReason());
 		return ApiResponse.success();
 	}
 }

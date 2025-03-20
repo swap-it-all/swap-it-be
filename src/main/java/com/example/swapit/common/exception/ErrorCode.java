@@ -49,6 +49,7 @@ public enum ErrorCode {
 	INVALID_ACCESS_TOKEN(HttpStatus.UNAUTHORIZED, "유효하지 않은 액세스 토큰입니다."),
 	GET_USER_INFO_FAIL(HttpStatus.BAD_REQUEST, "사용자 정보 조회에 실패했습니다."),
 	LOGIN_FAIL(HttpStatus.UNAUTHORIZED, "로그인에 실패했습니다."),
+	SOCIAL_UNLINK_FAILED(HttpStatus.BAD_REQUEST, "소셜 연결 해제에 실패했습니다."),
 
 	// trades error
 	TRADES_NOT_FOUND(HttpStatus.NOT_FOUND, "거래를 찾을 수 없습니다."),
