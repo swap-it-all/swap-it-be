@@ -11,8 +11,6 @@ import jakarta.persistence.EntityListeners;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -27,22 +25,21 @@ import lombok.NoArgsConstructor;
 public class WithdrawReasons {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "reason_id", columnDefinition = "BIGINT", nullable = false)
-	private Long reasonId;
+	@Column(name = "reasons_id", columnDefinition = "BIGINT", nullable = false)
+	private Long id;
 
 	@Column(name = "reason", columnDefinition = "VARCHAR(200)", nullable = false)
 	private String reason;
 
-	@OneToOne
-	@JoinColumn(name = "users_id", nullable = false)
-	private Users users;
+	@Column(name = "users_id", columnDefinition = "BIGINT", nullable = false)
+	private Long usersId;
 
 	@CreatedDate
 	@Column(nullable = false, updatable = false)
 	private LocalDateTime createdAt;
 
-	public WithdrawReasons(String reason, Users users) {
+	public WithdrawReasons(String reason, Long usersId) {
 		this.reason = reason;
-		this.users = users;
+		this.usersId = usersId;
 	}
 }

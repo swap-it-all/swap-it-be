@@ -215,6 +215,7 @@ public class AuthServiceImpl implements AuthService {
 	}
 
 	@Override
+	@Transactional
 	public void withdrawGoogleUser(String googleToken, String reason) {
 		RestTemplate restTemplate = new RestTemplate();
 		String revokeUrl = "https://oauth2.googleapis.com/revoke?token=" + googleToken;
@@ -231,6 +232,7 @@ public class AuthServiceImpl implements AuthService {
 	}
 
 	@Override
+	@Transactional
 	public void withdrawKakaoUser(String kakaoToken, String reason) {
 		RestTemplate restTemplate = new RestTemplate();
 		HttpHeaders headers = new HttpHeaders();
@@ -275,7 +277,7 @@ public class AuthServiceImpl implements AuthService {
 		goodsRepository.deleteAll(goodsList);
 
 		// 사유 저장
-		withdrawReasonsRepository.save(new WithdrawReasons(reason, user));
+		withdrawReasonsRepository.save(new WithdrawReasons(reason, user.getUsersId()));
 
 		// 사용자 삭제
 		usersRepository.delete(user);
