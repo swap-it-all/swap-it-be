@@ -9,4 +9,6 @@ import com.example.swapit.domain.Users;
 
 public interface FcmTokenRepository extends JpaRepository<FcmToken, Long> {
 	Optional<FcmToken> findByUser(Users user);
+
+	void deleteByUser(Users users);
 }

@@ -15,4 +15,6 @@ import io.lettuce.core.dynamic.annotation.Param;
 public interface NotificationRepository extends JpaRepository<Notifications, Long> {
 	@Query("SELECT n FROM Notifications n WHERE n.user = :user AND n.isRead = false ORDER BY n.createdAt DESC")
 	List<Notifications> findByUserAndReadNotOrderByCreatedAtDesc(@Param("user") Users user);
+
+	void deleteAllByUser(Users users);
 }

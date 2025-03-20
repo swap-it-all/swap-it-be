@@ -57,4 +57,10 @@ public interface TradesRepository extends JpaRepository<Trades, Long> {
 	boolean existsByTargetGoodsAndRequestedGoodsUserAndStatusNot(Goods targetGoods, Users requestedUser,
 		TradeStatus status);
 
+	@Query("""
+		SELECT t FROM Trades t
+		WHERE (t.requestedGoods.user.usersId = :userId)
+		OR (t.targetGoods.user.usersId = :userId)
+		""")
+	List<Trades> findAllByUser(@Param("userId") Long userId);
 }

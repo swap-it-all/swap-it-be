@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import com.example.swapit.domain.Chats;
+import com.example.swapit.domain.Users;
 
 public interface ChatsRepository extends JpaRepository<Chats, Long> {
 
@@ -28,4 +29,6 @@ public interface ChatsRepository extends JpaRepository<Chats, Long> {
 		   + "WHERE c.chatRooms.id = :chatRoomsId "
 		   + "AND c.id > :lastReadId")
 	long findUnreadChatCount(long chatRoomsId, long lastReadId);
+
+	void deleteAllBySender(Users sender);
 }

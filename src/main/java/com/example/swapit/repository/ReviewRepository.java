@@ -19,4 +19,6 @@ public interface ReviewRepository extends JpaRepository<Reviews, Long> {
 	List<Reviews> findTop5ByRevieweeOrderByCreatedAtDesc(Users reviewee);
 
 	long countByReviewee(Users reviewee);
+
+	void deleteAllByWriterOrReviewee(Users writer, Users reviewee);
 }
