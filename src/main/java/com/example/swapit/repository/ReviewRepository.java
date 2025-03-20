@@ -3,6 +3,7 @@ package com.example.swapit.repository;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
 import com.example.swapit.domain.Reviews;
@@ -20,5 +21,6 @@ public interface ReviewRepository extends JpaRepository<Reviews, Long> {
 
 	long countByReviewee(Users reviewee);
 
+	@Modifying
 	void deleteAllByWriterOrReviewee(Users writer, Users reviewee);
 }
