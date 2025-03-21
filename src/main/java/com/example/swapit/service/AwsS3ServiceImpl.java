@@ -107,7 +107,8 @@ public class AwsS3ServiceImpl implements AwsS3Service {
 	/**
 	 * S3에서 파일 삭제
 	 */
-	private void deleteFileFromS3(String s3Key) {
+	@Override
+	public void deleteFileFromS3(String s3Key) {
 		DeleteObjectRequest deleteObjectRequest = DeleteObjectRequest.builder()
 			.bucket(bucketName)
 			.key(baseUrl + s3Key)
@@ -192,7 +193,6 @@ public class AwsS3ServiceImpl implements AwsS3Service {
 			log.info("S3에서 {}개의 이미지가 성공적으로 삭제되었습니다.", objects.size());
 		} catch (S3Exception e) {
 			log.error("S3 이미지 삭제 중 오류 발생", e);
-			throw new RuntimeException("S3 이미지 삭제 실패", e);
 		}
 	}
 }

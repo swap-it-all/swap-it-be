@@ -14,6 +14,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -92,6 +93,9 @@ public class AuthServiceTest {
 
 	@Mock
 	private RestTemplate restTemplate;
+
+	@Mock
+	private ApplicationEventPublisher applicationEventPublisher;
 
 	@Mock
 	private AwsS3Service awsS3Service;
@@ -599,6 +603,10 @@ public class AuthServiceTest {
 		verify(usersRepository).delete(testUser);
 
 		// DB 트랜잭션 이후 S3 삭제 수행 검증
-		verify(authService).deleteFilesFromS3AfterTransaction(anyList());
+		verify(applicationEventPublisher).publishEvent(argThat(event ->
+			event instanceof UserWithdrawCompletedEvent &&
+			((UserWithdrawCompletedEvent)event).getImages().equals(Collections.emptyList()) &&
+			((UserWithdrawCompletedEvent)event).getUser().equals(testUser)
+		));
 	}
 }

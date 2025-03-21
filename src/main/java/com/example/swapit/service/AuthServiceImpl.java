@@ -3,6 +3,7 @@ package com.example.swapit.service;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -63,6 +64,7 @@ public class AuthServiceImpl implements AuthService {
 	private final GoodsImagesRepository goodsImagesRepository;
 
 	private final RestTemplate restTemplate;
+	private final ApplicationEventPublisher applicationEventPublisher;
 
 	private static final String GOOGLE_LOGIN_INFO = "google";
 	private static final String KAKAO_LOGIN_INFO = "kakao";
@@ -283,13 +285,15 @@ public class AuthServiceImpl implements AuthService {
 		usersRepository.delete(user);
 
 		// DB 트랜잭션 이후 S3 삭제 수행
-		deleteFilesFromS3AfterTransaction(goodsImagesList);
+		applicationEventPublisher.publishEvent(
+			new UserWithdrawCompletedEvent(this, goodsImagesList, user));
 	}
 
 	@TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-	public void deleteFilesFromS3AfterTransaction(List<GoodsImages> images) {
+	public void handleUserWithdrawCompletedEvent(UserWithdrawCompletedEvent event) {
 		try {
-			awsS3Service.deleteFilesFromS3(images);
+			awsS3Service.deleteFilesFromS3(event.getImages());
+			awsS3Service.deleteFileFromS3(event.getUser().getProfileImageUrl());
 		} catch (Exception e) {
 			log.error("S3 이미지 삭제 실패, 추후 재처리 필요", e);
 		}
