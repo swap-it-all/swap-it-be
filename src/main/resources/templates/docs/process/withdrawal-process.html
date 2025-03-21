@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>계정 및 데이터 삭제 안내</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 20px;
+            max-width: 900px;
+            margin: auto;
+            text-align: center;
+        }
+
+        h1 {
+            color: #d32f2f;
+        }
+
+        .steps-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+        }
+
+        .step {
+            width: 30%; /* 한 줄에 3개씩 배치 */
+            margin-bottom: 20px;
+        }
+
+        .step img {
+            width: 100%;
+            max-width: 250px; /* 이미지 크기 제한 */
+            height: auto;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+<h1>계정 및 데이터 삭제 안내</h1>
+<p>사용자가 계정 및 관련 데이터를 삭제하는 방법을 안내합니다. 다음 단계를 따라주세요.</p>
+
+<div class="steps-container">
+    <div class="step">
+        <h2>1단계</h2>
+        <h3>설정 페이지 이동</h3>
+        <img th:src="${cloudfrontBaseUrl} + 'withdraw1.png'" alt="설정 페이지 이동">
+    </div>
+
+    <div class="step">
+        <h2>2단계</h2>
+        <h3>"회원 탈퇴" 선택</h3>
+        <img th:src="${cloudfrontBaseUrl} + 'withdraw2.png'" alt="회원 탈퇴 선택">
+    </div>
+
+    <div class="step">
+        <h2>3단계</h2>
+        <h3>탈퇴 신청 페이지</h3>
+        <img th:src="${cloudfrontBaseUrl} + 'withdraw3.png'" alt="탈퇴 신청 페이지">
+    </div>
+
+    <div class="step">
+        <h2>4단계</h2>
+        <h3>탈퇴 이유 선택</h3>
+        <img th:src="${cloudfrontBaseUrl} + 'withdraw4.png'" alt="탈퇴 이유 선택">
+    </div>
+
+    <div class="step">
+        <h2>5단계</h2>
+        <h3>이유 직접 작성</h3>
+        <img th:src="${cloudfrontBaseUrl} + 'withdraw5.png'" alt="이유 직접 작성 가능">
+    </div>
+
+    <div class="step">
+        <h2>6단계</h2>
+        <h3>최종 삭제 완료</h3>
+        <img th:src="${cloudfrontBaseUrl} + 'withdraw6.png'" alt="최종 삭제 완료">
+    </div>
+</div>
+
+
+<p><strong>주의:</strong> 계정과 콘텐츠가 영구 삭제 됩니다.</p>
+</body>
+</html>
