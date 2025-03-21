@@ -13,7 +13,7 @@ public class DocsController {
 
 	@GetMapping("/docs/privacy-policy")
 	public String privacyPolicy() {
-		return "forward:/docs/policy/privacy-policy.html";
+		return "docs/policy/privacy-policy";
 	}
 
 	@GetMapping("/docs/withdraw-process")
