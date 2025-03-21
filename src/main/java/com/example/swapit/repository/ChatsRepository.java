@@ -4,10 +4,12 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import com.example.swapit.domain.Chats;
+import com.example.swapit.domain.Users;
 
 public interface ChatsRepository extends JpaRepository<Chats, Long> {
 
@@ -28,4 +30,7 @@ public interface ChatsRepository extends JpaRepository<Chats, Long> {
 		   + "WHERE c.chatRooms.id = :chatRoomsId "
 		   + "AND c.id > :lastReadId")
 	long findUnreadChatCount(long chatRoomsId, long lastReadId);
+
+	@Modifying
+	void deleteAllBySender(Users sender);
 }

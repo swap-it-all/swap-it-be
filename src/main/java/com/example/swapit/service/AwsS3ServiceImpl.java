@@ -8,6 +8,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.util.Pair;
@@ -25,8 +26,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.Delete;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
+import software.amazon.awssdk.services.s3.model.DeleteObjectsRequest;
+import software.amazon.awssdk.services.s3.model.ObjectIdentifier;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.model.S3Exception;
 
 @Slf4j
 @Service
@@ -102,7 +107,8 @@ public class AwsS3ServiceImpl implements AwsS3Service {
 	/**
 	 * S3에서 파일 삭제
 	 */
-	private void deleteFileFromS3(String s3Key) {
+	@Override
+	public void deleteFileFromS3(String s3Key) {
 		DeleteObjectRequest deleteObjectRequest = DeleteObjectRequest.builder()
 			.bucket(bucketName)
 			.key(baseUrl + s3Key)
@@ -163,6 +169,30 @@ public class AwsS3ServiceImpl implements AwsS3Service {
 		} catch (IOException e) {
 			log.error("MIME 타입 감지 실패: {}", e.getMessage());
 			throw new CustomException(ErrorCode.IMAGE_READ_FAILED);
+		}
+	}
+
+	/**
+	 * S3에서 한 번에 여러 이미지 삭제
+	 */
+	@Override
+	public void deleteFilesFromS3(List<GoodsImages> images) {
+		List<ObjectIdentifier> objects = images.stream()
+			.map(image -> ObjectIdentifier.builder()
+				.key(baseUrl + image.getS3Key())
+				.build())
+			.collect(Collectors.toList());
+
+		DeleteObjectsRequest deleteObjectsRequest = DeleteObjectsRequest.builder()
+			.bucket(bucketName)
+			.delete(Delete.builder().objects(objects).build())
+			.build();
+
+		try {
+			s3Client.deleteObjects(deleteObjectsRequest);
+			log.info("S3에서 {}개의 이미지가 성공적으로 삭제되었습니다.", objects.size());
+		} catch (S3Exception e) {
+			log.error("S3 이미지 삭제 중 오류 발생", e);
 		}
 	}
 }

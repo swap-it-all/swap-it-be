@@ -3,6 +3,7 @@ package com.example.swapit.service;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
 
@@ -13,6 +14,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -28,8 +30,17 @@ import com.example.swapit.domain.Tokens;
 import com.example.swapit.domain.Users;
 import com.example.swapit.domain.dto.TokenDTO;
 import com.example.swapit.domain.dto.UserResponseDTO;
+import com.example.swapit.repository.ChatRoomsRepository;
+import com.example.swapit.repository.ChatsRepository;
+import com.example.swapit.repository.FcmTokenRepository;
+import com.example.swapit.repository.GoodsImagesRepository;
+import com.example.swapit.repository.GoodsRepository;
+import com.example.swapit.repository.NotificationRepository;
+import com.example.swapit.repository.ReviewRepository;
 import com.example.swapit.repository.TokensRepository;
+import com.example.swapit.repository.TradesRepository;
 import com.example.swapit.repository.UsersRepository;
+import com.example.swapit.repository.WithdrawReasonsRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class AuthServiceTest {
@@ -51,7 +62,40 @@ public class AuthServiceTest {
 	private TokensRepository tokensRepository;
 
 	@Mock
+	private CurrentUserService currentUserService;
+
+	@Mock
+	private FcmTokenRepository fcmTokenRepository;
+
+	@Mock
+	private NotificationRepository notificationRepository;
+
+	@Mock
+	private ReviewRepository reviewRepository;
+
+	@Mock
+	private ChatsRepository chatsRepository;
+
+	@Mock
+	private ChatRoomsRepository chatRoomsRepository;
+
+	@Mock
+	private TradesRepository tradesRepository;
+
+	@Mock
+	private GoodsRepository goodsRepository;
+
+	@Mock
+	private GoodsImagesRepository goodsImagesRepository;
+
+	@Mock
+	private WithdrawReasonsRepository withdrawReasonsRepository;
+
+	@Mock
 	private RestTemplate restTemplate;
+
+	@Mock
+	private ApplicationEventPublisher applicationEventPublisher;
 
 	@Mock
 	private AwsS3Service awsS3Service;
@@ -494,5 +538,75 @@ public class AuthServiceTest {
 		// Then
 		verify(tokensRepository, times(1)).findByRefreshToken(Token);
 		verify(tokensRepository, never()).delete(any());
+	}
+
+	@Test
+	@DisplayName("회원정보 삭제 성공 테스트")
+	void testUserWithdraw() {
+		Users testUser = Users.builder()
+			.usersId(1L)
+			.nickname("testuser")
+			.email("test@example.com")
+			.profileImageUrl("http://example.com/profile.jpg")
+			.loginInfo("GOOGLE")
+			.role("USER")
+			.isDeleted(false)
+			.build();
+
+		when(currentUserService.getCurrentUser()).thenReturn(testUser);
+
+		// 물건, 채팅방, 거래 관련 리포지토리는 빈 리스트를 반환하도록 설정
+		when(goodsRepository.findByUserOrderByCreatedAtDesc(testUser))
+			.thenReturn(Collections.emptyList());
+		when(goodsImagesRepository.findByGoodIn(Collections.emptyList()))
+			.thenReturn(Collections.emptyList());
+		when(chatRoomsRepository.findMyChatRooms(testUser.getUsersId()))
+			.thenReturn(Collections.emptyList());
+		when(tradesRepository.findAllByUser(testUser.getUsersId()))
+			.thenReturn(Collections.emptyList());
+
+		String reason = "테스트 탈퇴 사유";
+
+		// userWithdraw() 메서드 실행 (내부에서 S3 삭제 메서드도 호출됨)
+		authService.userWithdraw(reason);
+
+		// FCM 토큰, 리프레시 토큰, 알림 삭제 검증
+		verify(fcmTokenRepository).deleteByUser(testUser);
+		verify(tokensRepository).deleteByUser(testUser);
+		verify(notificationRepository).deleteAllByUser(testUser);
+
+		// 후기, 채팅 메시지 삭제 검증
+		verify(reviewRepository).deleteAllByWriterOrReviewee(testUser, testUser);
+		verify(chatsRepository).deleteAllBySender(testUser);
+
+		// 채팅방 관련 삭제 검증
+		verify(chatRoomsRepository).findMyChatRooms(testUser.getUsersId());
+		verify(chatRoomsRepository).deleteAll(anyList());
+
+		// 거래 관련 삭제 검증
+		verify(tradesRepository).findAllByUser(testUser.getUsersId());
+		verify(tradesRepository).deleteAll(anyList());
+
+		// 물건 및 물건 사진 관련 검증
+		verify(goodsRepository).findByUserOrderByCreatedAtDesc(testUser);
+		verify(goodsImagesRepository).findByGoodIn(anyList());
+		verify(goodsImagesRepository).deleteAll(anyList());
+		verify(goodsRepository).deleteAll(anyList());
+
+		// 탈퇴 사유 저장시, userId가 올바르게 전달되었는지 검증
+		verify(withdrawReasonsRepository).save(argThat(wr ->
+			reason.equals(wr.getReason()) &&
+			testUser.getUsersId().equals(wr.getUsersId())
+		));
+
+		// 사용자 삭제 검증
+		verify(usersRepository).delete(testUser);
+
+		// DB 트랜잭션 이후 S3 삭제 수행 검증
+		verify(applicationEventPublisher).publishEvent(argThat(event ->
+			event instanceof UserWithdrawCompletedEvent &&
+			((UserWithdrawCompletedEvent)event).getImages().equals(Collections.emptyList()) &&
+			((UserWithdrawCompletedEvent)event).getUser().equals(testUser)
+		));
 	}
 }

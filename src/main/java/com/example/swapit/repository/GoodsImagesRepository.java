@@ -12,4 +12,6 @@ public interface GoodsImagesRepository extends JpaRepository<GoodsImages, Long> 
 	List<GoodsImages> findByGood(Goods good);
 
 	Optional<GoodsImages> findFirstByGoodOrderByIdAsc(Goods good);
+
+	List<GoodsImages> findByGoodIn(List<Goods> goods);
 }

@@ -18,4 +18,8 @@ public interface AuthService {
 	Users getKakaoUserInfo(String accessToken);
 
 	void deleteRefreshToken(String token);
+
+	void withdrawGoogleUser(String googleToken, String reason);
+
+	void withdrawKakaoUser(String kakaoToken, String reason);
 }

@@ -1,5 +1,6 @@
 package com.example.swapit.domain;
 
+import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
 import jakarta.persistence.Column;
@@ -23,6 +24,7 @@ import lombok.Setter;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
+@SQLDelete(sql = "UPDATE notifications SET is_deleted = true WHERE notifications_id = ?")
 @SQLRestriction("is_read = false")
 @Table(name = "notifications")
 public class Notifications extends BaseEntity {

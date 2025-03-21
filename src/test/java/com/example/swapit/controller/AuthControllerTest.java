@@ -17,11 +17,13 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.example.swapit.common.exception.CustomException;
 import com.example.swapit.common.exception.ErrorCode;
 import com.example.swapit.domain.dto.TokenDTO;
 import com.example.swapit.domain.dto.UserResponseDTO;
+import com.example.swapit.domain.dto.WithdrawDto;
 import com.example.swapit.service.AuthService;
 
 @ExtendWith(MockitoExtension.class)
@@ -34,6 +36,8 @@ public class AuthControllerTest {
 
 	@InjectMocks
 	private AuthController authController;
+
+	ObjectMapper objectMapper = new ObjectMapper();
 
 	@BeforeEach
 	void setUp() {
@@ -240,6 +244,52 @@ public class AuthControllerTest {
 		// When & Then
 		mockMvc.perform(post("/api/user/auth/logout")
 				.header("Authorization", token).contentType(MediaType.APPLICATION_JSON))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.success").value(true))
+			.andExpect(jsonPath("$.message").value("요청에 성공하였습니다."))
+			.andDo(print());
+	}
+
+	@Test
+	@DisplayName("구글 탈퇴 신청 성공 테스트")
+	void withdrawGoogleSuccess() throws Exception {
+		// Given
+		String token = "valid_token";
+		String googleToken = "google_access_token";
+
+		WithdrawDto withdrawDto = Mockito.mock(WithdrawDto.class);
+		when(withdrawDto.getReason()).thenReturn("너무 많이 사용해요.");
+
+		doNothing().when(authService).withdrawGoogleUser(googleToken, "너무 많이 사용해요.");
+
+		// When & Then
+		mockMvc.perform(
+				post("/api/user/auth/withdraw/google").header("Authorization", token).header("X-Google-Token", googleToken)
+					.contentType(MediaType.APPLICATION_JSON)
+					.content(objectMapper.writeValueAsString(withdrawDto)))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.success").value(true))
+			.andExpect(jsonPath("$.message").value("요청에 성공하였습니다."))
+			.andDo(print());
+	}
+
+	@Test
+	@DisplayName("카카오 탈퇴 신청 성공 테스트")
+	void withdrawKakaoSuccess() throws Exception {
+		// Given
+		String token = "valid_token";
+		String kakaoToken = "kakao_access_token";
+
+		WithdrawDto withdrawDto = Mockito.mock(WithdrawDto.class);
+		when(withdrawDto.getReason()).thenReturn("너무 많이 사용해요.");
+
+		doNothing().when(authService).withdrawKakaoUser(kakaoToken, "너무 많이 사용해요.");
+
+		// When & Then
+		mockMvc.perform(
+				post("/api/user/auth/withdraw/kakao").header("Authorization", token).header("X-Kakao-Token", kakaoToken)
+					.contentType(MediaType.APPLICATION_JSON)
+					.content(objectMapper.writeValueAsString(withdrawDto)))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.success").value(true))
 			.andExpect(jsonPath("$.message").value("요청에 성공하였습니다."))
