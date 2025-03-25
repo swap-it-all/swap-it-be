@@ -1,5 +1,9 @@
 package com.example.swapit.domain;
 
+import java.time.LocalDateTime;
+
+import org.springframework.data.annotation.CreatedDate;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -34,4 +38,9 @@ public class GoodsImages {
 
 	@Column(columnDefinition = "VARCHAR(50)", nullable = false)
 	private String contentType;
+
+	@Builder.Default
+	@CreatedDate
+	@Column(nullable = false, updatable = false)
+	private LocalDateTime createdAt = LocalDateTime.now();
 }
