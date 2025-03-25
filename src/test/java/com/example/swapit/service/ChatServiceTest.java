@@ -35,7 +35,7 @@ import com.example.swapit.domain.dto.chat.ChatRoomInfoDto;
 import com.example.swapit.domain.dto.chat.ChatRoomResponseDto;
 import com.example.swapit.domain.dto.chat.ChatStompRequestDto;
 import com.example.swapit.domain.dto.chat.ChatStompResponseDto;
-import com.example.swapit.domain.dto.good.TradeInGoodDetailDto;
+import com.example.swapit.domain.dto.good.TradeInfoDto;
 import com.example.swapit.repository.ChatRoomsRepository;
 import com.example.swapit.repository.ChatsRepository;
 import com.example.swapit.repository.GoodsImagesRepository;
@@ -348,7 +348,7 @@ class ChatServiceTest {
 			.trade(trades)
 			.build();
 
-		TradeInGoodDetailDto trade = new TradeInGoodDetailDto(1L, true, "PENDING", 2L);
+		TradeInfoDto trade = new TradeInfoDto(1L, true, "PENDING", 2L);
 
 		when(chatRoomsRepository.findById(chatroomId))
 			.thenReturn(Optional.of(chatRooms));

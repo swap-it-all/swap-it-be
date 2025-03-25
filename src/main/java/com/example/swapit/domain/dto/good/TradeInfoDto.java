@@ -7,7 +7,7 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public class TradeInGoodDetailDto {
+public class TradeInfoDto {
 	private Long tradesId;
 	private boolean isRequester;
 	private String status;

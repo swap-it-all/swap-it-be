@@ -25,7 +25,7 @@ import com.example.swapit.domain.dto.good.GoodsImageDto;
 import com.example.swapit.domain.dto.good.GoodsListDto;
 import com.example.swapit.domain.dto.good.GoodsRequestDto;
 import com.example.swapit.domain.dto.good.MyGoodDto;
-import com.example.swapit.domain.dto.good.TradeInGoodDetailDto;
+import com.example.swapit.domain.dto.good.TradeInfoDto;
 import com.example.swapit.repository.CategoriesRepository;
 import com.example.swapit.repository.GoodsImagesRepository;
 import com.example.swapit.repository.GoodsRepository;
@@ -137,7 +137,7 @@ public class GoodsServiceImpl implements GoodsService {
 			.toList();
 
 		// 현재 유저 확인 후, TradeInGoodDetailDto 구성.
-		TradeInGoodDetailDto tradeInGoodDetailDto = currentUserService.getCurrentUserOptional()
+		TradeInfoDto tradeInGoodDetailDto = currentUserService.getCurrentUserOptional()
 			.map(user -> getTradeInDetail(goodsId, user.getUsersId()))
 			.orElse(null);
 
@@ -147,7 +147,7 @@ public class GoodsServiceImpl implements GoodsService {
 	/**
 	 *  현재 사용자가 관련된 거래가 있는지 확인
 	 */
-	private TradeInGoodDetailDto getTradeInDetail(Long goodsId, Long userId) {
+	private TradeInfoDto getTradeInDetail(Long goodsId, Long userId) {
 		Optional<Trades> tradesOpt = tradesRepository.findUserRelatedTrade(goodsId, userId);
 		if (tradesOpt.isEmpty()) {
 			return null;
@@ -161,7 +161,7 @@ public class GoodsServiceImpl implements GoodsService {
 			? trade.getRequestedGoods().getId()
 			: trade.getTargetGoods().getId();
 
-		return new TradeInGoodDetailDto(trade.getId(), isRequester, trade.getStatus().name(), relatedGoodsId);
+		return new TradeInfoDto(trade.getId(), isRequester, trade.getStatus().name(), relatedGoodsId);
 	}
 
 	@Override

@@ -26,7 +26,7 @@ import com.example.swapit.domain.dto.chat.ChatRoomInfoDto;
 import com.example.swapit.domain.dto.chat.ChatRoomResponseDto;
 import com.example.swapit.domain.dto.chat.ChatStompRequestDto;
 import com.example.swapit.domain.dto.chat.ChatStompResponseDto;
-import com.example.swapit.domain.dto.good.TradeInGoodDetailDto;
+import com.example.swapit.domain.dto.good.TradeInfoDto;
 import com.example.swapit.repository.ChatRoomsRepository;
 import com.example.swapit.repository.ChatsRepository;
 import com.example.swapit.repository.GoodsImagesRepository;
@@ -254,11 +254,11 @@ public class ChatServiceImpl implements ChatService {
 		return counterpart;
 	}
 
-	public TradeInGoodDetailDto getTrade(Trades trade) {
+	public TradeInfoDto getTrade(Trades trade) {
 		Long loggedInUserId = currentUserService.getCurrentUser().getUsersId();
 		boolean isRequester = trade.getRequestedGoods().getUser().getUsersId().equals(loggedInUserId);
 		Long relatedGoodsId = isRequester ? trade.getTargetGoods().getId() : trade.getRequestedGoods().getId();
 		String tradeStatus = trade.getStatus().name();
-		return new TradeInGoodDetailDto(trade.getId(), isRequester, tradeStatus, relatedGoodsId);
+		return new TradeInfoDto(trade.getId(), isRequester, tradeStatus, relatedGoodsId);
 	}
 }

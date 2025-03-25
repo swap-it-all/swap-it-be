@@ -1,8 +1,8 @@
 package com.example.swapit.controller;
 
 import static org.hamcrest.Matchers.*;
-import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.*;
@@ -34,7 +34,7 @@ import com.example.swapit.domain.dto.good.GoodsImageDto;
 import com.example.swapit.domain.dto.good.GoodsListDto;
 import com.example.swapit.domain.dto.good.GoodsRequestDto;
 import com.example.swapit.domain.dto.good.MyGoodDto;
-import com.example.swapit.domain.dto.good.TradeInGoodDetailDto;
+import com.example.swapit.domain.dto.good.TradeInfoDto;
 import com.example.swapit.service.GoodsService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -91,7 +91,7 @@ class GoodsControllerTest {
 	@DisplayName("물건 상세 조회 테스트")
 	void getDetailGood() throws Exception {
 		// given
-		TradeInGoodDetailDto trade = new TradeInGoodDetailDto(2L, true, TradeStatus.PENDING.name(), 2L);
+		TradeInfoDto trade = new TradeInfoDto(2L, true, TradeStatus.PENDING.name(), 2L);
 		GoodsDetailDto mockGoodsDetail = new GoodsDetailDto(
 			1L,
 			new UserProfileDto(1L, "testUser", "profileImage", 4.8),
