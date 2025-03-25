@@ -28,7 +28,7 @@ import com.example.swapit.domain.dto.chat.ChatRoomAddRequestFromGoodDto;
 import com.example.swapit.domain.dto.chat.ChatRoomAddRequestFromTradeDto;
 import com.example.swapit.domain.dto.chat.ChatRoomInfoDto;
 import com.example.swapit.domain.dto.chat.ChatRoomResponseDto;
-import com.example.swapit.domain.dto.good.TradeInGoodDetailDto;
+import com.example.swapit.domain.dto.good.TradeInfoDto;
 import com.example.swapit.service.ChatServiceImpl;
 
 public class ChatControllerDocsTest extends RestDocsTest {
@@ -234,7 +234,7 @@ public class ChatControllerDocsTest extends RestDocsTest {
 	void getChatRoomGoods() throws Exception {
 		// Given
 		Long chatroomId = 1L;
-		TradeInGoodDetailDto trade = new TradeInGoodDetailDto(1L, true, "PENDING", 2L);
+		TradeInfoDto trade = new TradeInfoDto(1L, true, "PENDING", 2L);
 
 		ChatRoomInfoDto dto = new ChatRoomInfoDto(
 			1L, "아이폰 15", "ELECTRONICS", 1000000L, "http://example.com/image.jpg", 2L, "닉네임", trade);
