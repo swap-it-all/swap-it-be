@@ -28,6 +28,7 @@ import com.example.swapit.domain.dto.chat.ChatRoomAddRequestFromGoodDto;
 import com.example.swapit.domain.dto.chat.ChatRoomAddRequestFromTradeDto;
 import com.example.swapit.domain.dto.chat.ChatRoomInfoDto;
 import com.example.swapit.domain.dto.chat.ChatRoomResponseDto;
+import com.example.swapit.domain.dto.good.TradeInGoodDetailDto;
 import com.example.swapit.service.ChatServiceImpl;
 
 public class ChatControllerDocsTest extends RestDocsTest {
@@ -233,8 +234,10 @@ public class ChatControllerDocsTest extends RestDocsTest {
 	void getChatRoomGoods() throws Exception {
 		// Given
 		Long chatroomId = 1L;
+		TradeInGoodDetailDto trade = new TradeInGoodDetailDto(1L, true, "PENDING", 2L);
+
 		ChatRoomInfoDto dto = new ChatRoomInfoDto(
-			1L, "아이폰 15", "ELECTRONICS", 1000000L, "http://example.com/image.jpg", 2L, "닉네임");
+			1L, "아이폰 15", "ELECTRONICS", 1000000L, "http://example.com/image.jpg", 2L, "닉네임", trade);
 
 		given(chatService.getChatRoomInfo(any())).willReturn(dto);
 
@@ -260,7 +263,13 @@ public class ChatControllerDocsTest extends RestDocsTest {
 						fieldWithPath("results.price").type(JsonFieldType.NUMBER).description("물건 예상 가격"),
 						fieldWithPath("results.imageUrl").type(JsonFieldType.STRING).description("물건 이미지 URL"),
 						fieldWithPath("results.usersId").type(JsonFieldType.NUMBER).description("채팅방 상대 ID"),
-						fieldWithPath("results.nickname").type(JsonFieldType.STRING).description("채팅방 상대 닉네임")
+						fieldWithPath("results.nickname").type(JsonFieldType.STRING).description("채팅방 상대 닉네임"),
+						fieldWithPath("results.trade").type(JsonFieldType.OBJECT).description("스왑 정보"),
+						fieldWithPath("results.trade.tradesId").type(JsonFieldType.NUMBER).description("스왑 ID"),
+						fieldWithPath("results.trade.isRequester").type(JsonFieldType.BOOLEAN).description("스왑 요청자 여부"),
+						fieldWithPath("results.trade.status").type(JsonFieldType.STRING).description("스왑 상태"),
+						fieldWithPath("results.trade.relatedGoodsId").type(JsonFieldType.NUMBER)
+							.description("연관된 물건 ID")
 					)
 					.responseSchema(Schema.schema("ChatRoomInfoDto"))
 					.build()

@@ -26,6 +26,7 @@ import com.example.swapit.domain.dto.chat.ChatRoomAddRequestFromGoodDto;
 import com.example.swapit.domain.dto.chat.ChatRoomAddRequestFromTradeDto;
 import com.example.swapit.domain.dto.chat.ChatRoomInfoDto;
 import com.example.swapit.domain.dto.chat.ChatRoomResponseDto;
+import com.example.swapit.domain.dto.good.TradeInGoodDetailDto;
 import com.example.swapit.service.ChatService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -163,8 +164,10 @@ class ChatControllerTest {
 	@DisplayName("채팅방 물건 조회 성공")
 	void getChatRoomGoods() throws Exception {
 		// given
+		TradeInGoodDetailDto trade = new TradeInGoodDetailDto(1L, true, "PENDING", 2L);
+
 		ChatRoomInfoDto dto = new ChatRoomInfoDto(
-			1L, "아이폰 15", "ELECTRONICS", 2500L, null, 2L, "닉네임");
+			1L, "아이폰 15", "ELECTRONICS", 2500L, null, 2L, "닉네임", trade);
 
 		given(chatService.getChatRoomInfo(any())).willReturn(dto);
 
