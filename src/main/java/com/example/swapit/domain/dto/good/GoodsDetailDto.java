@@ -26,11 +26,11 @@ public class GoodsDetailDto {
 	private String placeName;
 	private long viewCount;
 	private List<GoodsImageDto> images;
-	private TradeInGoodDetailDto trade;
+	private TradeInfoDto trade;
 	private LocalDateTime createdAt;
 
 	public static GoodsDetailDto of(Goods good, UserProfileDto userProfileDto, List<GoodsImageDto> images,
-		TradeInGoodDetailDto trade) {
+		TradeInfoDto trade) {
 		return GoodsDetailDto.builder()
 			.goodsId(good.getId())
 			.user(userProfileDto)

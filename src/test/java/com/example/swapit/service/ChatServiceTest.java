@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -23,6 +24,7 @@ import com.example.swapit.domain.Chats;
 import com.example.swapit.domain.Goods;
 import com.example.swapit.domain.GoodsImages;
 import com.example.swapit.domain.GoodsQuality;
+import com.example.swapit.domain.TradeStatus;
 import com.example.swapit.domain.Trades;
 import com.example.swapit.domain.Users;
 import com.example.swapit.domain.dto.chat.ChatDto;
@@ -33,6 +35,7 @@ import com.example.swapit.domain.dto.chat.ChatRoomInfoDto;
 import com.example.swapit.domain.dto.chat.ChatRoomResponseDto;
 import com.example.swapit.domain.dto.chat.ChatStompRequestDto;
 import com.example.swapit.domain.dto.chat.ChatStompResponseDto;
+import com.example.swapit.domain.dto.good.TradeInfoDto;
 import com.example.swapit.repository.ChatRoomsRepository;
 import com.example.swapit.repository.ChatsRepository;
 import com.example.swapit.repository.GoodsImagesRepository;
@@ -69,6 +72,7 @@ class ChatServiceTest {
 	private NotificationEventPublisher notificationEventPublisher;
 
 	@InjectMocks
+	@Spy
 	private ChatServiceImpl chatService;
 
 	private final String testCdnUrl = "http://example.com/";
@@ -326,10 +330,25 @@ class ChatServiceTest {
 			.user(currentUser)
 			.build();
 
+		Goods targetGoods = Goods.builder()
+			.title("Test Targeg Good")
+			.user(counterpart)
+			.build();
+
+		Trades trades = Trades.builder()
+			.id(1L)
+			.requestedGoods(goods)
+			.targetGoods(targetGoods)
+			.status(TradeStatus.PENDING)
+			.build();
+
 		ChatRooms chatRooms = ChatRooms.builder()
 			.id(chatroomId)
 			.goods(goods)
+			.trade(trades)
 			.build();
+
+		TradeInfoDto trade = new TradeInfoDto(1L, true, "PENDING", 2L);
 
 		when(chatRoomsRepository.findById(chatroomId))
 			.thenReturn(Optional.of(chatRooms));
@@ -343,6 +362,7 @@ class ChatServiceTest {
 
 		when(currentUserService.getCurrentUser()).thenReturn(currentUser);
 		when(chatService.getCounterpart(chatRooms)).thenReturn(counterpart);
+		when(chatService.getTrade(chatRooms.getTrade())).thenReturn(trade);
 
 		// when
 		ChatRoomInfoDto result = chatService.getChatRoomInfo(chatroomId);

@@ -1,5 +1,7 @@
 package com.example.swapit.domain.dto.chat;
 
+import com.example.swapit.domain.dto.good.TradeInfoDto;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -13,4 +15,5 @@ public class ChatRoomInfoDto {
 	private String imageUrl;
 	private Long usersId;
 	private String nickname;
+	private TradeInfoDto trade;
 }
