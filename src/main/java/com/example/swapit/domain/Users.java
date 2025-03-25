@@ -28,7 +28,7 @@ import lombok.Setter;
 @SQLDelete(sql = "UPDATE users SET is_deleted = true WHERE users_id = ?")
 @SQLRestriction("is_deleted = false")
 @Table(name = "users")
-public class Users {
+public class Users extends BaseEntity {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "users_id", columnDefinition = "BIGINT", nullable = false)
@@ -50,9 +50,6 @@ public class Users {
 
 	@Column(name = "role", columnDefinition = "VARCHAR(20)", nullable = false)
 	private String role;
-
-	@Column(nullable = false)
-	private boolean isDeleted = false;
 
 	@Builder.Default
 	@OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
