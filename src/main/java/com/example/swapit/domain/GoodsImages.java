@@ -39,7 +39,8 @@ public class GoodsImages {
 	@Column(columnDefinition = "VARCHAR(50)", nullable = false)
 	private String contentType;
 
+	@Builder.Default
 	@CreatedDate
 	@Column(nullable = false, updatable = false)
-	private LocalDateTime createdAt;
+	private LocalDateTime createdAt = LocalDateTime.now();
 }
