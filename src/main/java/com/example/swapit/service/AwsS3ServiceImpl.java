@@ -1,7 +1,5 @@
 package com.example.swapit.service;
 
-import static com.google.common.io.Files.*;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -82,8 +80,9 @@ public class AwsS3ServiceImpl implements AwsS3Service {
 	 *  S3에 파일 업로드 후 S3 key 반환
 	 */
 	private String uploadFileToS3(MultipartFile file, String path, String contentType) {
-		String uniqueFileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
-		String s3Key = path + "/" + uniqueFileName;
+		String uuid = UUID.randomUUID().toString();
+		String ext = getFileExtension(file.getOriginalFilename());
+		String s3Key = path + "/" + uuid + "." + ext;
 
 		try {
 			PutObjectRequest putRequest = PutObjectRequest.builder()
@@ -100,8 +99,18 @@ public class AwsS3ServiceImpl implements AwsS3Service {
 			log.error("AWS S3 업로드 실패: {}", e.getMessage());
 			throw new CustomException(ErrorCode.IMAGE_UPLOAD_FAILED);
 		}
-
 		return s3Key;
+	}
+
+	/**
+	 * 확장자명 가져오기
+	 * @return : jpeg, jpg, png
+	 */
+	private String getFileExtension(String filename) {
+		if (filename == null || !filename.contains(".")) {
+			throw new CustomException(ErrorCode.INVALID_IMAGE_FORMAT);
+		}
+		return filename.substring(filename.lastIndexOf('.') + 1).toLowerCase();
 	}
 
 	/**
