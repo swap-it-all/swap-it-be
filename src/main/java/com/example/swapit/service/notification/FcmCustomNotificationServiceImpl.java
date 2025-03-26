@@ -1,5 +1,6 @@
 package com.example.swapit.service.notification;
 
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -31,7 +32,13 @@ public class FcmCustomNotificationServiceImpl implements FcmNotificationService 
 		Map<String, String> data = new HashMap<>();
 		data.put("notificationsId", noti.getId().toString());
 		data.put("type", noti.getType().toString());
-		data.put("deeplink", noti.getDeeplink());
+		data.put("title", noti.getTitle());
+		data.put("body", noti.getBody());
+		data.put("relatedData", noti.getRelatedData().toString());
+
+		// createdAt은 formatter로 문자형식으로 바꿔서 보냄.
+		DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
+		data.put("createdAt", noti.getCreatedAt().format(formatter));
 
 		Message message = Message.builder()
 			.setToken(fcmToken)
