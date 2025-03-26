@@ -102,7 +102,7 @@ public class TradesServiceImpl implements TradesService {
 
 		// 알림 발생 (거래요청)
 		notificationEventPublisher.publishNotification(
-			targetGoods.getUser().getUsersId(), NotificationType.REQUESTED, targetGoods.getId());
+			targetGoods.getUser().getUsersId(), NotificationType.REQUESTED, requestedGoods.getId());
 
 		// 채팅방이 존재하면 거래 연결 + 메시지 전송
 		Optional<ChatRooms> chatRoomsOpt = chatRoomsRepository.findByGoodsAndInviter(targetGoods,
@@ -236,7 +236,7 @@ public class TradesServiceImpl implements TradesService {
 		Users recipient = (userId.equals(trade.getTargetGoods().getUser().getUsersId()))
 			? trade.getRequestedGoods().getUser() : trade.getTargetGoods().getUser();
 		notificationEventPublisher.publishNotification(
-			recipient.getUsersId(), NotificationType.COMPLETED
+			recipient.getUsersId(), NotificationType.COMPLETED, null
 		);
 	}
 
