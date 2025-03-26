@@ -59,9 +59,9 @@ class NotificationEventListenerTest {
 			.type(NotificationType.CHAT)
 			.title(NotificationType.CHAT.getTitle())
 			.body(NotificationType.CHAT.getBody())
-			.deeplink(NotificationType.CHAT.getDeeplink())
+			.relatedData(2L)
 			.build();
-		testEvent = new NotificationEvent(1L, testUser.getUsersId(), NotificationType.CHAT);
+		testEvent = new NotificationEvent(1L, testUser.getUsersId(), NotificationType.CHAT, 2L);
 	}
 
 	@Test

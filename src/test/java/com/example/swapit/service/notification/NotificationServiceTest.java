@@ -57,7 +57,7 @@ class NotificationServiceTest {
 			.user(mockUser)
 			.title("title")
 			.body("Test Notification")
-			.deeplink("/test-url")
+			.relatedData(1L)
 			.isRead(false)
 			.type(NotificationType.REQUESTED)
 			.build();
@@ -87,7 +87,7 @@ class NotificationServiceTest {
 			.user(mockUser)
 			.title("title")
 			.body("Test Notification")
-			.deeplink("/test-url")
+			.relatedData(1L)
 			.isRead(false)
 			.build();
 

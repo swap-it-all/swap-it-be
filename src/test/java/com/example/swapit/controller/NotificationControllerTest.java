@@ -43,8 +43,8 @@ class NotificationControllerTest {
 	void getMyNotificationsTest() throws Exception {
 		// Given
 		List<NotificationDto> notifications = List.of(
-			new NotificationDto(1L, "CHAT", "Title 1", "Body 1", "deeplink1", LocalDateTime.now()),
-			new NotificationDto(2L, "REQUESTED", "Title 2", "Body 2", "deeplink2", LocalDateTime.now())
+			new NotificationDto(1L, "CHAT", "Title 1", "Body 1", 1L, LocalDateTime.now()),
+			new NotificationDto(2L, "REQUESTED", "Title 2", "Body 2", 2L, LocalDateTime.now())
 		);
 		NotificationListDto notificationListDto = new NotificationListDto(notifications);
 		ApiResponse<NotificationListDto> mockResponse = ApiResponse.success(notificationListDto);
@@ -60,7 +60,7 @@ class NotificationControllerTest {
 			.andExpect(jsonPath("$.results.notifications[0].type").value("CHAT"))
 			.andExpect(jsonPath("$.results.notifications[0].title").value("Title 1"))
 			.andExpect(jsonPath("$.results.notifications[0].body").value("Body 1"))
-			.andExpect(jsonPath("$.results.notifications[0].deeplink").value("deeplink1"));
+			.andExpect(jsonPath("$.results.notifications[0].relatedData").value(1));
 	}
 
 	@Test

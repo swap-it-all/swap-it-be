@@ -40,8 +40,8 @@ public class NotificationControllerDocsTest extends RestDocsTest {
 	void getMyNotificationsTest() throws Exception {
 		// Given
 		List<NotificationDto> notifications = List.of(
-			new NotificationDto(1L, "CHAT", "Title 1", "Body 1", "deeplink1", LocalDateTime.now()),
-			new NotificationDto(2L, "REQUESTED", "Title 2", "Body 2", "deeplink2", LocalDateTime.now())
+			new NotificationDto(1L, "CHAT", "Title 1", "Body 1", 1L, LocalDateTime.now()),
+			new NotificationDto(2L, "REQUESTED", "Title 2", "Body 2", 2L, LocalDateTime.now())
 		);
 		NotificationListDto notificationListDto = new NotificationListDto(notifications);
 
@@ -68,8 +68,8 @@ public class NotificationControllerDocsTest extends RestDocsTest {
 						fieldWithPath("results.notifications[].type").type(JsonFieldType.STRING).description("알림 타입"),
 						fieldWithPath("results.notifications[].title").type(JsonFieldType.STRING).description("알림 제목"),
 						fieldWithPath("results.notifications[].body").type(JsonFieldType.STRING).description("알림 내용"),
-						fieldWithPath("results.notifications[].deeplink").type(JsonFieldType.STRING)
-							.description("알림 클릭 시 이동 URL (app deeplink)"),
+						fieldWithPath("results.notifications[].relatedData").type(JsonFieldType.NUMBER)
+							.description("연관된 데이터 ID (Long)"),
 						fieldWithPath("results.notifications[].createdAt").type(JsonFieldType.STRING)
 							.description("알림 생성 시간")
 					)
