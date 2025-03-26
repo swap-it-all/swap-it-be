@@ -48,8 +48,7 @@ public class Notifications extends BaseEntity {
 	@Column(nullable = false, columnDefinition = "VARCHAR(255)")
 	private String body;
 
-	@Column(nullable = false)
-	private String deeplink;
+	private Long relatedData;
 
 	@Builder.Default
 	@Setter
