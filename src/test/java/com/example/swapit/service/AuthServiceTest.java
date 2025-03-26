@@ -550,7 +550,6 @@ public class AuthServiceTest {
 			.profileImageUrl("http://example.com/profile.jpg")
 			.loginInfo("GOOGLE")
 			.role("USER")
-			.isDeleted(false)
 			.build();
 
 		when(currentUserService.getCurrentUser()).thenReturn(testUser);
@@ -596,7 +595,7 @@ public class AuthServiceTest {
 		// 탈퇴 사유 저장시, userId가 올바르게 전달되었는지 검증
 		verify(withdrawReasonsRepository).save(argThat(wr ->
 			reason.equals(wr.getReason()) &&
-			testUser.getUsersId().equals(wr.getUsersId())
+				testUser.getUsersId().equals(wr.getUsersId())
 		));
 
 		// 사용자 삭제 검증
@@ -605,8 +604,8 @@ public class AuthServiceTest {
 		// DB 트랜잭션 이후 S3 삭제 수행 검증
 		verify(applicationEventPublisher).publishEvent(argThat(event ->
 			event instanceof UserWithdrawCompletedEvent &&
-			((UserWithdrawCompletedEvent)event).getImages().equals(Collections.emptyList()) &&
-			((UserWithdrawCompletedEvent)event).getUser().equals(testUser)
+				((UserWithdrawCompletedEvent)event).getImages().equals(Collections.emptyList()) &&
+				((UserWithdrawCompletedEvent)event).getUser().equals(testUser)
 		));
 	}
 }

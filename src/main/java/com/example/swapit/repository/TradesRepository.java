@@ -25,27 +25,30 @@ public interface TradesRepository extends JpaRepository<Trades, Long> {
 	void rejectOtherTrades(@Param("targetGoods") Goods targetGoods, @Param("acceptedTradeId") Long acceptedTradeId);
 
 	@Query("SELECT t.targetGoods.id AS goodsId, COALESCE(COUNT(t), 0) AS tradeCount "
-		   + "FROM Trades t "
-		   + "WHERE t.targetGoods.id IN :goodsIds "
-		   + "GROUP BY t.targetGoods.id")
+		+ "FROM Trades t "
+		+ "WHERE t.targetGoods.id IN :goodsIds "
+		+ "GROUP BY t.targetGoods.id")
 	List<TradeCountProjection> findTradeCountByGoodsIds(@Param("goodsIds") List<Long> goodsIds);
 
 	@Query("SELECT new com.example.swapit.domain.dao.TradeGoodsDao(t.targetGoods, t.requestedGoods, t.id) "
-		   + "FROM Trades t "
-		   + "WHERE t.requestedGoods.user.usersId = :userId AND t.status <> 'REJECTED'")
+		+ "FROM Trades t "
+		+ "WHERE t.requestedGoods.user.usersId = :userId AND t.status <> 'REJECTED'")
 	List<TradeGoodsDao> findMyRequests(@Param("userId") Long userId);
 
 	@Query("SELECT t.requestedGoods FROM Trades t WHERE t.targetGoods.id = :goodsId AND t.status <> 'REJECTED' ORDER BY t.createdAt DESC")
 	List<Goods> findGoodsRequests(@Param("goodsId") Long goodsId);
 
 	@Query("SELECT new com.example.swapit.domain.dto.trade.InProgressCountDto(t.targetGoods.id, COUNT(t)) "
-		   + "FROM Trades t "
-		   + "WHERE t.targetGoods.id IN :goodsIds AND t.status = 'INPROGRESS' "
-		   + "GROUP BY t.targetGoods.id")
+		+ "FROM Trades t "
+		+ "WHERE t.targetGoods.id IN :goodsIds AND t.status = 'INPROGRESS' "
+		+ "GROUP BY t.targetGoods.id")
 	List<InProgressCountDto> findInProgressCountByGoodsIds(@Param("goodsIds") List<Long> goodsIds);
 
-	boolean existsByRequestedGoodsAndTargetGoodsAndStatusNot(Goods requestedGoods, Goods targetGoods,
-		TradeStatus status);
+	@Query("SELECT t.id FROM Trades t WHERE t.requestedGoods = :requested AND t.targetGoods = :target AND t.status <> :status")
+	Optional<Long> findIdByRequestedGoodsAndTargetGoodsAndStatusNot(@Param("requested") Goods requested,
+		@Param("target") Goods target, @Param("status") TradeStatus status);
+
+	boolean existsByRequestedGoodsAndTargetGoodsAndStatus(Goods requestedGoods, Goods TargetGoods, TradeStatus status);
 
 	@Query("""
 		SELECT t FROM Trades t
@@ -54,8 +57,9 @@ public interface TradesRepository extends JpaRepository<Trades, Long> {
 		ORDER BY t.updatedAt DESC""")
 	Optional<Trades> findUserRelatedTrade(@Param("goodsId") Long goodsId, @Param("userId") Long userId);
 
-	boolean existsByTargetGoodsAndRequestedGoodsUserAndStatusNot(Goods targetGoods, Users requestedUser,
-		TradeStatus status);
+	@Query("SELECT t.id FROM Trades t WHERE t.targetGoods = :target AND t.requestedGoods.user = :requestUser AND t.status <> :status")
+	Optional<Long> findIdByTargetGoodsAndRequestedGoodsUserAndStatusNot(@Param("target") Goods target,
+		@Param("requestUser") Users requestUser, @Param("status") TradeStatus status);
 
 	@Query("""
 		SELECT t FROM Trades t

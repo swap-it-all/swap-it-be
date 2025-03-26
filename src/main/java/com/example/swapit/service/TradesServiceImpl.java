@@ -58,6 +58,7 @@ public class TradesServiceImpl implements TradesService {
 	private String cdnUrl;
 
 	@Override
+	@Transactional
 	public Result<Long> requestTrade(TradesRequestDto tradesRequestDto) {
 		Goods requestedGoods = goodsRepository.findById(tradesRequestDto.getRequestedGoodsId())
 			.orElseThrow(() -> new CustomException(ErrorCode.GOOD_NOT_FOUND));
@@ -65,15 +66,25 @@ public class TradesServiceImpl implements TradesService {
 			.orElseThrow(() -> new CustomException(ErrorCode.GOOD_NOT_FOUND));
 
 		// requestedGoods <-> targetGoods가 바뀌어서 요청된 건은 없는지 검증
-		if (tradesRepository.existsByRequestedGoodsAndTargetGoodsAndStatusNot(targetGoods, requestedGoods,
-			TradeStatus.REJECTED)) {
+		Optional<Long> failRequestTrade = tradesRepository.findIdByRequestedGoodsAndTargetGoodsAndStatusNot(targetGoods,
+			requestedGoods, TradeStatus.REJECTED);
+		if (failRequestTrade.isPresent()) {
+			log.debug("[{}] : trade id={}", ErrorCode.TRADE_ALREADY_REQUESTED.getMessage(), failRequestTrade.get());
 			return Result.fail(ErrorCode.TRADE_ALREADY_REQUESTED.getMessage());
 		}
 
 		// 동일 사용자가 targetGoods에 요청한 내역이 있는지 검사
-		if (tradesRepository.existsByTargetGoodsAndRequestedGoodsUserAndStatusNot(targetGoods, requestedGoods.getUser(),
-			TradeStatus.REJECTED)) {
+		failRequestTrade = tradesRepository.findIdByTargetGoodsAndRequestedGoodsUserAndStatusNot(targetGoods,
+			requestedGoods.getUser(), TradeStatus.REJECTED);
+		if (failRequestTrade.isPresent()) {
+			log.debug("[{}] : trade id={}", ErrorCode.DUPLICATE_TRADE_REQUEST.getMessage(), failRequestTrade.get());
 			return Result.fail(ErrorCode.DUPLICATE_TRADE_REQUEST.getMessage());
+		}
+
+		// 동일한 물건으로 reject 되었는데, 또 같은 요청을 할 경우 오류 발생.
+		if (tradesRepository.existsByRequestedGoodsAndTargetGoodsAndStatus(requestedGoods, targetGoods,
+			TradeStatus.REJECTED)) {
+			return Result.fail(ErrorCode.TRADE_ALREADY_REJECTED_WITH_SAME_GOODS.getMessage());
 		}
 
 		// 최대 PENDING 요청 제한 체크
@@ -89,7 +100,7 @@ public class TradesServiceImpl implements TradesService {
 			return Result.fail(ErrorCode.DUPLICATE_TRADE_REQUEST.getMessage());
 		}
 
-		// 알림 발생
+		// 알림 발생 (거래요청)
 		notificationEventPublisher.publishNotification(
 			targetGoods.getUser().getUsersId(), NotificationType.REQUESTED, targetGoods.getId());
 
@@ -159,7 +170,7 @@ public class TradesServiceImpl implements TradesService {
 		trades.getRequestedGoods().setGoodsTradeStatus(GoodsTradeStatus.RESERVED);
 		goodsRepository.save(trades.getRequestedGoods());
 
-		// 알림 발생
+		// 알림 발생 (거래 수락)
 		notificationEventPublisher.publishNotification(
 			trades.getRequestedGoods().getUser().getUsersId(),
 			NotificationType.ACCEPTED,
@@ -188,7 +199,7 @@ public class TradesServiceImpl implements TradesService {
 			rooms -> updateChatroomAndSendChat(rooms, null, ChatType.REJECT, trades.getRequestedGoods())
 		);
 
-		// 알림 발생
+		// 알림 발생 (거래 거절)
 		notificationEventPublisher.publishNotification(
 			trades.getRequestedGoods().getUser().getUsersId(),
 			NotificationType.REJECTED,

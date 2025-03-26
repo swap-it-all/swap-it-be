@@ -229,9 +229,9 @@ public class TradesServiceTest {
 
 		when(goodsRepository.findById(requestedGoodsId)).thenReturn(Optional.of(requestedGoods));
 		when(goodsRepository.findById(targetGoodsId)).thenReturn(Optional.of(targetGoods));
-		when(tradesRepository.existsByRequestedGoodsAndTargetGoodsAndStatusNot(targetGoods, requestedGoods,
-			TradeStatus.REJECTED))
-			.thenReturn(true);
+		// 이미 동일한 거래가 존재 (status != REJECTED)
+		when(tradesRepository.findIdByRequestedGoodsAndTargetGoodsAndStatusNot(targetGoods, requestedGoods,
+			TradeStatus.REJECTED)).thenReturn(Optional.of(999L)); // 이미 존재하는 거래 ID
 
 		// when
 		Result<Long> result = tradesService.requestTrade(tradesRequestDto);
@@ -239,6 +239,42 @@ public class TradesServiceTest {
 		// when & then
 		assertFalse(result.isSuccess());
 		assertEquals(ErrorCode.TRADE_ALREADY_REQUESTED.getMessage(), result.getMessage());
+	}
+
+	@Test
+	@DisplayName("동일한 물건으로 reject 되었는데, 또 같은 요청을 할 경우 오류 발생")
+	void requestTrade_ShouldThrowException_WhenTradeAlreadyRejected() {
+		// given
+		Users requester = Users.builder()
+			.email("email")
+			.build();
+		Goods requestedGoods = Goods.builder()
+			.user(requester)
+			.build();
+
+		Users target = Users.builder()
+			.email("email")
+			.build();
+		Goods targetGoods = Goods.builder()
+			.user(target)
+			.build();
+
+		Long requestedGoodsId = 1L;
+		Long targetGoodsId = 2L;
+		TradesRequestDto tradesRequestDto = new TradesRequestDto(requestedGoodsId, targetGoodsId);
+		
+		when(goodsRepository.findById(requestedGoodsId)).thenReturn(Optional.of(requestedGoods));
+		when(goodsRepository.findById(targetGoodsId)).thenReturn(Optional.of(targetGoods));
+		when(tradesRepository.existsByRequestedGoodsAndTargetGoodsAndStatus(
+			requestedGoods, targetGoods, TradeStatus.REJECTED
+		)).thenReturn(true);
+
+		// when
+		Result<Long> result = tradesService.requestTrade(tradesRequestDto);
+
+		// then
+		assertFalse(result.isSuccess());
+		assertEquals(ErrorCode.TRADE_ALREADY_REJECTED_WITH_SAME_GOODS.getMessage(), result.getMessage());
 	}
 
 	@Test
