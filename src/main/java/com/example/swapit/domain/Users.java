@@ -52,6 +52,10 @@ public class Users extends BaseEntity {
 	private String role;
 
 	@Builder.Default
+	@Column(nullable = false)
+	private boolean notificationEnabled = true;
+
+	@Builder.Default
 	@OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
 	private List<Goods> goodsList = new ArrayList<>();
 
