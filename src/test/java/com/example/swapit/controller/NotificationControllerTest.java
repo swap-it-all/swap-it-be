@@ -13,13 +13,16 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import com.example.swapit.common.api.ApiResponse;
 import com.example.swapit.domain.dto.NotificationDto;
 import com.example.swapit.domain.dto.NotificationListDto;
+import com.example.swapit.domain.dto.NotificationSettingDto;
 import com.example.swapit.service.notification.NotificationService;
 
 @ExtendWith(MockitoExtension.class)
@@ -61,6 +64,21 @@ class NotificationControllerTest {
 			.andExpect(jsonPath("$.results.notifications[0].title").value("Title 1"))
 			.andExpect(jsonPath("$.results.notifications[0].body").value("Body 1"))
 			.andExpect(jsonPath("$.results.notifications[0].relatedData").value(1));
+	}
+
+	@Test
+	@DisplayName("알림 수신 설정 조회 API 테스트")
+	void getMyNotificationSetting() throws Exception {
+		// given
+		NotificationSettingDto dto = new NotificationSettingDto(true);
+		Mockito.when(notificationService.getMyNotificationSetting()).thenReturn(dto);
+
+		// when & then
+		mvc.perform(get("/api/user/notifications/settings")
+				.accept(MediaType.APPLICATION_JSON))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.success").value(true))
+			.andExpect(jsonPath("$.results.notificationEnabled").value(true));
 	}
 
 	@Test
