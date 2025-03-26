@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.swapit.common.api.ApiResponse;
 import com.example.swapit.domain.dto.NotificationListDto;
+import com.example.swapit.domain.dto.NotificationSettingDto;
 import com.example.swapit.service.notification.NotificationService;
 
 import lombok.RequiredArgsConstructor;
@@ -22,6 +23,11 @@ public class NotificationController {
 	@GetMapping
 	public ApiResponse<NotificationListDto> getMyNotifications() {
 		return ApiResponse.success(notificationService.getMyNotifications());
+	}
+
+	@GetMapping("/settings")
+	public ApiResponse<NotificationSettingDto> getMyNotificationSetting() {
+		return ApiResponse.success(notificationService.getMyNotificationSetting());
 	}
 
 	@PatchMapping("/{notificationsId}/read")
