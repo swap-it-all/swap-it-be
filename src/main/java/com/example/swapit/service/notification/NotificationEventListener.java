@@ -1,14 +1,11 @@
 package com.example.swapit.service.notification;
 
-import java.util.Optional;
-
 import org.springframework.context.event.EventListener;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
 
 import com.example.swapit.common.exception.CustomException;
 import com.example.swapit.common.exception.ErrorCode;
-import com.example.swapit.domain.FcmToken;
 import com.example.swapit.domain.NotificationEvent;
 import com.example.swapit.domain.Notifications;
 import com.example.swapit.domain.Users;
@@ -42,25 +39,27 @@ public class NotificationEventListener {
 		Notifications noti = event.toEntity(user);
 		notificationRepository.save(noti);
 
-		// 웹소켓 알림 전송 (앱이 온라인 상태) : "/user/queue/notifications" 구독
-		boolean isWebsocketSent = false;
-		try {
-			messagingTemplate.convertAndSendToUser(userId.toString(), "/queue/notifications",
-				NotificationDto.of(noti));
-			isWebsocketSent = true;
-		} catch (Exception e) {
-			// todo : 이상 없으면 이후에 로그 제거
-			log.info("[WS알림LOG] 알림 웹소켓 전송 실패 -> FCM으로 전송. {}", e.getMessage());
+		// 알림 설정이 꺼져 있으면 전송 생략
+		if (!user.isNotificationEnabled()) {
+			log.info("[알림 꺼짐] 사용자 ID {}: 알림 전송하지 않음 {}", userId, noti.getId());
+			return;
 		}
 
-		// 앱이 백그라운드 상태일 때, FCM 알림 전송 (웹소켓 실패 or FCM 알림 필요)
-		if (!isWebsocketSent) {
-			Optional<FcmToken> optionalFcmToken = fcmTokenRepository.findByUser(user);
-			if (optionalFcmToken.isPresent()) {
-				fcmNotificationService.sendFcmNotification(optionalFcmToken.get().getFcmToken(), noti);
-			} else {
-				log.warn("[FCM알림 실패] 사용자 ID {} 에 대한 FCM 토큰이 존재하지 않음.", userId);
-			}
+		// 웹소켓 알림 전송 (앱이 온라인 상태) : "/user/queue/notifications" 구독된 상태
+		try {
+			messagingTemplate.convertAndSendToUser(
+				userId.toString(), "/queue/notifications", NotificationDto.of(noti)
+			);
+		} catch (Exception e) {
+			log.info("[WS알림LOG] 알림 웹소켓 전송 실패 -> FCM으로 전송. {}", e.getMessage());
+			sendFcm(user, noti);
 		}
+	}
+
+	private void sendFcm(Users user, Notifications noti) {
+		fcmTokenRepository.findByUser(user).ifPresentOrElse(
+			token -> fcmNotificationService.sendFcmNotification(token.getFcmToken(), noti),
+			() -> log.warn("[FCM알림 실패] 사용자 ID {}: FCM 토큰 없음", user.getUsersId())
+		);
 	}
 }

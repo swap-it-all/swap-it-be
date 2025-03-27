@@ -23,6 +23,7 @@ import com.epages.restdocs.apispec.Schema;
 import com.example.swapit.controller.NotificationController;
 import com.example.swapit.domain.dto.NotificationDto;
 import com.example.swapit.domain.dto.NotificationListDto;
+import com.example.swapit.domain.dto.NotificationSettingDto;
 import com.example.swapit.service.notification.NotificationService;
 
 public class NotificationControllerDocsTest extends RestDocsTest {
@@ -74,6 +75,40 @@ public class NotificationControllerDocsTest extends RestDocsTest {
 							.description("알림 생성 시간")
 					)
 					.responseSchema(Schema.schema("NotificationListDto"))
+					.build()
+				)
+			));
+	}
+
+	@Test
+	@DisplayName("알림 설정 조회 API 문서화")
+	void getMyNotificationSettingTest() throws Exception {
+		// Given
+		when(notificationService.getMyNotificationSetting())
+			.thenReturn(new NotificationSettingDto(true));
+
+		// When & Then
+		mockMvc.perform(get("/api/user/notifications/settings")
+				.header("Authorization", "Bearer valid_token")
+				.contentType(MediaType.APPLICATION_JSON))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.success").value(true))
+			.andExpect(jsonPath("$.message").value("요청에 성공하였습니다."))
+			.andExpect(jsonPath("$.results.notificationEnabled").value(true))
+			.andDo(document("get-notification-setting",
+				preprocessRequest(prettyPrint()),
+				preprocessResponse(prettyPrint()),
+				resource(ResourceSnippetParameters.builder()
+					.tag("Notification")
+					.description("사용자의 알림 설정 여부를 조회하는 API")
+					.responseFields(
+						fieldWithPath("success").type(JsonFieldType.BOOLEAN).description("요청 성공 여부"),
+						fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지"),
+						fieldWithPath("results").type(JsonFieldType.OBJECT).description("응답 결과 데이터"),
+						fieldWithPath("results.notificationEnabled").type(JsonFieldType.BOOLEAN)
+							.description("알림 수신 설정 여부 (true: 켜짐)")
+					)
+					.responseSchema(Schema.schema("NotificationSettingDto"))
 					.build()
 				)
 			));

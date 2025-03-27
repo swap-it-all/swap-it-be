@@ -9,6 +9,7 @@ import com.example.swapit.domain.Notifications;
 import com.example.swapit.domain.Users;
 import com.example.swapit.domain.dto.NotificationDto;
 import com.example.swapit.domain.dto.NotificationListDto;
+import com.example.swapit.domain.dto.NotificationSettingDto;
 import com.example.swapit.repository.NotificationRepository;
 import com.example.swapit.service.CurrentUserService;
 
@@ -30,6 +31,12 @@ public class NotificationServiceImpl implements NotificationService {
 				.stream()
 				.map(NotificationDto::of)
 				.toList());
+	}
+
+	@Override
+	public NotificationSettingDto getMyNotificationSetting() {
+		Users user = currentUserService.getCurrentUser();
+		return new NotificationSettingDto(user.isNotificationEnabled());
 	}
 
 	@Override
