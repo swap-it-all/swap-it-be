@@ -29,35 +29,15 @@ class NotificationEventPublisherTest {
 	}
 
 	@Test
-	@DisplayName("알림발생(기본 url) - 성공")
+	@DisplayName("알림발생 성공")
 	void testPublishNotification_WithBasicUrl() {
 		// given
 		Long userId = 1L;
 		NotificationType type = NotificationType.REQUESTED;
+		Long relatedData = 2L;
 
 		// when
-		notificationEventPublisher.publishNotification(userId, type);
-
-		// then
-		ArgumentCaptor<NotificationEvent> eventCaptor = ArgumentCaptor.forClass(NotificationEvent.class);
-		verify(eventPublisher, times(1)).publishEvent(eventCaptor.capture());
-
-		NotificationEvent event = eventCaptor.getValue();
-		assertThat(event).isNotNull();
-		assertThat(event.getUserId()).isEqualTo(userId);
-		assertThat(event.getType()).isEqualTo(type);
-	}
-
-	@Test
-	@DisplayName("알림발생(동적 url) - 성공")
-	void testPublishNotification_WithDynamicUrl() {
-		// given
-		Long userId = 2L;
-		NotificationType type = NotificationType.ACCEPTED;
-		Object[] urlParams = {"param1", "param2"};
-
-		// when
-		notificationEventPublisher.publishNotification(userId, type, urlParams);
+		notificationEventPublisher.publishNotification(userId, type, relatedData);
 
 		// then
 		ArgumentCaptor<NotificationEvent> eventCaptor = ArgumentCaptor.forClass(NotificationEvent.class);

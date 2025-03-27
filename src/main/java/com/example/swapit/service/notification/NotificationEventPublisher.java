@@ -14,13 +14,7 @@ public class NotificationEventPublisher {
 
 	private final ApplicationEventPublisher eventPublisher;
 
-	// 기본 URL 사용
-	public void publishNotification(Long userId, NotificationType type) {
-		eventPublisher.publishEvent(new NotificationEvent(this, userId, type));
-	}
-
-	// URL에 동적 값 적용
-	public void publishNotification(Long userId, NotificationType type, Object... urlParams) {
-		eventPublisher.publishEvent(new NotificationEvent(this, userId, type, urlParams));
+	public void publishNotification(Long userId, NotificationType type, Long relatedData) {
+		eventPublisher.publishEvent(new NotificationEvent(this, userId, type, relatedData));
 	}
 }

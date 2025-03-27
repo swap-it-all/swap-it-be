@@ -3,6 +3,8 @@ package com.example.swapit.service.notification;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import java.time.LocalDateTime;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -10,6 +12,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import com.example.swapit.domain.NotificationType;
 import com.example.swapit.domain.Notifications;
@@ -36,7 +39,8 @@ class FcmNotificationServiceTest {
 
 		Users user = Users.builder().build();
 		Notifications noti = new Notifications(1L, user, NotificationType.REQUESTED, "Test Title", "Test Body",
-			"deeplink", false);
+			1L, false);
+		ReflectionTestUtils.setField(noti, "createdAt", LocalDateTime.now());
 
 		// FirebaseMessaging을 Mock으로 생성 (mockStatic() 사용)
 		try (MockedStatic<FirebaseMessaging> mockedStatic = mockStatic(FirebaseMessaging.class)) {
