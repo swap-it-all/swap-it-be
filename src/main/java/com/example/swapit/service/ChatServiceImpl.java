@@ -257,6 +257,9 @@ public class ChatServiceImpl implements ChatService {
 	}
 
 	public TradeInfoDto getTrade(Trades trade) {
+		if (trade == null) {
+			return null;
+		}
 		Long loggedInUserId = currentUserService.getCurrentUser().getUsersId();
 		boolean isRequester = trade.getRequestedGoods().getUser().getUsersId().equals(loggedInUserId);
 		Long relatedGoodsId = isRequester ? trade.getTargetGoods().getId() : trade.getRequestedGoods().getId();
