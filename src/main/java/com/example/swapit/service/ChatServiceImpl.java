@@ -199,6 +199,8 @@ public class ChatServiceImpl implements ChatService {
 			.orElse(null);
 		Users counterpart = getCounterpart(chatRooms);
 
+		TradeInfoDto tradeDto = chatRooms.getTrade() != null ? getTrade(chatRooms.getTrade()) : null;
+
 		return new ChatRoomInfoDto(
 			goods.getId(),
 			goods.getTitle(),
@@ -207,7 +209,7 @@ public class ChatServiceImpl implements ChatService {
 			firstImageUrl,
 			counterpart.getUsersId(),
 			counterpart.getNickname(),
-			getTrade(chatRooms.getTrade())
+			tradeDto
 		);
 	}
 
