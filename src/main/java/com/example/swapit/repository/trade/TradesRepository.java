@@ -17,7 +17,7 @@ import com.example.swapit.domain.dto.trade.TradeCountProjection;
 
 import io.lettuce.core.dynamic.annotation.Param;
 
-public interface TradesRepository extends JpaRepository<Trades, Long> {
+public interface TradesRepository extends JpaRepository<Trades, Long>, TradeQueryRepository {
 	long countByTargetGoodsIdAndStatus(Long goodsId, TradeStatus status);
 
 	@Modifying
