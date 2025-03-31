@@ -16,7 +16,7 @@ import com.example.swapit.domain.dto.ReviewDto;
 import com.example.swapit.domain.dto.ReviewListDto;
 import com.example.swapit.domain.dto.ReviewRequestDto;
 import com.example.swapit.repository.ReviewRepository;
-import com.example.swapit.repository.TradesRepository;
+import com.example.swapit.repository.trade.TradesRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

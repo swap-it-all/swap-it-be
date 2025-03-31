@@ -1,4 +1,4 @@
-package com.example.swapit.repository;
+package com.example.swapit.repository.good;
 
 import java.time.LocalDateTime;
 import java.util.List;

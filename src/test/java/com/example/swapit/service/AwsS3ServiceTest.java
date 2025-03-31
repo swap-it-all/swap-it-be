@@ -20,7 +20,7 @@ import com.example.swapit.common.exception.CustomException;
 import com.example.swapit.domain.Goods;
 import com.example.swapit.domain.GoodsImages;
 import com.example.swapit.domain.Users;
-import com.example.swapit.repository.GoodsRepository;
+import com.example.swapit.repository.good.GoodsRepository;
 
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;

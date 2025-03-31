@@ -25,6 +25,7 @@ import com.example.swapit.domain.Categories;
 import com.example.swapit.domain.Goods;
 import com.example.swapit.domain.GoodsQuality;
 import com.example.swapit.domain.Users;
+import com.example.swapit.repository.good.GoodsRepository;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;

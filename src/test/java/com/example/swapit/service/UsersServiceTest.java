@@ -6,7 +6,6 @@ import static org.mockito.Mockito.*;
 import java.util.List;
 import java.util.Optional;
 
-import com.example.swapit.domain.GoodsTradeStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -18,12 +17,12 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.example.swapit.common.exception.CustomException;
+import com.example.swapit.domain.GoodsTradeStatus;
 import com.example.swapit.domain.Users;
 import com.example.swapit.domain.dto.UserPageDto;
-import com.example.swapit.repository.GoodsRepository;
 import com.example.swapit.repository.ReviewRepository;
-import com.example.swapit.repository.TradesRepository;
 import com.example.swapit.repository.UsersRepository;
+import com.example.swapit.repository.good.GoodsRepository;
 
 @ExtendWith(MockitoExtension.class)
 class UsersServiceTest {
