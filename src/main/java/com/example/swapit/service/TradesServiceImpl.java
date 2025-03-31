@@ -5,9 +5,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,6 +19,7 @@ import com.example.swapit.domain.NotificationType;
 import com.example.swapit.domain.TradeStatus;
 import com.example.swapit.domain.Trades;
 import com.example.swapit.domain.Users;
+import com.example.swapit.domain.dao.ConflictTradeResult;
 import com.example.swapit.domain.dao.TradeGoodsDao;
 import com.example.swapit.domain.dto.Result;
 import com.example.swapit.domain.dto.trade.InProgressCountDto;
@@ -32,8 +31,8 @@ import com.example.swapit.domain.dto.trade.TradeMyGoodsRequestDto;
 import com.example.swapit.domain.dto.trade.TradesRequestDto;
 import com.example.swapit.repository.ChatRoomsRepository;
 import com.example.swapit.repository.GoodsImagesRepository;
-import com.example.swapit.repository.GoodsRepository;
-import com.example.swapit.repository.TradesRepository;
+import com.example.swapit.repository.good.GoodsRepository;
+import com.example.swapit.repository.trade.TradesRepository;
 import com.example.swapit.service.notification.NotificationEventPublisher;
 
 import lombok.RequiredArgsConstructor;
@@ -65,26 +64,16 @@ public class TradesServiceImpl implements TradesService {
 		Goods targetGoods = goodsRepository.findById(tradesRequestDto.getTargetGoodsId())
 			.orElseThrow(() -> new CustomException(ErrorCode.GOOD_NOT_FOUND));
 
-		// requestedGoods <-> targetGoods가 바뀌어서 요청된 건은 없는지 검증
-		Optional<Long> failRequestTrade = tradesRepository.findIdByRequestedGoodsAndTargetGoodsAndStatusNot(targetGoods,
-			requestedGoods, TradeStatus.REJECTED);
-		if (failRequestTrade.isPresent()) {
-			log.debug("[{}] : trade id={}", ErrorCode.TRADE_ALREADY_REQUESTED.getMessage(), failRequestTrade.get());
-			return Result.fail(ErrorCode.TRADE_ALREADY_REQUESTED.getMessage());
-		}
+		// 거래 충돌 여부 검사
+		Optional<ConflictTradeResult> conflictOpt = tradesRepository.findConflictTrade(requestedGoods, targetGoods,
+			requestedGoods.getUser());
 
-		// 동일 사용자가 targetGoods에 요청한 내역이 있는지 검사
-		failRequestTrade = tradesRepository.findIdByTargetGoodsAndRequestedGoodsUserAndStatusNot(targetGoods,
-			requestedGoods.getUser(), TradeStatus.REJECTED);
-		if (failRequestTrade.isPresent()) {
-			log.debug("[{}] : trade id={}", ErrorCode.DUPLICATE_TRADE_REQUEST.getMessage(), failRequestTrade.get());
-			return Result.fail(ErrorCode.DUPLICATE_TRADE_REQUEST.getMessage());
-		}
+		if (conflictOpt.isPresent()) {
+			ConflictTradeResult conflict = conflictOpt.get();
+			log.warn("[swap 요청 실패: {}] 원인: tradeId={}, requestedGoodsId={}, targetGoodsId={}", conflict.type(),
+				conflict.tradesId(), requestedGoods.getId(), targetGoods.getId());
 
-		// 동일한 물건으로 reject 되었는데, 또 같은 요청을 할 경우 오류 발생.
-		if (tradesRepository.existsByRequestedGoodsAndTargetGoodsAndStatus(requestedGoods, targetGoods,
-			TradeStatus.REJECTED)) {
-			return Result.fail(ErrorCode.TRADE_ALREADY_REJECTED_WITH_SAME_GOODS.getMessage());
+			return Result.fail(conflict.type().getDescription());
 		}
 
 		// 최대 PENDING 요청 제한 체크
@@ -95,10 +84,7 @@ public class TradesServiceImpl implements TradesService {
 		}
 
 		// 거래 생성
-		Trades savedTrades = createAndSaveTrade(requestedGoods, targetGoods);
-		if (savedTrades == null) {
-			return Result.fail(ErrorCode.DUPLICATE_TRADE_REQUEST.getMessage());
-		}
+		Trades savedTrades = tradesRepository.save(new Trades(requestedGoods, targetGoods));
 
 		// 알림 발생 (거래요청)
 		notificationEventPublisher.publishNotification(
@@ -112,16 +98,6 @@ public class TradesServiceImpl implements TradesService {
 		);
 
 		return Result.success(savedTrades.getId());
-	}
-
-	private Trades createAndSaveTrade(Goods requestedGoods, Goods targetGoods) {
-		try {
-			return tradesRepository.save(new Trades(requestedGoods, targetGoods));
-		} catch (DataIntegrityViolationException | ConstraintViolationException e) {
-			log.warn("[swap 요청] Duplicate trade request: requestedGoodsId={}, targetGoodsId={}, errorName={}",
-				requestedGoods.getId(), targetGoods.getId(), e.getClass().getSimpleName());
-			return null;
-		}
 	}
 
 	@Override
