@@ -15,7 +15,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import com.example.swapit.common.exception.CustomException;
@@ -39,8 +38,8 @@ import com.example.swapit.domain.dto.trade.TradeMyGoodsRequestDto;
 import com.example.swapit.domain.dto.trade.TradesRequestDto;
 import com.example.swapit.repository.ChatRoomsRepository;
 import com.example.swapit.repository.GoodsImagesRepository;
-import com.example.swapit.repository.GoodsRepository;
-import com.example.swapit.repository.TradesRepository;
+import com.example.swapit.repository.good.GoodsRepository;
+import com.example.swapit.repository.trade.TradesRepository;
 import com.example.swapit.service.notification.NotificationEventPublisher;
 
 @ExtendWith(MockitoExtension.class)
@@ -164,117 +163,6 @@ public class TradesServiceTest {
 		verify(goodsRepository, times(1)).findById(dto.getTargetGoodsId());
 		verify(tradesRepository, times(1)).countByTargetGoodsIdAndStatus(dto.getTargetGoodsId(), TradeStatus.PENDING);
 		verify(tradesRepository, never()).save(any(Trades.class));
-	}
-
-	@Test
-	@DisplayName("거래 요청 실패 - 중복 거래 요청")
-	void requestTradesDuplicateFailure() {
-		// Given
-		Users requester = Users.builder()
-			.email("email")
-			.build();
-		Goods requestedGoods = Goods.builder()
-			.user(requester)
-			.build();
-
-		Users target = Users.builder()
-			.email("email")
-			.build();
-		Goods targetGoods = Goods.builder()
-			.user(target)
-			.build();
-
-		dto = new TradesRequestDto(1L, 2L);
-
-		when(goodsRepository.findById(dto.getRequestedGoodsId())).thenReturn(Optional.of(requestedGoods));
-		when(goodsRepository.findById(dto.getTargetGoodsId())).thenReturn(Optional.of(targetGoods));
-		when(tradesRepository.countByTargetGoodsIdAndStatus(dto.getTargetGoodsId(), TradeStatus.PENDING)).thenReturn(
-			5L);
-		doThrow(new DataIntegrityViolationException("Duplicate")).when(tradesRepository).save(any(Trades.class));
-
-		// When
-		Result<Long> result = tradesService.requestTrade(dto);
-
-		// Then
-		assertFalse(result.isSuccess());
-		assertEquals(ErrorCode.DUPLICATE_TRADE_REQUEST.getMessage(), result.getMessage());
-		verify(goodsRepository, times(1)).findById(dto.getRequestedGoodsId());
-		verify(goodsRepository, times(1)).findById(dto.getTargetGoodsId());
-		verify(tradesRepository, times(1)).countByTargetGoodsIdAndStatus(dto.getTargetGoodsId(), TradeStatus.PENDING);
-		verify(tradesRepository, times(1)).save(any(Trades.class));
-	}
-
-	@Test
-	@DisplayName("거래 요청 실패 - requestedGoods <-> targetGoods 반대로 이미 있을 때 요청 실패")
-	void requestTrade_ShouldThrowException_WhenTradeAlreadyRequested() {
-		// given
-		Users requester = Users.builder()
-			.email("email")
-			.build();
-		Goods requestedGoods = Goods.builder()
-			.user(requester)
-			.build();
-
-		Users target = Users.builder()
-			.email("email")
-			.build();
-		Goods targetGoods = Goods.builder()
-			.user(target)
-			.build();
-
-		Long requestedGoodsId = 1L;
-		Long targetGoodsId = 2L;
-
-		TradesRequestDto tradesRequestDto = new TradesRequestDto(requestedGoodsId, targetGoodsId);
-
-		when(goodsRepository.findById(requestedGoodsId)).thenReturn(Optional.of(requestedGoods));
-		when(goodsRepository.findById(targetGoodsId)).thenReturn(Optional.of(targetGoods));
-		// 이미 동일한 거래가 존재 (status != REJECTED)
-		when(tradesRepository.findIdByRequestedGoodsAndTargetGoodsAndStatusNot(targetGoods, requestedGoods,
-			TradeStatus.REJECTED)).thenReturn(Optional.of(999L)); // 이미 존재하는 거래 ID
-
-		// when
-		Result<Long> result = tradesService.requestTrade(tradesRequestDto);
-
-		// when & then
-		assertFalse(result.isSuccess());
-		assertEquals(ErrorCode.TRADE_ALREADY_REQUESTED.getMessage(), result.getMessage());
-	}
-
-	@Test
-	@DisplayName("동일한 물건으로 reject 되었는데, 또 같은 요청을 할 경우 오류 발생")
-	void requestTrade_ShouldThrowException_WhenTradeAlreadyRejected() {
-		// given
-		Users requester = Users.builder()
-			.email("email")
-			.build();
-		Goods requestedGoods = Goods.builder()
-			.user(requester)
-			.build();
-
-		Users target = Users.builder()
-			.email("email")
-			.build();
-		Goods targetGoods = Goods.builder()
-			.user(target)
-			.build();
-
-		Long requestedGoodsId = 1L;
-		Long targetGoodsId = 2L;
-		TradesRequestDto tradesRequestDto = new TradesRequestDto(requestedGoodsId, targetGoodsId);
-		
-		when(goodsRepository.findById(requestedGoodsId)).thenReturn(Optional.of(requestedGoods));
-		when(goodsRepository.findById(targetGoodsId)).thenReturn(Optional.of(targetGoods));
-		when(tradesRepository.existsByRequestedGoodsAndTargetGoodsAndStatus(
-			requestedGoods, targetGoods, TradeStatus.REJECTED
-		)).thenReturn(true);
-
-		// when
-		Result<Long> result = tradesService.requestTrade(tradesRequestDto);
-
-		// then
-		assertFalse(result.isSuccess());
-		assertEquals(ErrorCode.TRADE_ALREADY_REJECTED_WITH_SAME_GOODS.getMessage(), result.getMessage());
 	}
 
 	@Test

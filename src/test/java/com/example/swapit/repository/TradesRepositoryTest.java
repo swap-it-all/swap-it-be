@@ -1,9 +1,12 @@
 package com.example.swapit.repository;
 
+import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.List;
+import java.util.Optional;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +27,9 @@ import com.example.swapit.domain.GoodsQuality;
 import com.example.swapit.domain.TradeStatus;
 import com.example.swapit.domain.Trades;
 import com.example.swapit.domain.Users;
+import com.example.swapit.domain.dao.ConflictTradeResult;
+import com.example.swapit.repository.good.GoodsRepository;
+import com.example.swapit.repository.trade.TradesRepository;
 
 import jakarta.persistence.EntityManager;
 
@@ -63,18 +69,137 @@ class TradesRepositoryTest {
 	@Autowired
 	private EntityManager em;
 
-	@Test
-	@DisplayName("거래 거절 - 특정 거래를 제외한 나머지 거래들이 REJECTED로 변경되는지 확인")
-	void rejectOtherTrades() {
-		// Given
-		// 거래 생성을 위한 users, goods
-		Users requester = Users.builder()
+	Users requester, owner;
+	Categories category;
+	Goods requestGood, targetGood;
+
+	@BeforeEach
+	void setUp() {
+		requester = Users.builder()
 			.nickname("requester")
 			.profileImageUrl("requester")
 			.email("requester")
 			.loginInfo("google")
 			.role("ROLE_USER")
 			.build();
+		owner = Users.builder()
+			.nickname("owner")
+			.profileImageUrl("owner")
+			.email("owner")
+			.loginInfo("google")
+			.role("ROLE_USER")
+			.build();
+		usersRepository.saveAll(List.of(requester, owner));
+
+		category = categoriesRepository.save(
+			Categories.builder().name("MISC").build());
+
+		requestGood = Goods.builder()
+			.user(requester)
+			.title("requestGood")
+			.price(1000)
+			.quality(GoodsQuality.GOOD)
+			.category(category)
+			.content("requestGood")
+			.placeName("place")
+			.build();
+		targetGood = Goods.builder()
+			.user(owner)
+			.title("targetGood")
+			.price(1000)
+			.quality(GoodsQuality.GOOD)
+			.category(category)
+			.content("targetGood")
+			.placeName("place")
+			.build();
+		goodsRepository.saveAll(List.of(requestGood, targetGood));
+	}
+
+	@Test
+	@DisplayName("거래 요청 - 제약 걸리지 않음.")
+	void createTrade_noConflict() {
+		// given
+		// when
+		Optional<ConflictTradeResult> result = tradesRepository.findConflictTrade(requestGood, targetGood, requester);
+
+		// then
+		assertThat(result).isEmpty();
+	}
+
+	@Test
+	@DisplayName("거래 요청 실패 - 역방향 요청이 있는 경우")
+	void createTrade_conflict0() {
+		// given
+		tradesRepository.save(new Trades(targetGood, requestGood)); // 이미 반대로 거래가 있음.
+
+		// when
+		Optional<ConflictTradeResult> result = tradesRepository.findConflictTrade(requestGood, targetGood, requester);
+
+		// then
+		assertThat(result).isPresent();
+		assertThat(result.get().type()).isEqualTo(ConflictTradeResult.ConflictType.TRADE_ALREADY_REQUESTED_IN_REVERSE);
+	}
+
+	@Test
+	@DisplayName("거래 요청 실패 - 같은 거래 조합으로 거래가 이미 존재하는 경우")
+	void createTrade_conflict1() {
+		// given
+		tradesRepository.save(new Trades(requestGood, targetGood));
+
+		// when
+		Optional<ConflictTradeResult> result = tradesRepository.findConflictTrade(requestGood, targetGood, requester);
+
+		// then
+		assertThat(result).isPresent();
+		assertThat(result.get().type()).isEqualTo(
+			ConflictTradeResult.ConflictType.TRADE_ALREADY_EXISTS_WITH_SAME_GOODS);
+	}
+
+	@Test
+	@DisplayName("거래 요청 실패 - 동일한 거래가 과거게 거절된 적이 있는 경우")
+	void createTrade_conflict2() {
+		// given
+		Trades trade = new Trades(requestGood, targetGood);
+		trade.setStatus(TradeStatus.REJECTED);
+		tradesRepository.save(trade);
+
+		// when
+		Optional<ConflictTradeResult> result = tradesRepository.findConflictTrade(requestGood, targetGood, requester);
+
+		// then
+		assertThat(result).isPresent();
+		assertThat(result.get().type()).isEqualTo(ConflictTradeResult.ConflictType.TRADE_ALREADY_REJECTED);
+	}
+
+	@Test
+	@DisplayName("거래 요청 실패 - 동일 사용자가 이미 다른 거래로 요청한 경우")
+	void createTrade_conflict3() {
+		// given
+		Goods anotherGood = goodsRepository.save(
+			Goods.builder()
+				.user(requester)
+				.title("requestGood2")
+				.price(10000)
+				.quality(GoodsQuality.EXCELLENT)
+				.category(category)
+				.content("requestGood2")
+				.placeName("place")
+				.build());
+		tradesRepository.save(new Trades(anotherGood, targetGood));
+
+		// when
+		Optional<ConflictTradeResult> result = tradesRepository.findConflictTrade(requestGood, targetGood, requester);
+
+		// then
+		assertThat(result).isPresent();
+		assertThat(result.get().type()).isEqualTo(ConflictTradeResult.ConflictType.TRADE_REQUESTED_BY_SAME_USER);
+	}
+
+	@Test
+	@DisplayName("거래 거절 - 특정 거래를 제외한 나머지 거래들이 REJECTED로 변경되는지 확인")
+	void rejectOtherTrades() {
+		// Given
+		// 거래 생성을 위한 users, goods
 		Users requester2 = Users.builder()
 			.nickname("requester2")
 			.profileImageUrl("requester2")
@@ -89,27 +214,8 @@ class TradesRepositoryTest {
 			.loginInfo("google")
 			.role("ROLE_USER")
 			.build();
-		Users owner = Users.builder()
-			.nickname("owner")
-			.profileImageUrl("owner")
-			.email("owner")
-			.loginInfo("google")
-			.role("ROLE_USER")
-			.build();
-		usersRepository.saveAll(List.of(requester, requester2, requester3, owner));
+		usersRepository.saveAll(List.of(requester2, requester3));
 
-		Categories category = categoriesRepository.save(
-			Categories.builder().name("MISC").build());
-
-		Goods requestGood = Goods.builder()
-			.user(requester)
-			.title("requestGood")
-			.price(1000)
-			.quality(GoodsQuality.GOOD)
-			.category(category)
-			.content("requestGood")
-			.placeName("place")
-			.build();
 		Goods requestGood2 = Goods.builder()
 			.user(requester2)
 			.title("requestGood2")
@@ -126,15 +232,6 @@ class TradesRepositoryTest {
 			.quality(GoodsQuality.GOOD)
 			.category(category)
 			.content("requestGood3")
-			.placeName("place")
-			.build();
-		Goods targetGood = Goods.builder()
-			.user(owner)
-			.title("targetGood")
-			.price(1000)
-			.quality(GoodsQuality.GOOD)
-			.category(category)
-			.content("targetGood")
 			.placeName("place")
 			.build();
 		goodsRepository.saveAll(List.of(requestGood, requestGood2, requestGood3, targetGood));
