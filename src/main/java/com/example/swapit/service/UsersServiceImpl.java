@@ -18,9 +18,9 @@ import com.example.swapit.domain.dto.ReviewDto;
 import com.example.swapit.domain.dto.UserNicknameDto;
 import com.example.swapit.domain.dto.UserPageDto;
 import com.example.swapit.repository.FcmTokenRepository;
-import com.example.swapit.repository.GoodsRepository;
 import com.example.swapit.repository.ReviewRepository;
 import com.example.swapit.repository.UsersRepository;
+import com.example.swapit.repository.good.GoodsRepository;
 
 import lombok.RequiredArgsConstructor;
 

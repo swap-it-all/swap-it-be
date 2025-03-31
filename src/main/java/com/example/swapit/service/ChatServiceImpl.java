@@ -30,9 +30,9 @@ import com.example.swapit.domain.dto.good.TradeInfoDto;
 import com.example.swapit.repository.ChatRoomsRepository;
 import com.example.swapit.repository.ChatsRepository;
 import com.example.swapit.repository.GoodsImagesRepository;
-import com.example.swapit.repository.GoodsRepository;
-import com.example.swapit.repository.TradesRepository;
 import com.example.swapit.repository.UsersRepository;
+import com.example.swapit.repository.good.GoodsRepository;
+import com.example.swapit.repository.trade.TradesRepository;
 import com.example.swapit.service.notification.NotificationEventPublisher;
 
 import lombok.RequiredArgsConstructor;

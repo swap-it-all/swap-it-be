@@ -26,7 +26,7 @@ import com.example.swapit.domain.GoodsImages;
 import com.example.swapit.domain.GoodsQuality;
 import com.example.swapit.domain.Users;
 import com.example.swapit.repository.GoodsImagesRepository;
-import com.example.swapit.repository.GoodsRepository;
+import com.example.swapit.repository.good.GoodsRepository;
 
 @ExtendWith(MockitoExtension.class)
 class GoodsImagesServiceTest {

@@ -28,9 +28,9 @@ import com.example.swapit.domain.dto.good.MyGoodDto;
 import com.example.swapit.domain.dto.good.TradeInfoDto;
 import com.example.swapit.repository.CategoriesRepository;
 import com.example.swapit.repository.GoodsImagesRepository;
-import com.example.swapit.repository.GoodsRepository;
 import com.example.swapit.repository.ReviewRepository;
-import com.example.swapit.repository.TradesRepository;
+import com.example.swapit.repository.good.GoodsRepository;
+import com.example.swapit.repository.trade.TradesRepository;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;

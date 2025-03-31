@@ -28,13 +28,13 @@ import com.example.swapit.repository.ChatRoomsRepository;
 import com.example.swapit.repository.ChatsRepository;
 import com.example.swapit.repository.FcmTokenRepository;
 import com.example.swapit.repository.GoodsImagesRepository;
-import com.example.swapit.repository.GoodsRepository;
 import com.example.swapit.repository.NotificationRepository;
 import com.example.swapit.repository.ReviewRepository;
 import com.example.swapit.repository.TokensRepository;
-import com.example.swapit.repository.TradesRepository;
 import com.example.swapit.repository.UsersRepository;
 import com.example.swapit.repository.WithdrawReasonsRepository;
+import com.example.swapit.repository.good.GoodsRepository;
+import com.example.swapit.repository.trade.TradesRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
