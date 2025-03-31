@@ -10,10 +10,10 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -28,7 +28,9 @@ import lombok.Setter;
 @SQLDelete(sql = "UPDATE trades SET is_deleted = true WHERE trades_id = ?")
 @SQLRestriction("is_deleted = false")
 @Table(name = "trades",
-	uniqueConstraints = @UniqueConstraint(columnNames = {"target_goods_id, requested_goods_id"})
+	indexes = {
+		@Index(name = "idx_target_requested_deleted", columnList = "requested_goods_id, target_goods_id, is_deleted")
+	}
 )
 public class Trades extends BaseEntity {
 
