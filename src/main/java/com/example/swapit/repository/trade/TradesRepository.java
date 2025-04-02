@@ -52,7 +52,8 @@ public interface TradesRepository extends JpaRepository<Trades, Long>, TradeQuer
 
 	@Query("""
 		SELECT t FROM Trades t
-		WHERE (t.targetGoods.id = :goodsId AND t.requestedGoods.user.usersId = :userId)
+		WHERE t.isDeleted = false AND t.status <> 'REJECTED'
+		AND (t.targetGoods.id = :goodsId AND t.requestedGoods.user.usersId = :userId)
 		OR (t.requestedGoods.id = :goodsId AND t.targetGoods.user.usersId = :userId)
 		ORDER BY t.updatedAt DESC""")
 	Optional<Trades> findUserRelatedTrade(@Param("goodsId") Long goodsId, @Param("userId") Long userId);
