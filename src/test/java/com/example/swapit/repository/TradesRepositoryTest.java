@@ -196,7 +196,7 @@ class TradesRepositoryTest {
 	}
 
 	@Test
-	@DisplayName("거래 거절 - 특정 거래를 제외한 나머지 거래들이 REJECTED로 변경되는지 확인")
+	@DisplayName("거래 수락 - 특정 거래를 제외한 나머지 거래들이 REJECTED로 변경되는지 확인")
 	void rejectOtherTrades() {
 		// Given
 		// 거래 생성을 위한 users, goods
@@ -256,6 +256,69 @@ class TradesRepositoryTest {
 
 		for (Trades trade : tradesList) {
 			assertEquals(TradeStatus.REJECTED, trade.getStatus()); // 나머지 거래는 REJECTED
+		}
+	}
+
+	@Test
+	@DisplayName("거래 수락 - 거래 신청된 내역 모두 취소 처리")
+	void cancelOtherTrades() {
+		// given
+		Users target2 = Users.builder()
+			.nickname("target2")
+			.profileImageUrl("requester2")
+			.email("target2")
+			.loginInfo("google")
+			.role("ROLE_USER")
+			.build();
+		Users target3 = Users.builder()
+			.nickname("target3")
+			.profileImageUrl("requester3")
+			.email("target3")
+			.loginInfo("google")
+			.role("ROLE_USER")
+			.build();
+		usersRepository.saveAll(List.of(target2, target3));
+
+		Goods targetGood2 = Goods.builder()
+			.user(target2)
+			.title("targetGood2")
+			.price(1000)
+			.quality(GoodsQuality.GOOD)
+			.category(category)
+			.content("targetGood2")
+			.placeName("place")
+			.build();
+		Goods targetGood3 = Goods.builder()
+			.user(target3)
+			.title("targetGood3")
+			.price(1000)
+			.quality(GoodsQuality.GOOD)
+			.category(category)
+			.content("targetGood3")
+			.placeName("place")
+			.build();
+		goodsRepository.saveAll(List.of(requestGood, targetGood2, targetGood3, targetGood));
+
+		Trades acceptedTrade = new Trades(requestGood, targetGood);
+		Trades pendingTrade1 = new Trades(requestGood, targetGood2);
+		Trades pendingTrade2 = new Trades(requestGood, targetGood3);
+		tradesRepository.saveAll(List.of(acceptedTrade, pendingTrade1, pendingTrade2));
+
+		// when: 특정 거래를 제외한 나머지를 취소.
+		tradesRepository.cancelOtherTrades(requestGood, acceptedTrade.getId());
+
+		em.flush(); // DB에 데이터 반영
+		em.clear(); // 영속성 컨텍스트 초기화
+
+		// then: 상태가 변경되었는지 확인
+		List<Trades> tradesList = em.createQuery(
+				"SELECT t FROM Trades t WHERE t.requestedGoods = :requestGood AND t.id <> :acceptedTradeId", Trades.class)
+			.setParameter("requestGood", requestGood)
+			.setParameter("acceptedTradeId", acceptedTrade.getId())
+			.getResultList();
+
+		for (Trades trade : tradesList) {
+			assertTrue(trade.isDeleted()); // 나머지 거래는 CANCEL -> isDeleted = true
 		}
 	}
 }
