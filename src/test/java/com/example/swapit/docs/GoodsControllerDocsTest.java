@@ -22,6 +22,7 @@ import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
 import com.epages.restdocs.apispec.ResourceSnippetParameters;
 import com.epages.restdocs.apispec.Schema;
 import com.example.swapit.controller.GoodsController;
+import com.example.swapit.domain.GoodsTradeStatus;
 import com.example.swapit.domain.dto.Dto;
 import com.example.swapit.domain.dto.good.GoodsDto;
 import com.example.swapit.domain.dto.good.GoodsListDto;
@@ -42,7 +43,7 @@ public class GoodsControllerDocsTest extends RestDocsTest {
 	void getAllGoods() throws Exception {
 		// given
 		GoodsDto sampleGood = new GoodsDto(
-			1L, "스타벅스 머그컵", 15000L, "MISC", "cup-image.jpg", "용산구",
+			1L, "스타벅스 머그컵", 15000L, "MISC", GoodsTradeStatus.RESERVED.name(), "cup-image.jpg", "용산구",
 			2300L, LocalDateTime.now());
 		GoodsListDto response = new GoodsListDto(
 			List.of(sampleGood), true, 5L, 10);
@@ -102,6 +103,8 @@ public class GoodsControllerDocsTest extends RestDocsTest {
 						fieldWithPath("results.goodsList[].title").type(JsonFieldType.STRING).description("물건 제목"),
 						fieldWithPath("results.goodsList[].price").type(JsonFieldType.NUMBER).description("물건 가격"),
 						fieldWithPath("results.goodsList[].category").type(JsonFieldType.STRING).description("물건 카테고리"),
+						fieldWithPath("results.goodsList[].goodsTradeStatus").type(JsonFieldType.STRING)
+							.description("물건 거래가능 상태"),
 						fieldWithPath("results.goodsList[].imageUrl").type(JsonFieldType.STRING)
 							.description("물건 이미지 URL"),
 						fieldWithPath("results.goodsList[].placeName").type(JsonFieldType.STRING).description("거래 위치"),
