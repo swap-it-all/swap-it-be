@@ -21,8 +21,12 @@ public interface TradesRepository extends JpaRepository<Trades, Long>, TradeQuer
 	long countByTargetGoodsIdAndStatus(Long goodsId, TradeStatus status);
 
 	@Modifying
-	@Query("UPDATE Trades t SET t.status = 'REJECTED' WHERE t.targetGoods = :targetGoods AND t.id <> :acceptedTradeId")
-	void rejectOtherTrades(@Param("targetGoods") Goods targetGoods, @Param("acceptedTradeId") Long acceptedTradeId);
+	@Query("UPDATE Trades t SET t.status = 'REJECTED' WHERE t.targetGoods = :targetGood AND t.status = 'PENDING' AND t.id <> :acceptedTradeId")
+	void rejectOtherTrades(@Param("targetGood") Goods targetGood, @Param("acceptedTradeId") Long acceptedTradeId);
+
+	@Modifying
+	@Query("UPDATE Trades t SET t.isDeleted = true WHERE t.requestedGoods = :requestedGood AND t.status = 'PENDING' AND t.id <> :acceptedTradeId")
+	void cancelOtherTrades(@Param("requestedGood") Goods requestedGood, @Param("acceptedTradeId") Long acceptedTradeId);
 
 	@Query("SELECT t.targetGoods.id AS goodsId, COALESCE(COUNT(t), 0) AS tradeCount "
 		+ "FROM Trades t "
