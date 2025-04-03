@@ -1,8 +1,8 @@
 package com.example.swapit.controller;
 
 import static org.hamcrest.Matchers.*;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.*;
@@ -64,10 +64,10 @@ class GoodsControllerTest {
 		LocalDateTime tenMinutesAgo = LocalDateTime.now().minus(10, ChronoUnit.MINUTES);
 
 		GoodsDto dto1 = new GoodsDto(
-			1L, "아이폰 15", 2500L, "NEW", null, null, 10L, now
+			1L, "아이폰 15", 2500L, "NEW", GoodsTradeStatus.AVAILABLE.name(), null, null, 10L, now
 		);
 		GoodsDto dto2 = new GoodsDto(
-			2L, "갤럭시 S25", 1300L, "FAIR", null, null, 100L, tenMinutesAgo
+			2L, "갤럭시 S25", 1300L, "FAIR", GoodsTradeStatus.AVAILABLE.name(), null, null, 100L, tenMinutesAgo
 		);
 
 		GoodsListDto mockGoodsList = new GoodsListDto(List.of(dto1, dto2), true, 2L, 2);
