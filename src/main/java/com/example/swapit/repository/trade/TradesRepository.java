@@ -52,7 +52,7 @@ public interface TradesRepository extends JpaRepository<Trades, Long>, TradeQuer
 	Optional<Long> findIdByRequestedGoodsAndTargetGoodsAndStatusNot(@Param("requested") Goods requested,
 		@Param("target") Goods target, @Param("status") TradeStatus status);
 
-	boolean existsByRequestedGoodsAndTargetGoodsAndStatus(Goods requestedGoods, Goods TargetGoods, TradeStatus status);
+	boolean existsByRequestedGoodsAndTargetGoodsAndStatus(Goods requestedGoods, Goods targetGoods, TradeStatus status);
 
 	@Query("""
 		SELECT t FROM Trades t
