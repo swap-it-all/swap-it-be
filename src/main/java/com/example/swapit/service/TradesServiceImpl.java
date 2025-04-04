@@ -131,8 +131,10 @@ public class TradesServiceImpl implements TradesService {
 		// 거래 상태 변경
 		trades.setStatus(TradeStatus.INPROGRESS);
 
-		// 같은 물건의 다른 거래 요청을 모두 REJECTED로 변경
+		// target 물건으로 swap 요청된 건 모두 REJECTED로 변경
 		tradesRepository.rejectOtherTrades(trades.getTargetGoods(), tradesId);
+		// request 물건으로 swap 요청한 건 모두 cancel 처리 -> isDeleted = true
+		tradesRepository.cancelOtherTrades(trades.getRequestedGoods(), tradesId);
 
 		// 채팅방이 있으면 메시지 전송
 		Optional<ChatRooms> chatRoomsOpt = chatRoomsRepository.findByTrade(trades);

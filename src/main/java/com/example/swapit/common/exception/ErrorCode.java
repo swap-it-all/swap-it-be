@@ -34,7 +34,6 @@ public enum ErrorCode {
 	// image error
 	IMAGE_READ_FAILED(HttpStatus.BAD_REQUEST, "이미지를 읽는데 실패하였습니다."),
 	IMAGE_UPLOAD_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "AWS S3 이미지 업로드에 실패했습니다. 다시 시도해주세요."),
-	S3_NETWORK_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "AWS S3 통신에 실패했습니다."),
 	IMAGE_COUNT_EXCEEDED(HttpStatus.BAD_REQUEST, "이미지는 최대 10개까지 올릴 수 있습니다."),
 	FILE_SIZE_EXCEEDED(HttpStatus.PAYLOAD_TOO_LARGE, "파일 크기가 최대 한도를 초과했습니다. (5MB)"),
 	INVALID_IMAGE_FORMAT(HttpStatus.BAD_REQUEST, "파일 확장자는 JPG, JPEG, PNG만 가능합니다."),
@@ -54,9 +53,6 @@ public enum ErrorCode {
 	// trades error
 	TRADES_NOT_FOUND(HttpStatus.NOT_FOUND, "거래를 찾을 수 없습니다."),
 	TRADE_UNAUTHORIZED(HttpStatus.FORBIDDEN, "거래에 대한 권한이 없습니다."),
-	DUPLICATE_TRADE_REQUEST(HttpStatus.BAD_REQUEST, "이미 해당 물건에 스왑 요청한 내역이 있습니다."),
-	TRADE_ALREADY_REQUESTED(HttpStatus.BAD_REQUEST, "이미 해당 거래에 대해 요청을 받은 건이 존재합니다."),
-	TRADE_ALREADY_REJECTED_WITH_SAME_GOODS(HttpStatus.BAD_REQUEST, "같은 물건 조합으로 이미 거절된 거래 요청이 존재합니다."),
 	MAXIMUM_TRADE_REQUEST(HttpStatus.BAD_REQUEST, "가능한 스왑 요청 횟수를 초과하였습니다."),
 
 	// chat error

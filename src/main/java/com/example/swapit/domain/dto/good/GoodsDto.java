@@ -18,6 +18,7 @@ public class GoodsDto {
 	private String title;
 	private long price;
 	private String category;
+	private String goodsTradeStatus;
 	private String imageUrl;
 	private String placeName;
 	private long viewCount;
@@ -29,6 +30,7 @@ public class GoodsDto {
 			.title(good.getTitle())
 			.price(good.getPrice())
 			.category(good.getCategory().getName())
+			.goodsTradeStatus(good.getGoodsTradeStatus().name())
 			.imageUrl(imageUrl)
 			.placeName(good.getPlaceName())
 			.viewCount(good.getViewCount())
