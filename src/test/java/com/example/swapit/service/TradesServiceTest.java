@@ -492,6 +492,11 @@ public class TradesServiceTest {
 			public Long getTradeCount() {
 				return 5L;
 			}
+
+			@Override
+			public String getTradeStatus() {
+				return "InProgress";
+			}
 		};
 		when(tradesRepository.findTradeCountByGoodsIds(anyList())).thenReturn(List.of(projection));
 

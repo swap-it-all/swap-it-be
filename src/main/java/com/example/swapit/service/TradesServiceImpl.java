@@ -2,6 +2,7 @@ package com.example.swapit.service;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -228,6 +229,8 @@ public class TradesServiceImpl implements TradesService {
 		List<TradeCountProjection> tradeCounts = tradesRepository.findTradeCountByGoodsIds(goodsIds);
 		Map<Long, Long> tradeCountMap = tradeCounts.stream()
 			.collect(Collectors.toMap(TradeCountProjection::getGoodsId, TradeCountProjection::getTradeCount));
+		Map<Long, String> tradeStatusMap = tradeCounts.stream()
+			.collect(Collectors.toMap(TradeCountProjection::getGoodsId, TradeCountProjection::getTradeStatus));
 
 		// INPROGRESS 거래 수 조회
 		List<InProgressCountDto> inProgressCounts = tradesRepository.findInProgressCountByGoodsIds(goodsIds);
@@ -237,6 +240,7 @@ public class TradesServiceImpl implements TradesService {
 		// MyGoodsDto 변환
 		List<MyGoodsDto> result = goodsList.stream()
 			.filter(goods -> tradeCountMap.getOrDefault(goods.getId(), 0L) != 0L)
+			.filter(goods -> !Objects.equals(tradeStatusMap.get(goods.getId()), TradeStatus.COMPLETED.name()))
 			.map(goods -> new MyGoodsDto(
 				goods.getId(),
 				goods.getTitle(),
@@ -246,15 +250,15 @@ public class TradesServiceImpl implements TradesService {
 				getFirstImageUrl(goods),
 				goods.getViewCount(),
 				tradeCountMap.getOrDefault(goods.getId(), 0L), // 전체 거래 요청 수
-				inProgressMap.getOrDefault(goods.getId(), 0L), // INPROGRESS 거래 수
+				inProgressMap.getOrDefault(goods.getId(), 0L) != 0, // INPROGRESS 유무
 				goods.getCreatedAt()
 			))
 			.collect(Collectors.toList());
 
 		// 정렬 로직: INPROGRESS 거래 수가 1개 이상인 물건이 우선, 그 후 createdAt 내림차순
 		result.sort((dto1, dto2) -> {
-			boolean dto1HasInProgress = dto1.getInProgressCount() > 0;
-			boolean dto2HasInProgress = dto2.getInProgressCount() > 0;
+			boolean dto1HasInProgress = dto1.getIsInProgress();
+			boolean dto2HasInProgress = dto2.getIsInProgress();
 
 			// 1) INPROGRESS 거래가 있는 상품(dto1) vs 없는 상품(dto2)
 			if (dto1HasInProgress && !dto2HasInProgress) {
@@ -284,6 +288,7 @@ public class TradesServiceImpl implements TradesService {
 				goods.getCategory().getName(),
 				goods.getPlaceName(),
 				getFirstImageUrl(goods),
+				tradesRepository.existsInProgressTrade(myGoods, goods),
 				goods.getCreatedAt()
 			))
 			.toList();
@@ -310,6 +315,7 @@ public class TradesServiceImpl implements TradesService {
 					myGoodsPhotoUrl,
 					targetGoodsPhotoUrl,
 					dao.getTargetGoods().getViewCount(),
+					tradesRepository.existsInProgressTrade(dao.getTargetGoods(), dao.getMyGoods()),
 					dao.getTargetGoods().getCreatedAt(),
 					dao.getTradesId()
 				);

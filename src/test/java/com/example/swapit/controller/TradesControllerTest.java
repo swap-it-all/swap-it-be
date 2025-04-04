@@ -221,7 +221,7 @@ public class TradesControllerTest {
 			"http://example.com/image.jpg",
 			100L,
 			5L,
-			2L,
+			false,
 			LocalDateTime.now()
 		);
 		goodsList.add(dummyGoods);
@@ -249,6 +249,7 @@ public class TradesControllerTest {
 			"MISC",
 			"경기도 안산시",
 			"http://example.com/request-image.jpg",
+			false,
 			LocalDateTime.now()
 		);
 		requestList.add(dummyRequest);
@@ -279,6 +280,7 @@ public class TradesControllerTest {
 			"http://example.com/mygoods-image.jpg",
 			"http://example.com/requestedgoods-image.jpg",
 			200,
+			false,
 			LocalDateTime.now(),
 			2L
 		);

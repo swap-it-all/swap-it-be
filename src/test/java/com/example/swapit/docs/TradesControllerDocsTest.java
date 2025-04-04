@@ -219,7 +219,7 @@ public class TradesControllerDocsTest extends RestDocsTest {
 			"http://example.com/image.jpg",
 			100L,
 			5L,
-			2L,
+			false,
 			LocalDateTime.now()
 		);
 		goodsList.add(dummyGoods);
@@ -253,8 +253,8 @@ public class TradesControllerDocsTest extends RestDocsTest {
 						fieldWithPath("results.goodsList[].viewCount").type(JsonFieldType.NUMBER).description("조회수"),
 						fieldWithPath("results.goodsList[].requestCount").type(JsonFieldType.NUMBER)
 							.description("스왑 요청 수"),
-						fieldWithPath("results.goodsList[].inProgressCount").type(JsonFieldType.NUMBER)
-							.description("INPROGRESS 상태인 스왑 수"),
+						fieldWithPath("results.goodsList[].isInProgress").type(JsonFieldType.BOOLEAN)
+							.description("INPROGRESS 유무"),
 						fieldWithPath("results.goodsList[].createdAt").type(JsonFieldType.STRING).description("등록 시간")
 					)
 					.responseSchema(Schema.schema("ApiResponse<TradesGoodsListResponseDto<MyGoodsDto>>"))
@@ -276,6 +276,7 @@ public class TradesControllerDocsTest extends RestDocsTest {
 			"MISC",
 			"경기도 안산시",
 			"http://example.com/image.jpg",
+			false,
 			LocalDateTime.now()
 		);
 		requestList.add(dummyGoods);
@@ -308,6 +309,8 @@ public class TradesControllerDocsTest extends RestDocsTest {
 						fieldWithPath("results.goodsList[].placeName").type(JsonFieldType.STRING).description("물건 위치"),
 						fieldWithPath("results.goodsList[].photoUrl").type(JsonFieldType.STRING)
 							.description("물건 이미지 URL"),
+						fieldWithPath("results.goodsList[].isInProgress").type(JsonFieldType.BOOLEAN)
+							.description("INPROGRESS 유무"),
 						fieldWithPath("results.goodsList[].createdAt").type(JsonFieldType.STRING).description("등록 시간")
 					)
 					.responseSchema(Schema.schema("TradeMyGoodsRequestDto"))
@@ -330,6 +333,7 @@ public class TradesControllerDocsTest extends RestDocsTest {
 			"http://example.com/my-goods.jpg",
 			"http://example.com/requested-goods.jpg",
 			100,
+			false,
 			LocalDateTime.now(),
 			1L
 		);
@@ -365,6 +369,8 @@ public class TradesControllerDocsTest extends RestDocsTest {
 							.description("요청한 물건 이미지 URL"),
 						fieldWithPath("results.goodsList[].targetGoodsViewCount").type(JsonFieldType.NUMBER)
 							.description("요청한 물건 이미지 조회 수"),
+						fieldWithPath("results.goodsList[].isInProgress").type(JsonFieldType.BOOLEAN)
+							.description("INPROGRESS 유무"),
 						fieldWithPath("results.goodsList[].createdAt").type(JsonFieldType.STRING)
 							.description("신청한 물건 등록 시간"),
 						fieldWithPath("results.goodsList[].tradesId").type(JsonFieldType.NUMBER)

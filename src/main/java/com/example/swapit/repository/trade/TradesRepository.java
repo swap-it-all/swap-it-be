@@ -28,31 +28,31 @@ public interface TradesRepository extends JpaRepository<Trades, Long>, TradeQuer
 	@Query("UPDATE Trades t SET t.isDeleted = true WHERE t.requestedGoods = :requestedGood AND t.status = 'PENDING' AND t.id <> :acceptedTradeId")
 	void cancelOtherTrades(@Param("requestedGood") Goods requestedGood, @Param("acceptedTradeId") Long acceptedTradeId);
 
-	@Query("SELECT t.targetGoods.id AS goodsId, COALESCE(COUNT(t), 0) AS tradeCount "
-		+ "FROM Trades t "
-		+ "WHERE t.targetGoods.id IN :goodsIds AND t.status <> 'REJECTED' "
-		+ "GROUP BY t.targetGoods.id")
+	@Query("SELECT t.targetGoods.id AS goodsId, COALESCE(COUNT(t), 0) AS tradeCount, t.status AS tradeStatus "
+		   + "FROM Trades t "
+		   + "WHERE t.targetGoods.id IN :goodsIds AND t.status <> 'REJECTED' "
+		   + "GROUP BY t.targetGoods.id, t.status")
 	List<TradeCountProjection> findTradeCountByGoodsIds(@Param("goodsIds") List<Long> goodsIds);
 
 	@Query("SELECT new com.example.swapit.domain.dao.TradeGoodsDao(t.targetGoods, t.requestedGoods, t.id) "
-		+ "FROM Trades t "
-		+ "WHERE t.requestedGoods.user.usersId = :userId AND t.status <> 'REJECTED'")
+		   + "FROM Trades t "
+		   + "WHERE t.requestedGoods.user.usersId = :userId AND t.status not in ('COMPLETED', 'REJECTED')")
 	List<TradeGoodsDao> findMyRequests(@Param("userId") Long userId);
 
 	@Query("SELECT t.requestedGoods FROM Trades t WHERE t.targetGoods.id = :goodsId AND t.status <> 'REJECTED' ORDER BY t.createdAt DESC")
 	List<Goods> findGoodsRequests(@Param("goodsId") Long goodsId);
 
 	@Query("SELECT new com.example.swapit.domain.dto.trade.InProgressCountDto(t.targetGoods.id, COUNT(t)) "
-		+ "FROM Trades t "
-		+ "WHERE t.targetGoods.id IN :goodsIds AND t.status = 'INPROGRESS' "
-		+ "GROUP BY t.targetGoods.id")
+		   + "FROM Trades t "
+		   + "WHERE t.targetGoods.id IN :goodsIds AND t.status = 'INPROGRESS' "
+		   + "GROUP BY t.targetGoods.id")
 	List<InProgressCountDto> findInProgressCountByGoodsIds(@Param("goodsIds") List<Long> goodsIds);
 
 	@Query("SELECT t.id FROM Trades t WHERE t.requestedGoods = :requested AND t.targetGoods = :target AND t.status <> :status")
 	Optional<Long> findIdByRequestedGoodsAndTargetGoodsAndStatusNot(@Param("requested") Goods requested,
 		@Param("target") Goods target, @Param("status") TradeStatus status);
 
-	boolean existsByRequestedGoodsAndTargetGoodsAndStatus(Goods requestedGoods, Goods TargetGoods, TradeStatus status);
+	boolean existsByRequestedGoodsAndTargetGoodsAndStatus(Goods requestedGoods, Goods targetGoods, TradeStatus status);
 
 	@Query("""
 		SELECT t FROM Trades t
@@ -72,4 +72,9 @@ public interface TradesRepository extends JpaRepository<Trades, Long>, TradeQuer
 		OR (t.targetGoods.user.usersId = :userId)
 		""")
 	List<Trades> findAllByUser(@Param("userId") Long userId);
+
+	@Query("SELECT CASE WHEN COUNT(t) > 0 THEN true ELSE false END FROM Trades t "
+		   + "WHERE t.targetGoods = :target AND t.requestedGoods = :request AND t.status = 'INPROGRESS'")
+	boolean existsInProgressTrade(@Param("target") Goods target, @Param("request") Goods request);
+
 }
