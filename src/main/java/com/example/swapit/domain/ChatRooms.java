@@ -57,6 +57,7 @@ public class ChatRooms {
 	@Column(name = "not_inviter_last_read_id", nullable = false)
 	private Long notInviterLastReadId;
 
+	@Builder.Default
 	@Column(nullable = false)
 	private boolean isDeleted = false;
 
