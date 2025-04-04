@@ -12,14 +12,12 @@ public class MyGoodsDto extends BaseTradeGoodsDto {
 	private final String photoUrl;
 	private final long viewCount;
 	private final long requestCount;
-	private final long inProgressCount;
 
 	public MyGoodsDto(Long id, String title, long price, String category, String placeName, String photoUrl,
-		long viewCount, long requestCount, long inProgressCount, LocalDateTime createdAt) {
-		super(id, title, price, category, placeName, createdAt);
+		long viewCount, long requestCount, boolean isInProgress, LocalDateTime createdAt) {
+		super(id, title, price, category, placeName, isInProgress, createdAt);
 		this.photoUrl = photoUrl;
 		this.viewCount = viewCount;
 		this.requestCount = requestCount;
-		this.inProgressCount = inProgressCount;
 	}
 }

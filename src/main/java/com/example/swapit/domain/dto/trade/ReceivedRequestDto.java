@@ -12,8 +12,8 @@ public class ReceivedRequestDto extends BaseTradeGoodsDto {
 	private final String photoUrl;
 
 	public ReceivedRequestDto(Long id, String title, long price, String category, String placeName, String photoUrl,
-		LocalDateTime createdAt) {
-		super(id, title, price, category, placeName, createdAt);
+		boolean isInProgress, LocalDateTime createdAt) {
+		super(id, title, price, category, placeName, isInProgress, createdAt);
 		this.photoUrl = photoUrl;
 	}
 }

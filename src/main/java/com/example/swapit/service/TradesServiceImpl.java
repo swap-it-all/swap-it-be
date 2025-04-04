@@ -244,15 +244,15 @@ public class TradesServiceImpl implements TradesService {
 				getFirstImageUrl(goods),
 				goods.getViewCount(),
 				tradeCountMap.getOrDefault(goods.getId(), 0L), // 전체 거래 요청 수
-				inProgressMap.getOrDefault(goods.getId(), 0L), // INPROGRESS 거래 수
+				inProgressMap.getOrDefault(goods.getId(), 0L) != 0, // INPROGRESS 유무
 				goods.getCreatedAt()
 			))
 			.collect(Collectors.toList());
 
 		// 정렬 로직: INPROGRESS 거래 수가 1개 이상인 물건이 우선, 그 후 createdAt 내림차순
 		result.sort((dto1, dto2) -> {
-			boolean dto1HasInProgress = dto1.getInProgressCount() > 0;
-			boolean dto2HasInProgress = dto2.getInProgressCount() > 0;
+			boolean dto1HasInProgress = dto1.getIsInProgress();
+			boolean dto2HasInProgress = dto2.getIsInProgress();
 
 			// 1) INPROGRESS 거래가 있는 상품(dto1) vs 없는 상품(dto2)
 			if (dto1HasInProgress && !dto2HasInProgress) {
@@ -282,6 +282,7 @@ public class TradesServiceImpl implements TradesService {
 				goods.getCategory().getName(),
 				goods.getPlaceName(),
 				getFirstImageUrl(goods),
+				tradesRepository.existsInProgressTrade(myGoods, goods),
 				goods.getCreatedAt()
 			))
 			.toList();
@@ -308,6 +309,7 @@ public class TradesServiceImpl implements TradesService {
 					myGoodsPhotoUrl,
 					targetGoodsPhotoUrl,
 					dao.getTargetGoods().getViewCount(),
+					tradesRepository.existsInProgressTrade(dao.getTargetGoods(), dao.getMyGoods()),
 					dao.getTargetGoods().getCreatedAt(),
 					dao.getTradesId()
 				);
