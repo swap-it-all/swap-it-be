@@ -4,4 +4,6 @@ public interface TradeCountProjection {
 	Long getGoodsId();
 
 	Long getTradeCount();
+
+	String getTradeStatus();
 }

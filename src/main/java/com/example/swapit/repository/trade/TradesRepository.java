@@ -28,15 +28,15 @@ public interface TradesRepository extends JpaRepository<Trades, Long>, TradeQuer
 	@Query("UPDATE Trades t SET t.isDeleted = true WHERE t.requestedGoods = :requestedGood AND t.status = 'PENDING' AND t.id <> :acceptedTradeId")
 	void cancelOtherTrades(@Param("requestedGood") Goods requestedGood, @Param("acceptedTradeId") Long acceptedTradeId);
 
-	@Query("SELECT t.targetGoods.id AS goodsId, COALESCE(COUNT(t), 0) AS tradeCount "
+	@Query("SELECT t.targetGoods.id AS goodsId, COALESCE(COUNT(t), 0) AS tradeCount, t.status AS tradeStatus "
 		   + "FROM Trades t "
 		   + "WHERE t.targetGoods.id IN :goodsIds AND t.status <> 'REJECTED' "
-		   + "GROUP BY t.targetGoods.id")
+		   + "GROUP BY t.targetGoods.id, t.status")
 	List<TradeCountProjection> findTradeCountByGoodsIds(@Param("goodsIds") List<Long> goodsIds);
 
 	@Query("SELECT new com.example.swapit.domain.dao.TradeGoodsDao(t.targetGoods, t.requestedGoods, t.id) "
 		   + "FROM Trades t "
-		   + "WHERE t.requestedGoods.user.usersId = :userId AND t.status <> 'REJECTED'")
+		   + "WHERE t.requestedGoods.user.usersId = :userId AND t.status not in ('COMPLETED', 'REJECTED')")
 	List<TradeGoodsDao> findMyRequests(@Param("userId") Long userId);
 
 	@Query("SELECT t.requestedGoods FROM Trades t WHERE t.targetGoods.id = :goodsId AND t.status <> 'REJECTED' ORDER BY t.createdAt DESC")

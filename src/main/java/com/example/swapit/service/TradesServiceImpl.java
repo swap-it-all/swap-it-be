@@ -2,6 +2,7 @@ package com.example.swapit.service;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -228,6 +229,8 @@ public class TradesServiceImpl implements TradesService {
 		List<TradeCountProjection> tradeCounts = tradesRepository.findTradeCountByGoodsIds(goodsIds);
 		Map<Long, Long> tradeCountMap = tradeCounts.stream()
 			.collect(Collectors.toMap(TradeCountProjection::getGoodsId, TradeCountProjection::getTradeCount));
+		Map<Long, String> tradeStatusMap = tradeCounts.stream()
+			.collect(Collectors.toMap(TradeCountProjection::getGoodsId, TradeCountProjection::getTradeStatus));
 
 		// INPROGRESS 거래 수 조회
 		List<InProgressCountDto> inProgressCounts = tradesRepository.findInProgressCountByGoodsIds(goodsIds);
@@ -237,6 +240,7 @@ public class TradesServiceImpl implements TradesService {
 		// MyGoodsDto 변환
 		List<MyGoodsDto> result = goodsList.stream()
 			.filter(goods -> tradeCountMap.getOrDefault(goods.getId(), 0L) != 0L)
+			.filter(goods -> !Objects.equals(tradeStatusMap.get(goods.getId()), TradeStatus.COMPLETED.name()))
 			.map(goods -> new MyGoodsDto(
 				goods.getId(),
 				goods.getTitle(),
