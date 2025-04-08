@@ -51,6 +51,7 @@ public class Users extends BaseEntity {
 	@Column(name = "role", columnDefinition = "VARCHAR(20)", nullable = false)
 	private String role;
 
+	@Setter
 	@Builder.Default
 	@Column(nullable = false)
 	private boolean notificationEnabled = true;

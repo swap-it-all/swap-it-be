@@ -8,5 +8,7 @@ public interface NotificationService {
 
 	NotificationSettingDto getMyNotificationSetting();
 
+	void setMyNotificationSetting(NotificationSettingDto notificationSettingDto);
+
 	void notificationRead(Long notificationId);
 }

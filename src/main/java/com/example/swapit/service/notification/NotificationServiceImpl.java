@@ -11,6 +11,7 @@ import com.example.swapit.domain.dto.NotificationDto;
 import com.example.swapit.domain.dto.NotificationListDto;
 import com.example.swapit.domain.dto.NotificationSettingDto;
 import com.example.swapit.repository.NotificationRepository;
+import com.example.swapit.repository.UsersRepository;
 import com.example.swapit.service.CurrentUserService;
 
 import lombok.RequiredArgsConstructor;
@@ -21,6 +22,7 @@ public class NotificationServiceImpl implements NotificationService {
 
 	private final NotificationRepository notificationRepository;
 	private final CurrentUserService currentUserService;
+	private final UsersRepository usersRepository;
 
 	@Override
 	@Transactional(readOnly = true)
@@ -37,6 +39,13 @@ public class NotificationServiceImpl implements NotificationService {
 	public NotificationSettingDto getMyNotificationSetting() {
 		Users user = currentUserService.getCurrentUser();
 		return new NotificationSettingDto(user.isNotificationEnabled());
+	}
+
+	@Override
+	public void setMyNotificationSetting(NotificationSettingDto notificationSettingDto) {
+		Users user = currentUserService.getCurrentUser();
+		user.setNotificationEnabled(notificationSettingDto.notificationEnabled());
+		usersRepository.save(user);
 	}
 
 	@Override
