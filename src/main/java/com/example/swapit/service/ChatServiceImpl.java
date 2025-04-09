@@ -180,23 +180,10 @@ public class ChatServiceImpl implements ChatService {
 		chatRepository.save(chats);
 
 		// 알림 발행
-		Long receiverId = getReceiverId(chatRooms, userId);
+		Long receiverId = chatRooms.getCounterpartId(sender.getUsersId());
 		notificationEventPublisher.publishNotification(receiverId, NotificationType.CHAT, chatroomId);
 
 		return new ChatStompResponseDto(chats);
-	}
-
-	private Long getReceiverId(ChatRooms chatRooms, Long senderId) {
-		Long inviterId = chatRooms.getInviter().getUsersId();
-		Long sellerId = chatRooms.getGoods().getUser().getUsersId();
-
-		if (inviterId.equals(senderId)) {
-			return sellerId;
-		} else if (sellerId.equals(senderId)) {
-			return inviterId;
-		} else {
-			throw new CustomException(ErrorCode.USER_NOT_FOUND_IN_CHATROOM);
-		}
 	}
 
 	@Override
