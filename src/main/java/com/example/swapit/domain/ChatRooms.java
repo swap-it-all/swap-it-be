@@ -3,6 +3,9 @@ package com.example.swapit.domain;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
+import com.example.swapit.common.exception.CustomException;
+import com.example.swapit.common.exception.ErrorCode;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -71,5 +74,17 @@ public class ChatRooms {
 
 	public void updateTrade(Trades trade) {
 		this.trade = trade;
+	}
+
+	public Long getCounterpartId(Long userId) {
+		Long inviterId = inviter.getUsersId();
+		Long inviteeId = goods.getUser().getUsersId();
+
+		if (inviterId.equals(userId))
+			return inviteeId;
+		else if (inviteeId.equals(userId))
+			return inviterId;
+		else
+			throw new CustomException(ErrorCode.USER_NOT_FOUND_IN_CHATROOM);
 	}
 }

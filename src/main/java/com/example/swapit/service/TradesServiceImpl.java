@@ -88,8 +88,9 @@ public class TradesServiceImpl implements TradesService {
 		Trades savedTrades = tradesRepository.save(new Trades(requestedGoods, targetGoods));
 
 		// 알림 발생 (거래요청)
+		Long tradingPartnerId = targetGoods.getUser().getUsersId();
 		notificationEventPublisher.publishNotification(
-			targetGoods.getUser().getUsersId(), NotificationType.REQUESTED, requestedGoods.getId());
+			tradingPartnerId, NotificationType.REQUESTED, requestedGoods.getId());
 
 		// 채팅방이 존재하면 거래 연결 + 메시지 전송
 		Optional<ChatRooms> chatRoomsOpt = chatRoomsRepository.findByGoodsAndInviter(targetGoods,
@@ -150,11 +151,9 @@ public class TradesServiceImpl implements TradesService {
 		goodsRepository.save(trades.getRequestedGoods());
 
 		// 알림 발생 (거래 수락)
+		Long tradingPartnerId = trades.getTradingPartnerId(currentUserId);
 		notificationEventPublisher.publishNotification(
-			trades.getRequestedGoods().getUser().getUsersId(),
-			NotificationType.ACCEPTED,
-			trades.getTargetGoods().getId()
-		);
+			tradingPartnerId, NotificationType.ACCEPTED, trades.getTargetGoods().getId());
 	}
 
 	@Override
@@ -179,11 +178,9 @@ public class TradesServiceImpl implements TradesService {
 		);
 
 		// 알림 발생 (거래 거절)
+		Long tradingPartnerId = trades.getTradingPartnerId(currentUserId);
 		notificationEventPublisher.publishNotification(
-			trades.getRequestedGoods().getUser().getUsersId(),
-			NotificationType.REJECTED,
-			trades.getTargetGoods().getId()
-		);
+			tradingPartnerId, NotificationType.REJECTED, trades.getTargetGoods().getId());
 	}
 
 	@Override
@@ -212,10 +209,9 @@ public class TradesServiceImpl implements TradesService {
 		goodsRepository.save(trade.getRequestedGoods());
 
 		// 거래 상대방에게 알림 전송
-		Users recipient = (userId.equals(trade.getTargetGoods().getUser().getUsersId()))
-			? trade.getRequestedGoods().getUser() : trade.getTargetGoods().getUser();
+		Long tradingPartnerId = trade.getTradingPartnerId(userId);
 		notificationEventPublisher.publishNotification(
-			recipient.getUsersId(), NotificationType.COMPLETED, null
+			tradingPartnerId, NotificationType.COMPLETED, null
 		);
 	}
 

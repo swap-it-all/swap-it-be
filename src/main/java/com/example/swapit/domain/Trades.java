@@ -3,6 +3,9 @@ package com.example.swapit.domain;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
+import com.example.swapit.common.exception.CustomException;
+import com.example.swapit.common.exception.ErrorCode;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -56,5 +59,17 @@ public class Trades extends BaseEntity {
 		this.status = TradeStatus.PENDING;
 		this.requestedGoods = requestedGoods;
 		this.targetGoods = targetGoods;
+	}
+
+	public Long getTradingPartnerId(Long userId) {
+		Long targeterId = targetGoods.getUser().getUsersId();
+		Long requesterId = requestedGoods.getUser().getUsersId();
+
+		if (userId.equals(targeterId))
+			return requesterId;
+		else if (userId.equals(requesterId))
+			return targeterId;
+		else
+			throw new CustomException(ErrorCode.TRADE_UNAUTHORIZED);
 	}
 }
