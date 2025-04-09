@@ -57,6 +57,7 @@ public enum ErrorCode {
 
 	// chat error
 	CHATROOMS_NOT_FOUND(HttpStatus.NOT_FOUND, "채팅방을 찾을 수 없습니다."),
+	USER_NOT_FOUND_IN_CHATROOM(HttpStatus.UNAUTHORIZED, "채팅방에서 해당 유저를 찾을 수 없습니다."),
 
 	// notifications error
 	NOTIFICATION_NOT_FOUND(HttpStatus.NOT_FOUND, "알림 내역을 찾을 수 없습니다."),

@@ -167,11 +167,11 @@ public class ChatServiceImpl implements ChatService {
 	public ChatStompResponseDto saveChat(Long chatroomId, ChatStompRequestDto chatDto, Long userId) {
 		ChatRooms chatRooms = chatRoomsRepository.findById(chatroomId)
 			.orElseThrow(() -> new CustomException(ErrorCode.CHATROOMS_NOT_FOUND));
-		Users users = usersRepository.findById(userId)
+		Users sender = usersRepository.findById(userId)
 			.orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 		Chats chats = Chats.builder()
 			.chatRooms(chatRooms)
-			.sender(users)
+			.sender(sender)
 			.chatType(chatDto.getChatType())
 			.content(chatDto.getContent())
 			.goodsId(chatDto.getGoodsId())
@@ -180,12 +180,23 @@ public class ChatServiceImpl implements ChatService {
 		chatRepository.save(chats);
 
 		// 알림 발행
-		Long receiverId =
-			(chatRooms.getInviter().getUsersId().equals(userId)) ? userId : chatRooms.getGoods().getUser().getUsersId();
-		notificationEventPublisher.publishNotification(
-			receiverId, NotificationType.CHAT, chatroomId
-		);
+		Long receiverId = getReceiverId(chatRooms, userId);
+		notificationEventPublisher.publishNotification(receiverId, NotificationType.CHAT, chatroomId);
+
 		return new ChatStompResponseDto(chats);
+	}
+
+	private Long getReceiverId(ChatRooms chatRooms, Long senderId) {
+		Long inviterId = chatRooms.getInviter().getUsersId();
+		Long sellerId = chatRooms.getGoods().getUser().getUsersId();
+
+		if (inviterId.equals(senderId)) {
+			return sellerId;
+		} else if (sellerId.equals(senderId)) {
+			return inviterId;
+		} else {
+			throw new CustomException(ErrorCode.USER_NOT_FOUND_IN_CHATROOM);
+		}
 	}
 
 	@Override
