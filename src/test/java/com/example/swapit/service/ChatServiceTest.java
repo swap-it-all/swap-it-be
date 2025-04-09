@@ -273,10 +273,13 @@ class ChatServiceTest {
 		ChatStompRequestDto chatDto = new ChatStompRequestDto(ChatType.TALK, "Hello, this is a test chat", 123L);
 
 		Users sender = Users.builder().usersId(100L).build();
+		Users receiver = Users.builder().usersId(200L).build();
+		Goods good = Goods.builder().user(receiver).build();
 
 		ChatRooms chatRoom = ChatRooms.builder()
 			.id(chatroomId)
 			.inviter(sender)
+			.goods(good)
 			.build();
 
 		when(chatRoomsRepository.findById(chatroomId)).thenReturn(Optional.of(chatRoom));
