@@ -208,6 +208,12 @@ public class TradesServiceImpl implements TradesService {
 		trade.getRequestedGoods().setGoodsTradeStatus(GoodsTradeStatus.SOLDOUT);
 		goodsRepository.save(trade.getRequestedGoods());
 
+		// 채팅방이 있으면 메시지 전송
+		Optional<ChatRooms> chatRoomsOpt = chatRoomsRepository.findByTrade(trade);
+		chatRoomsOpt.ifPresent(
+			rooms -> updateChatroomAndSendChat(rooms, null, ChatType.COMPLETE, trade.getRequestedGoods())
+		);
+
 		// 거래 상대방에게 알림 전송
 		Long tradingPartnerId = trade.getTradingPartnerId(userId);
 		notificationEventPublisher.publishNotification(
