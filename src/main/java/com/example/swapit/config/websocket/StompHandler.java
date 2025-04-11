@@ -77,6 +77,11 @@ public class StompHandler implements ChannelInterceptor {
 		Set<String> subscribedList = getOrInitSubscribedSet(accessor);
 		if (!subscribedList.contains(dest)) {
 			subscribedList.add(dest);
+			// /topic/chat/read/{roomId}도 같이 추가.
+			if (dest.startsWith("/topic/chat/")) {
+				String roomId = dest.substring("/topic/chat/".length());
+				subscribedList.add("/topic/chat/read/" + roomId);
+			}
 		}
 
 		log.debug("[SUBSCRIBE] 유저id={}, 세션={}, dest={}", accessor.getUser().getName(),
@@ -89,6 +94,11 @@ public class StompHandler implements ChannelInterceptor {
 
 		Set<String> subscribedList = getOrInitSubscribedSet(accessor);
 		subscribedList.remove(dest);
+		// /topic/chat/read/{roomId}도 같이 제거
+		if (dest.startsWith("/topic/chat/")) {
+			String roomId = dest.substring("/topic/chat/".length());
+			subscribedList.remove("/topic/chat/read/" + roomId);
+		}
 
 		log.debug("[UNSUBSCRIBE] 유저id={}, 세션={}, dest={}", accessor.getUser().getName(),
 			accessor.getSessionId(), dest);
