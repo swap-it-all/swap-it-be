@@ -25,7 +25,7 @@ public class ChatSendService {
 		ChatStompRequestDto requestDto = new ChatStompRequestDto(chatType, chatType.getMessage(), goods.getId());
 		ChatStompResponseDto responseDto = chatService.saveChat(chatRoomId, requestDto, user.getUsersId());
 
-		log.info("[SWAP CHAT SEND] chatRoomId={}, userId={}, chatType={}, goodsId={}, content=\"{}\"",
+		log.debug("[SWAP CHAT SEND] chatRoomId={}, userId={}, chatType={}, goodsId={}, content=\"{}\"",
 			chatRoomId, user.getUsersId(), chatType.name(), goods.getId(), responseDto.getContent());
 
 		messagingTemplate.convertAndSend("/topic/chat/" + chatRoomId, responseDto);
