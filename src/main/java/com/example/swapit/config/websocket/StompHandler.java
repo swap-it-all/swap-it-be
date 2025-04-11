@@ -98,10 +98,22 @@ public class StompHandler implements ChannelInterceptor {
 		setPrincipalFromSession(accessor);
 		String dest = accessor.getDestination();
 
+		// /app -> /topic 변환
+		String subscribeDest = dest.replaceFirst("^/app", "/topic");
+
 		Set<String> subscribedList = getOrInitSubscribedSet(accessor);
-		if (!subscribedList.contains(dest)) {
-			log.warn("[SEND 차단] 유저id={}, 세션={}, dest={}, payload={} → 구독되지 않은 대상", accessor.getUser().getName(),
-				accessor.getSessionId(), dest, message.getPayload());
+		if (!subscribedList.contains(subscribeDest)) {
+			// payload 변환
+			Object payload = message.getPayload();
+			String payloadStr = null;
+			if (payload instanceof byte[] byteArray) {
+				payloadStr = new String(byteArray, java.nio.charset.StandardCharsets.UTF_8);
+			} else {
+				payloadStr = payload.toString();
+			}
+
+			log.warn("[SEND 차단] 유저id={}, 세션={}, dest={}, payload={} → 구독되지 않은 대상",
+				accessor.getUser().getName(), accessor.getSessionId(), dest, payloadStr);
 			return null;
 		}
 
