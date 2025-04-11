@@ -41,17 +41,17 @@ public class NotificationEventListener {
 
 		// 알림 설정이 꺼져 있으면 전송 생략
 		if (!user.isNotificationEnabled()) {
-			log.info("[알림 꺼짐] 사용자 ID {}: 알림 전송하지 않음 {}", userId, noti.getId());
+			log.debug("[알림 꺼짐] 사용자 ID {}: 알림 전송하지 않음 {}", userId, noti.getId());
 			return;
 		}
 
 		// 웹소켓 알림 전송 (앱이 온라인 상태) : "/user/queue/notifications" 구독된 상태
 		try {
-			messagingTemplate.convertAndSendToUser(
-				userId.toString(), "/queue/notifications", NotificationDto.of(noti)
-			);
+			NotificationDto notiDto = NotificationDto.of(noti);
+			messagingTemplate.convertAndSendToUser(userId.toString(), "/queue/notifications", notiDto);
+			log.debug("[WS알림 전송] 유저id={}, payload={} ", userId, notiDto);
 		} catch (Exception e) {
-			log.info("[WS알림LOG] 알림 웹소켓 전송 실패 -> FCM으로 전송. {}", e.getMessage());
+			log.warn("[WS알림 LOG] 알림 웹소켓 전송 실패 -> FCM으로 전송. {}", e.getMessage());
 			sendFcm(user, noti);
 		}
 	}
