@@ -177,13 +177,25 @@ public class ChatServiceImpl implements ChatService {
 			.goodsId(chatDto.getGoodsId())
 			.build();
 
+		RequesterGoodsDto requesterGoods = null;
+		if (ChatType.REQUEST.equals(chats.getChatType()) || ChatType.ACCEPT.equals(chats.getChatType())) {
+			Goods goods = goodsRepository.findById(chats.getGoodsId())
+				.orElseThrow(() -> new CustomException(ErrorCode.GOOD_NOT_FOUND));
+
+			requesterGoods = new RequesterGoodsDto(
+				goods.getId(),
+				goods.getTitle(),
+				goods.getUser().getNickname()
+			);
+		}
+
 		chatRepository.save(chats);
 
 		// 알림 발행
 		Long receiverId = chatRooms.getCounterpartId(sender.getUsersId());
 		notificationEventPublisher.publishNotification(receiverId, NotificationType.CHAT, chatroomId);
 
-		return new ChatStompResponseDto(chats);
+		return new ChatStompResponseDto(chats, requesterGoods);
 	}
 
 	@Override
