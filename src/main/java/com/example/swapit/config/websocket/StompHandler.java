@@ -48,11 +48,23 @@ public class StompHandler implements ChannelInterceptor {
 				Users user = usersRepository.findByEmail(jwtProvider.getEmailFromToken(onlyToken))
 					.orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 				setSessionFromPrincipal(accessor, user.getUsersId());
+				log.debug("[{}}] userId={}, sessionId={}, token={}", accessor.getCommand(), user.getUsersId(),
+					accessor.getSessionId(), token);
 			}
-			case SUBSCRIBE -> setPrincipalFromSession(accessor);
+			case SUBSCRIBE -> {
+				setPrincipalFromSession(accessor);
+				log.debug("[{}] userId={}, sessionId={}, destination={}", accessor.getCommand(),
+					accessor.getUser().getName(), accessor.getSessionId(), accessor.getDestination());
+			}
+			case UNSUBSCRIBE -> {
+				setPrincipalFromSession(accessor);
+				log.debug("[{}] userId={}, sessionId={}", accessor.getCommand(),
+					accessor.getUser().getName(), accessor.getSessionId());
+			}
 			case SEND -> {
 				setPrincipalFromSession(accessor);
-				log.debug("[{}] Principal 설정 후 User: {}", accessor.getCommand(), accessor.getUser());
+				log.debug("[{}] userId={}, sessionId={}, destination={}", accessor.getCommand(),
+					accessor.getUser().getName(), accessor.getSessionId(), accessor.getDestination());
 
 				MessageHeaders headers = accessor.getMessageHeaders();
 				Map<String, Object> newHeaders = new HashMap<>(headers);
@@ -61,7 +73,6 @@ public class StompHandler implements ChannelInterceptor {
 				return MessageBuilder.createMessage(message.getPayload(), new MessageHeaders(newHeaders));
 			}
 		}
-
 		return message;
 	}
 
@@ -100,7 +111,5 @@ public class StompHandler implements ChannelInterceptor {
 
 		accessor.setUser(principal);
 		accessor.getSessionAttributes().put("simpUser", principal);
-		log.info("[{}] Principal 유지 : 유저 id = {}, 세션 id = {}", accessor.getCommand(), principal.getName(),
-			accessor.getSessionId());
 	}
 }
