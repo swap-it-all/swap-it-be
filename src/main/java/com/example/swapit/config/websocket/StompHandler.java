@@ -67,7 +67,7 @@ public class StompHandler implements ChannelInterceptor {
 		// 세션 속성에 빈 구독 set 추가 : 순서 상관없을 것 같아서 일단 set으로 설정
 		accessor.getSessionAttributes().put(SUBSCRIBED_SET_KEY, new HashSet<String>());
 
-		log.debug("[CONNECT] userId={}, sessionId={}, token={}", user.getUsersId(), accessor.getSessionId(), token);
+		log.debug("[CONNECT] 유저id={}, 세션={}, token={}", user.getUsersId(), accessor.getSessionId(), token);
 	}
 
 	private void handleSubscribe(StompHeaderAccessor accessor) {
@@ -79,7 +79,7 @@ public class StompHandler implements ChannelInterceptor {
 			subscribedList.add(dest);
 		}
 
-		log.debug("[SUBSCRIBE] userId={}, sessionId={}, destination={}", accessor.getUser().getName(),
+		log.debug("[SUBSCRIBE] 유저id={}, 세션={}, dest={}", accessor.getUser().getName(),
 			accessor.getSessionId(), dest);
 	}
 
@@ -90,7 +90,7 @@ public class StompHandler implements ChannelInterceptor {
 		Set<String> subscribedList = getOrInitSubscribedSet(accessor);
 		subscribedList.remove(dest);
 
-		log.debug("[UNSUBSCRIBE] userId={}, sessionId={}, destination={}", accessor.getUser().getName(),
+		log.debug("[UNSUBSCRIBE] 유저id={}, 세션={}, dest={}", accessor.getUser().getName(),
 			accessor.getSessionId(), dest);
 	}
 
@@ -100,11 +100,12 @@ public class StompHandler implements ChannelInterceptor {
 
 		Set<String> subscribedList = getOrInitSubscribedSet(accessor);
 		if (!subscribedList.contains(dest)) {
-			log.warn("[SEND 차단] userId={}, 세션={}, destination={} → 구독되지 않은 대상", accessor.getUser().getName(),
-				accessor.getSessionId(), dest);
+			log.warn("[SEND 차단] 유저id={}, 세션={}, dest={}, payload={} → 구독되지 않은 대상", accessor.getUser().getName(),
+				accessor.getSessionId(), dest, message.getPayload());
+			return null;
 		}
 
-		log.debug("[SEND] userId={}, sessionId={}, destination={}", accessor.getUser().getName(),
+		log.debug("[SEND] 유저id={}, 세션={}, dest={}", accessor.getUser().getName(),
 			accessor.getSessionId(), dest);
 
 		Map<String, Object> newHeaders = new HashMap<>(accessor.getMessageHeaders());
@@ -134,7 +135,7 @@ public class StompHandler implements ChannelInterceptor {
 
 		accessor.setUser(principal); // STOMP 메시지에 Principal 설정
 		accessor.getSessionAttributes().put("simpUser", principal);
-		log.info("[CONNECT] Principal 설정 완료: userId = {}", userId);
+		log.info("[CONNECT] Principal 설정 완료: 유저id = {}", userId);
 	}
 
 	private void setPrincipalFromSession(StompHeaderAccessor accessor) {
