@@ -2,13 +2,16 @@ package com.example.swapit.config.websocket;
 
 import java.security.Principal;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.MessageHeaders;
+import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.messaging.support.MessageBuilder;
@@ -29,6 +32,7 @@ public class StompHandler implements ChannelInterceptor {
 
 	private final JwtProvider jwtProvider;
 	private final UsersRepository usersRepository;
+	private static final String SUBSCRIBED_SET_KEY = "subscribedSet";
 
 	@Override
 	public Message<?> preSend(Message<?> message, MessageChannel channel) {
@@ -39,41 +43,78 @@ public class StompHandler implements ChannelInterceptor {
 			return message; // 그냥 메시지를 반환하여 계속 정상 처리되도록 함
 		}
 
+		StompCommand command = accessor.getCommand();
 		String token = accessor.getFirstNativeHeader(HttpHeaders.AUTHORIZATION);
 
-		switch (accessor.getCommand()) {
-			case CONNECT -> {
-				String onlyToken = token.replace("Bearer ", "");
-				validateToken(onlyToken);
-				Users user = usersRepository.findByEmail(jwtProvider.getEmailFromToken(onlyToken))
-					.orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
-				setSessionFromPrincipal(accessor, user.getUsersId());
-				log.debug("[{}}] userId={}, sessionId={}, token={}", accessor.getCommand(), user.getUsersId(),
-					accessor.getSessionId(), token);
-			}
-			case SUBSCRIBE -> {
-				setPrincipalFromSession(accessor);
-				log.debug("[{}] userId={}, sessionId={}, destination={}", accessor.getCommand(),
-					accessor.getUser().getName(), accessor.getSessionId(), accessor.getDestination());
-			}
-			case UNSUBSCRIBE -> {
-				setPrincipalFromSession(accessor);
-				log.debug("[{}] userId={}, sessionId={}", accessor.getCommand(),
-					accessor.getUser().getName(), accessor.getSessionId());
-			}
+		switch (command) {
+			case CONNECT -> handleConnect(accessor, token);
+			case SUBSCRIBE -> handleSubscribe(accessor);
+			case UNSUBSCRIBE -> handleUnsubscribe(accessor);
 			case SEND -> {
-				setPrincipalFromSession(accessor);
-				log.debug("[{}] userId={}, sessionId={}, destination={}", accessor.getCommand(),
-					accessor.getUser().getName(), accessor.getSessionId(), accessor.getDestination());
-
-				MessageHeaders headers = accessor.getMessageHeaders();
-				Map<String, Object> newHeaders = new HashMap<>(headers);
-				newHeaders.put("simpUser", accessor.getUser());
-
-				return MessageBuilder.createMessage(message.getPayload(), new MessageHeaders(newHeaders));
+				return handleSend(message, accessor);
 			}
 		}
 		return message;
+	}
+
+	private void handleConnect(StompHeaderAccessor accessor, String token) {
+		String onlyToken = token.replace("Bearer ", "");
+		validateToken(onlyToken);
+		Users user = usersRepository.findByEmail(jwtProvider.getEmailFromToken(onlyToken))
+			.orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+		setSessionFromPrincipal(accessor, user.getUsersId());
+
+		// 세션 속성에 빈 구독 set 추가 : 순서 상관없을 것 같아서 일단 set으로 설정
+		accessor.getSessionAttributes().put(SUBSCRIBED_SET_KEY, new HashSet<String>());
+
+		log.debug("[CONNECT] userId={}, sessionId={}, token={}", user.getUsersId(), accessor.getSessionId(), token);
+	}
+
+	private void handleSubscribe(StompHeaderAccessor accessor) {
+		setPrincipalFromSession(accessor);
+		String dest = accessor.getDestination();
+
+		Set<String> subscribedList = getOrInitSubscribedSet(accessor);
+		if (!subscribedList.contains(dest)) {
+			subscribedList.add(dest);
+		}
+
+		log.debug("[SUBSCRIBE] userId={}, sessionId={}, destination={}", accessor.getUser().getName(),
+			accessor.getSessionId(), dest);
+	}
+
+	private void handleUnsubscribe(StompHeaderAccessor accessor) {
+		setPrincipalFromSession(accessor);
+		String dest = accessor.getDestination();
+
+		Set<String> subscribedList = getOrInitSubscribedSet(accessor);
+		subscribedList.remove(dest);
+
+		log.debug("[UNSUBSCRIBE] userId={}, sessionId={}, destination={}", accessor.getUser().getName(),
+			accessor.getSessionId(), dest);
+	}
+
+	private Message<?> handleSend(Message<?> message, StompHeaderAccessor accessor) {
+		setPrincipalFromSession(accessor);
+		String dest = accessor.getDestination();
+
+		Set<String> subscribedList = getOrInitSubscribedSet(accessor);
+		if (!subscribedList.contains(dest)) {
+			log.warn("[SEND 차단] userId={}, 세션={}, destination={} → 구독되지 않은 대상", accessor.getUser().getName(),
+				accessor.getSessionId(), dest);
+		}
+
+		log.debug("[SEND] userId={}, sessionId={}, destination={}", accessor.getUser().getName(),
+			accessor.getSessionId(), dest);
+
+		Map<String, Object> newHeaders = new HashMap<>(accessor.getMessageHeaders());
+		newHeaders.put("simpUser", accessor.getUser());
+		return MessageBuilder.createMessage(message.getPayload(), new MessageHeaders(newHeaders));
+	}
+
+	private Set<String> getOrInitSubscribedSet(StompHeaderAccessor accessor) {
+		Map<String, Object> session = accessor.getSessionAttributes();
+		return (Set<String>)session.computeIfAbsent(SUBSCRIBED_SET_KEY, k -> new HashSet<String>());
 	}
 
 	private void validateToken(String token) {
