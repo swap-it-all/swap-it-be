@@ -2,6 +2,10 @@ package com.example.swapit.service.notification;
 
 import org.springframework.context.event.EventListener;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.messaging.simp.user.SimpSession;
+import org.springframework.messaging.simp.user.SimpSubscription;
+import org.springframework.messaging.simp.user.SimpUser;
+import org.springframework.messaging.simp.user.SimpUserRegistry;
 import org.springframework.stereotype.Component;
 
 import com.example.swapit.common.exception.CustomException;
@@ -23,6 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 public class NotificationEventListener {
 
 	private final SimpMessagingTemplate messagingTemplate;
+	private final SimpUserRegistry simpUserRegistry;
 	private final NotificationRepository notificationRepository;
 	private final UsersRepository usersRepository;
 	private final FcmTokenRepository fcmTokenRepository;
@@ -46,12 +51,35 @@ public class NotificationEventListener {
 		}
 
 		// 웹소켓 알림 전송 (앱이 온라인 상태) : "/user/queue/notifications" 구독된 상태
-		try {
-			NotificationDto notiDto = NotificationDto.of(noti);
-			messagingTemplate.convertAndSendToUser(userId.toString(), "/queue/notifications", notiDto);
+		NotificationDto notiDto = NotificationDto.of(noti);
+		String userKey = userId.toString();
+		SimpUser simpUser = simpUserRegistry.getUser(userKey);
+		log.debug("[WS 유저 조회] userId={}, simpUser 존재 여부={}, simpUser.getName()={}", userKey, simpUser != null,
+			simpUser != null ? simpUser.getName() : "없음");
+
+		boolean isSubscribed = false;
+
+		if (simpUser != null) {
+			sessionLoop:
+			for (SimpSession session : simpUser.getSessions()) {
+				log.debug("[WS 세션] sessionId={}, subscription 수={}", session.getId(),
+					session.getSubscriptions().size());
+
+				for (SimpSubscription sub : session.getSubscriptions()) {
+					log.debug("[WS 구독 경로] {}", sub.getDestination());
+					if ("/user/queue/notifications".equals(sub.getDestination())) {
+						isSubscribed = true;
+						break sessionLoop;
+					}
+				}
+			}
+		}
+
+		if (isSubscribed) {
+			messagingTemplate.convertAndSendToUser(userKey, "/queue/notifications", notiDto);
 			log.debug("[WS알림 전송] 유저id={}, payload={} ", userId, notiDto);
-		} catch (Exception e) {
-			log.warn("[WS알림 LOG] 알림 웹소켓 전송 실패 -> FCM으로 전송. {}", e.getMessage());
+		} else {
+			log.debug("[WS알림 스킵] 유저id={}는 현재 오프라인 상태 → FCM 전송", userId);
 			sendFcm(user, noti);
 		}
 	}
