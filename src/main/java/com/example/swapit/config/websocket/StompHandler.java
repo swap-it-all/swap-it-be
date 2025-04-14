@@ -157,7 +157,7 @@ public class StompHandler implements ChannelInterceptor {
 
 		accessor.setUser(principal); // STOMP 메시지에 Principal 설정
 		accessor.getSessionAttributes().put("simpUser", principal);
-		log.info("[CONNECT] Principal 설정 완료: 유저id = {}", userId);
+		log.info("[CONNECT] Principal 설정 완료: 유저id={}, principal.getName()={}", userId, principal.getName());
 	}
 
 	private void setPrincipalFromSession(StompHeaderAccessor accessor) {
