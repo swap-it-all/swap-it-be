@@ -2,9 +2,9 @@ package com.example.swapit.config.websocket;
 
 import java.security.Principal;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
@@ -64,8 +64,8 @@ public class StompHandler implements ChannelInterceptor {
 			.orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 		setSessionFromPrincipal(accessor, user.getUsersId());
 
-		// 세션 속성에 빈 구독 set 추가 : 순서 상관없을 것 같아서 일단 set으로 설정
-		accessor.getSessionAttributes().put(SUBSCRIBED_SET_KEY, new HashSet<String>());
+		// 세션 속성에 빈 구독 set 추가 (동시성 안전) : 순서 상관없을 것 같아서 일단 set으로 설정
+		accessor.getSessionAttributes().put(SUBSCRIBED_SET_KEY, ConcurrentHashMap.newKeySet());
 
 		log.debug("[CONNECT] 유저id={}, 세션={}, token={}", user.getUsersId(), accessor.getSessionId(), token);
 	}
@@ -77,6 +77,11 @@ public class StompHandler implements ChannelInterceptor {
 		Set<String> subscribedList = getOrInitSubscribedSet(accessor);
 		if (!subscribedList.contains(dest)) {
 			subscribedList.add(dest);
+			// /topic/chat/read/{roomId}도 같이 추가.
+			if (dest.startsWith("/topic/chat/")) {
+				String roomId = dest.substring("/topic/chat/".length());
+				subscribedList.add("/topic/chat/read/" + roomId);
+			}
 		}
 
 		log.debug("[SUBSCRIBE] 유저id={}, 세션={}, dest={}", accessor.getUser().getName(),
@@ -89,6 +94,11 @@ public class StompHandler implements ChannelInterceptor {
 
 		Set<String> subscribedList = getOrInitSubscribedSet(accessor);
 		subscribedList.remove(dest);
+		// /topic/chat/read/{roomId}도 같이 제거
+		if (dest.startsWith("/topic/chat/")) {
+			String roomId = dest.substring("/topic/chat/".length());
+			subscribedList.remove("/topic/chat/read/" + roomId);
+		}
 
 		log.debug("[UNSUBSCRIBE] 유저id={}, 세션={}, dest={}", accessor.getUser().getName(),
 			accessor.getSessionId(), dest);
@@ -127,7 +137,7 @@ public class StompHandler implements ChannelInterceptor {
 
 	private Set<String> getOrInitSubscribedSet(StompHeaderAccessor accessor) {
 		Map<String, Object> session = accessor.getSessionAttributes();
-		return (Set<String>)session.computeIfAbsent(SUBSCRIBED_SET_KEY, k -> new HashSet<String>());
+		return (Set<String>)session.computeIfAbsent(SUBSCRIBED_SET_KEY, k -> ConcurrentHashMap.newKeySet());
 	}
 
 	private void validateToken(String token) {
@@ -147,7 +157,7 @@ public class StompHandler implements ChannelInterceptor {
 
 		accessor.setUser(principal); // STOMP 메시지에 Principal 설정
 		accessor.getSessionAttributes().put("simpUser", principal);
-		log.info("[CONNECT] Principal 설정 완료: 유저id = {}", userId);
+		log.info("[CONNECT] Principal 설정 완료: 유저id={}, principal.getName()={}", userId, principal.getName());
 	}
 
 	private void setPrincipalFromSession(StompHeaderAccessor accessor) {
