@@ -13,6 +13,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.messaging.simp.user.SimpSession;
+import org.springframework.messaging.simp.user.SimpUser;
+import org.springframework.messaging.simp.user.SimpUserRegistry;
 
 import com.example.swapit.common.exception.CustomException;
 import com.example.swapit.common.exception.ErrorCode;
@@ -20,7 +23,6 @@ import com.example.swapit.domain.NotificationEvent;
 import com.example.swapit.domain.NotificationType;
 import com.example.swapit.domain.Notifications;
 import com.example.swapit.domain.Users;
-import com.example.swapit.domain.dto.NotificationDto;
 import com.example.swapit.repository.FcmTokenRepository;
 import com.example.swapit.repository.NotificationRepository;
 import com.example.swapit.repository.UsersRepository;
@@ -42,6 +44,15 @@ class NotificationEventListenerTest {
 
 	@Mock
 	private FcmCustomNotificationServiceImpl fcmNotificationService;
+
+	@Mock
+	private SimpUserRegistry simpUserRegistry;
+
+	@Mock
+	private SimpUser simpUser;
+
+	@Mock
+	private SimpSession simpSession;
 
 	@InjectMocks
 	private NotificationEventListener notificationEventListener;
@@ -82,14 +93,19 @@ class NotificationEventListenerTest {
 	@DisplayName("FCM 토큰이 없을 때, 에러.")
 	void testHandleNotification_FCMTokenNotFound() {
 		// Given
-		when(usersRepository.findById(1L)).thenReturn(Optional.of(testUser));
-		when(notificationRepository.save(any(Notifications.class))).thenReturn(testNotification);
+		Long userId = 1L;
+
+		Users testUser = Users.builder()
+			.usersId(userId)
+			.notificationEnabled(true)
+			.build();
+
+		when(usersRepository.findById(userId)).thenReturn(Optional.of(testUser));
+		when(notificationRepository.save(any(Notifications.class))).thenReturn(mock(Notifications.class));
 		when(fcmTokenRepository.findByUser(testUser)).thenReturn(Optional.empty());
 
-		// 웹소켓 실패 시 FCM 시도 (그러나 토큰 없음)
-		doThrow(new RuntimeException("WebSocket Error"))
-			.when(messagingTemplate)
-			.convertAndSendToUser(eq("1"), eq("/queue/notifications"), any(NotificationDto.class));
+		// Simulate user not connected → simpUserRegistry returns null
+		when(simpUserRegistry.getUser(String.valueOf(userId))).thenReturn(null);
 
 		// When
 		assertDoesNotThrow(() -> {
@@ -97,8 +113,9 @@ class NotificationEventListenerTest {
 		});
 
 		// Then
-		verify(messagingTemplate, times(1))
-			.convertAndSendToUser(eq("1"), eq("/queue/notifications"), any(NotificationDto.class));
-		verify(fcmNotificationService, never()).sendFcmNotification(anyString(), any(Notifications.class));
+		verify(messagingTemplate, never())
+			.convertAndSendToUser(anyString(), anyString(), any());
+		verify(fcmNotificationService, never())
+			.sendFcmNotification(anyString(), any(Notifications.class));
 	}
 }

@@ -2,9 +2,9 @@ package com.example.swapit.config.websocket;
 
 import java.security.Principal;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
@@ -64,10 +64,10 @@ public class StompHandler implements ChannelInterceptor {
 			.orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 		setSessionFromPrincipal(accessor, user.getUsersId());
 
-		// 세션 속성에 빈 구독 set 추가 : 순서 상관없을 것 같아서 일단 set으로 설정
-		accessor.getSessionAttributes().put(SUBSCRIBED_SET_KEY, new HashSet<String>());
+		// 세션 속성에 빈 구독 set 추가 (동시성 안전) : 순서 상관없을 것 같아서 일단 set으로 설정
+		accessor.getSessionAttributes().put(SUBSCRIBED_SET_KEY, ConcurrentHashMap.newKeySet());
 
-		log.debug("[CONNECT] userId={}, sessionId={}, token={}", user.getUsersId(), accessor.getSessionId(), token);
+		log.debug("[CONNECT] 유저id={}, 세션={}, token={}", user.getUsersId(), accessor.getSessionId(), token);
 	}
 
 	private void handleSubscribe(StompHeaderAccessor accessor) {
@@ -79,7 +79,7 @@ public class StompHandler implements ChannelInterceptor {
 			subscribedList.add(dest);
 		}
 
-		log.debug("[SUBSCRIBE] userId={}, sessionId={}, destination={}", accessor.getUser().getName(),
+		log.debug("[SUBSCRIBE] 유저id={}, 세션={}, dest={}", accessor.getUser().getName(),
 			accessor.getSessionId(), dest);
 	}
 
@@ -90,7 +90,7 @@ public class StompHandler implements ChannelInterceptor {
 		Set<String> subscribedList = getOrInitSubscribedSet(accessor);
 		subscribedList.remove(dest);
 
-		log.debug("[UNSUBSCRIBE] userId={}, sessionId={}, destination={}", accessor.getUser().getName(),
+		log.debug("[UNSUBSCRIBE] 유저id={}, 세션={}, dest={}", accessor.getUser().getName(),
 			accessor.getSessionId(), dest);
 	}
 
@@ -98,13 +98,26 @@ public class StompHandler implements ChannelInterceptor {
 		setPrincipalFromSession(accessor);
 		String dest = accessor.getDestination();
 
+		// /app -> /topic 변환
+		String subscribeDest = dest.replaceFirst("^/app", "/topic");
+
 		Set<String> subscribedList = getOrInitSubscribedSet(accessor);
-		if (!subscribedList.contains(dest)) {
-			log.warn("[SEND 차단] userId={}, 세션={}, destination={} → 구독되지 않은 대상", accessor.getUser().getName(),
-				accessor.getSessionId(), dest);
+		if (!subscribeDest.startsWith("/topic/chat/read/") && !subscribedList.contains(subscribeDest)) {
+			// payload 변환
+			Object payload = message.getPayload();
+			String payloadStr = null;
+			if (payload instanceof byte[] byteArray) {
+				payloadStr = new String(byteArray, java.nio.charset.StandardCharsets.UTF_8);
+			} else {
+				payloadStr = payload.toString();
+			}
+
+			log.warn("[SEND 차단] 유저id={}, 세션={}, dest={}, payload={} → 구독되지 않은 대상",
+				accessor.getUser().getName(), accessor.getSessionId(), dest, payloadStr);
+			return null;
 		}
 
-		log.debug("[SEND] userId={}, sessionId={}, destination={}", accessor.getUser().getName(),
+		log.debug("[SEND] 유저id={}, 세션={}, dest={}", accessor.getUser().getName(),
 			accessor.getSessionId(), dest);
 
 		Map<String, Object> newHeaders = new HashMap<>(accessor.getMessageHeaders());
@@ -114,7 +127,7 @@ public class StompHandler implements ChannelInterceptor {
 
 	private Set<String> getOrInitSubscribedSet(StompHeaderAccessor accessor) {
 		Map<String, Object> session = accessor.getSessionAttributes();
-		return (Set<String>)session.computeIfAbsent(SUBSCRIBED_SET_KEY, k -> new HashSet<String>());
+		return (Set<String>)session.computeIfAbsent(SUBSCRIBED_SET_KEY, k -> ConcurrentHashMap.newKeySet());
 	}
 
 	private void validateToken(String token) {
@@ -134,7 +147,7 @@ public class StompHandler implements ChannelInterceptor {
 
 		accessor.setUser(principal); // STOMP 메시지에 Principal 설정
 		accessor.getSessionAttributes().put("simpUser", principal);
-		log.info("[CONNECT] Principal 설정 완료: userId = {}", userId);
+		log.info("[CONNECT] Principal 설정 완료: 유저id={}, principal.getName()={}", userId, principal.getName());
 	}
 
 	private void setPrincipalFromSession(StompHeaderAccessor accessor) {
