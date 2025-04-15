@@ -40,6 +40,11 @@ public class NotificationEventListener {
 		Users user = usersRepository.findById(userId)
 			.orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
+		// 현재 등록된 모든 SimpUser 확인 로그
+		simpUserRegistry.getUsers().forEach(u ->
+			log.info(" 현재 SimpUser 등록됨: name={}, 세션 수={}", u.getName(), u.getSessions().size())
+		);
+
 		// 알림 저장
 		Notifications noti = event.toEntity(user);
 		notificationRepository.save(noti);
