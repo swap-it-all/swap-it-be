@@ -11,6 +11,11 @@ pipeline {
                 sh 'GRADLE_OPTS="-Duser.timezone=Asia/Seoul" ./gradlew clean bootJar'
             }
         }
+        stage('Upload to S3') {
+            steps {
+                sh 'aws s3 cp $JENKINS_ROUTE $S3_ROUTE'
+            }
+        }
         stage('Deploy') {
             when {
                 branch 'develop'
