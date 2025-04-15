@@ -18,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
 	private final StompHandler stompHandler; // jwt 인증
+	private final JwtHandshakeHandler jwtHandshakeHandler;
 
 	@Bean
 	public TaskScheduler taskScheduler() {
@@ -40,7 +41,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 	@Override
 	public void registerStompEndpoints(StompEndpointRegistry registry) {
 		registry.addEndpoint("/ws")
-			// .addInterceptors(jwtHandshakeInterceptor) // todo: 앱 연결 후, handshake interceptor로 변환
+			.setHandshakeHandler(jwtHandshakeHandler) // todo: 앱 연결 후, handshake interceptor로 변환
 			.setAllowedOrigins("*"); // cors
 	}
 
