@@ -54,7 +54,7 @@ public class NotificationEventListener {
 		NotificationDto notiDto = NotificationDto.of(noti);
 		String userKey = userId.toString();
 		SimpUser simpUser = simpUserRegistry.getUser(userKey);
-		log.debug("[WS 유저 조회] userId={}, simpUser 존재 여부={}, simpUser.getName()={}", userKey, simpUser != null,
+		log.debug("[WS 유저 조회] userId={},  simpUser.getName()={}", userKey,
 			simpUser != null ? simpUser.getName() : "없음");
 
 		boolean isSubscribed = false;
