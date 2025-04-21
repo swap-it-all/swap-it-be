@@ -32,3 +32,6 @@ firebase:
 logging:
   level:
     com.example.swapit: debug
+    org.springframework.messaging.simp: debug
+    org.springframework.web.socket.messaging: debug
+    org.springframework.messaging.support: debug
