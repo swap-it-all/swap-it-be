@@ -48,7 +48,6 @@ public class FcmCustomNotificationServiceImpl implements FcmNotificationService 
 					.setTitle(noti.getTitle())
 					.setBody(noti.getBody())
 					.build())
-			.putAllData(data)
 			.setAndroidConfig(
 				AndroidConfig.builder()
 					.setPriority(AndroidConfig.Priority.HIGH)
