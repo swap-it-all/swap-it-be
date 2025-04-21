@@ -72,6 +72,11 @@ public class AuthServiceImpl implements AuthService {
 	@Override
 	public TokenDTO refresh(String token) {
 		try {
+			log.debug("[리프레시 토큰 재발급 시작] token={}", token);
+
+			if (token.isBlank()) {
+				throw new CustomException(ErrorCode.TOKEN_IS_BLANK);
+			}
 			String refreshToken = token.replace("Bearer ", "");
 			String email = jwtProvider.getEmailFromRefreshToken(refreshToken);
 
@@ -91,7 +96,7 @@ public class AuthServiceImpl implements AuthService {
 		} catch (CustomException ce) {
 			throw ce;
 		} catch (Exception e) {
-			log.error("[리프레시 토큰 발급 에러]", e);
+			log.error("[리프레시 토큰 발급 에러] ", e);
 			throw new CustomException(ErrorCode.NEW_REFRESH_TOKEN_FAIL);
 		}
 	}
