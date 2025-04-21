@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import com.example.swapit.domain.Notifications;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.messaging.AndroidConfig;
+import com.google.firebase.messaging.AndroidNotification;
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.Message;
 import com.google.firebase.messaging.Notification;
@@ -51,6 +52,11 @@ public class FcmCustomNotificationServiceImpl implements FcmNotificationService 
 			.setAndroidConfig(
 				AndroidConfig.builder()
 					.setPriority(AndroidConfig.Priority.HIGH)
+					.setNotification(
+						AndroidNotification.builder()
+							.setChannelId("swapit_alert_channel")
+							.build()
+					)
 					.build())
 			.build();
 
