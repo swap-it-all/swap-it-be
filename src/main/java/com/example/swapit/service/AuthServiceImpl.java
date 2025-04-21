@@ -91,6 +91,7 @@ public class AuthServiceImpl implements AuthService {
 		} catch (CustomException ce) {
 			throw ce;
 		} catch (Exception e) {
+			log.error("[리프레시 토큰 발급 에러]", e);
 			throw new CustomException(ErrorCode.NEW_REFRESH_TOKEN_FAIL);
 		}
 	}
