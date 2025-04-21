@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import com.example.swapit.domain.Notifications;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.messaging.AndroidConfig;
+import com.google.firebase.messaging.AndroidNotification;
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.Message;
 import com.google.firebase.messaging.Notification;
@@ -51,11 +52,17 @@ public class FcmCustomNotificationServiceImpl implements FcmNotificationService 
 			.setAndroidConfig(
 				AndroidConfig.builder()
 					.setPriority(AndroidConfig.Priority.HIGH)
+					.setNotification(
+						AndroidNotification.builder()
+							.setChannelId("swapit_alert_channel")
+							.build()
+					)
 					.build())
 			.build();
 
 		try {
-			firebaseMessaging.send(message);
+			String response = firebaseMessaging.send(message);
+			log.debug("[FCM 알림 전송 성공] response : {}", response);
 		} catch (Exception e) {
 			log.error("[FCM알림 전송실패] Firebase Messaging 실패 : {}", e.getMessage());
 		}
