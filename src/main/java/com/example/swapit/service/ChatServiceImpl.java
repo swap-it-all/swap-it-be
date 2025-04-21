@@ -5,7 +5,6 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.messaging.simp.user.SimpUser;
 import org.springframework.messaging.simp.user.SimpUserRegistry;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,7 +19,6 @@ import com.example.swapit.domain.GoodsImages;
 import com.example.swapit.domain.NotificationType;
 import com.example.swapit.domain.Trades;
 import com.example.swapit.domain.Users;
-import com.example.swapit.domain.dto.NotificationDto;
 import com.example.swapit.domain.dto.RequesterGoodsDto;
 import com.example.swapit.domain.dto.chat.ChatDto;
 import com.example.swapit.domain.dto.chat.ChatListDto;
@@ -199,42 +197,8 @@ public class ChatServiceImpl implements ChatService {
 
 		chatRepository.save(chats);
 
-		// 2. 여기서 직접 queue로 전송
-		Long receiverId = chatRooms.getCounterpartId(sender.getUsersId());
-		if (receiverId != null) {
-			NotificationDto notificationDto = new NotificationDto(111L, NotificationType.CHAT.toString(),
-				"test", "test", 1234L, LocalDateTime.now());
-
-			log.debug("[Queue 전송 시도] 수신자ID={}, 경로={}, 페이로드={}",
-				receiverId, "/queue/notifications", notificationDto);
-
-			try {
-				messagingTemplate.convertAndSendToUser(
-					receiverId.toString(), // user 이름 (Spring Security Principal.getName()과 매칭돼야 함)
-					"/queue/notifications", // destination 경로
-					notificationDto
-				);
-				log.debug("[Queue 전송 성공] 수신자ID={}", receiverId);
-			} catch (Exception e) {
-				log.error("[Queue 전송 실패] 수신자ID={}, 오류={}", receiverId, e.getMessage(), e);
-			}
-
-			// 현재 연결된 세션 정보 확인 로그
-			SimpUser simpUser = simpUserRegistry.getUser(receiverId.toString());
-			if (simpUser != null) {
-				log.debug("[Queue 전송 대상] 수신자={}, 세션 수={}", simpUser.getName(), simpUser.getSessions().size());
-				simpUser.getSessions().forEach(session -> {
-					log.debug("[Queue 전송 세션] 세션ID={}, 구독 수={}", session.getId(), session.getSubscriptions().size());
-					session.getSubscriptions().forEach(sub ->
-						log.debug("[Queue 전송 구독] 경로={}", sub.getDestination()));
-				});
-			} else {
-				log.debug("[Queue 전송 대상] 수신자ID={}는 현재 연결된 세션 없음", receiverId);
-			}
-		}
-
 		// 알림 발행
-		receiverId = chatRooms.getCounterpartId(sender.getUsersId());
+		Long receiverId = chatRooms.getCounterpartId(sender.getUsersId());
 		notificationEventPublisher.publishNotification(receiverId, NotificationType.CHAT, chatroomId);
 
 		return new ChatStompResponseDto(chats, requesterGoods);

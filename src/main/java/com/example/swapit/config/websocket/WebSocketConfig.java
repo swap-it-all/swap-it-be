@@ -31,7 +31,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
 	@Override
 	public void configureMessageBroker(MessageBrokerRegistry registry) {
-		registry.enableSimpleBroker("/topic", "/user") // 일반 구독 채널
+		registry.enableSimpleBroker("/topic", "/queue") // 일반 구독 채널
 			.setHeartbeatValue(new long[] {30000, 60000}) // 30초, 60초 간격으로 하트비트 전송
 			.setTaskScheduler(taskScheduler());
 		registry.setApplicationDestinationPrefixes("/app"); // 클라이언트가 보낼 prefix
