@@ -55,7 +55,8 @@ public class FcmCustomNotificationServiceImpl implements FcmNotificationService 
 			.build();
 
 		try {
-			firebaseMessaging.send(message);
+			String response = firebaseMessaging.send(message);
+			log.debug("[FCM 알림 전송 성공] response : {}", response);
 		} catch (Exception e) {
 			log.error("[FCM알림 전송실패] Firebase Messaging 실패 : {}", e.getMessage());
 		}
