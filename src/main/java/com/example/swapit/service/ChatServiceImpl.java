@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,6 +18,7 @@ import com.example.swapit.domain.GoodsImages;
 import com.example.swapit.domain.NotificationType;
 import com.example.swapit.domain.Trades;
 import com.example.swapit.domain.Users;
+import com.example.swapit.domain.dto.NotificationDto;
 import com.example.swapit.domain.dto.RequesterGoodsDto;
 import com.example.swapit.domain.dto.chat.ChatDto;
 import com.example.swapit.domain.dto.chat.ChatListDto;
@@ -49,6 +51,7 @@ public class ChatServiceImpl implements ChatService {
 	private final ChatsRepository chatRepository;
 	private final GoodsImagesRepository goodsImagesRepository;
 	private final NotificationEventPublisher notificationEventPublisher;
+	private final SimpMessagingTemplate messagingTemplate;
 
 	@Value("${cloud.aws.cloudfront.url}")
 	private String cdnUrl;
@@ -191,8 +194,18 @@ public class ChatServiceImpl implements ChatService {
 
 		chatRepository.save(chats);
 
-		// 알림 발행
+		// 2. 여기서 직접 queue로 전송
 		Long receiverId = chatRooms.getCounterpartId(sender.getUsersId());
+		if (receiverId != null) {
+			messagingTemplate.convertAndSendToUser(
+				receiverId.toString(), // user 이름 (Spring Security Principal.getName()과 매칭돼야 함)
+				"/queue/notifications", // destination 경로
+				new NotificationDto(111L, NotificationType.CHAT.toString(), "test", "test", 1234L, LocalDateTime.now())
+			);
+		}
+
+		// 알림 발행
+		receiverId = chatRooms.getCounterpartId(sender.getUsersId());
 		notificationEventPublisher.publishNotification(receiverId, NotificationType.CHAT, chatroomId);
 
 		return new ChatStompResponseDto(chats, requesterGoods);
