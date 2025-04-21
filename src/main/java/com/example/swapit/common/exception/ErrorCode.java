@@ -43,6 +43,7 @@ public enum ErrorCode {
 	CATEGORY_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 카테고리를 찾을 수 없습니다."),
 
 	// login error
+	TOKEN_IS_BLANK(HttpStatus.UNAUTHORIZED, "토큰이 비어있습니다."),
 	INVALID_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "유효하지 않은 리프레시 토큰입니다."),
 	NEW_REFRESH_TOKEN_FAIL(HttpStatus.BAD_REQUEST, "리프레시 토큰 발급에 실패했습니다."),
 	INVALID_ACCESS_TOKEN(HttpStatus.UNAUTHORIZED, "유효하지 않은 액세스 토큰입니다."),
