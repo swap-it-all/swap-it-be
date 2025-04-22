@@ -38,6 +38,8 @@ import com.example.swapit.repository.trade.TradesRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import io.jsonwebtoken.MalformedJwtException;
+import io.jsonwebtoken.security.SignatureException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -70,7 +72,7 @@ public class AuthServiceImpl implements AuthService {
 	private static final String KAKAO_LOGIN_INFO = "kakao";
 
 	@Override
-	public TokenDTO refresh(String token) {
+	public synchronized TokenDTO refresh(String token) {
 		try {
 			log.debug("[리프레시 토큰 재발급 시작] token={}", token);
 
@@ -93,6 +95,9 @@ public class AuthServiceImpl implements AuthService {
 			jwtService.updateRefreshToken(userOptional.get(), newToken.getRefreshToken());
 
 			return newToken;
+		} catch (SignatureException | MalformedJwtException e) {
+			log.error("[리프레시 토큰 에러] 잘못된 서명 또는 토큰 형식 오류", e);
+			throw new CustomException(ErrorCode.INVALID_REFRESH_TOKEN); // 시그니처나 변조된 토큰 처리
 		} catch (CustomException ce) {
 			throw ce;
 		} catch (Exception e) {
