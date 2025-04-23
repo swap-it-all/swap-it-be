@@ -9,21 +9,28 @@ import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.oauth2.jwt.JwtException;
 import org.springframework.stereotype.Component;
 
+import com.example.swapit.common.exception.CustomException;
+import com.example.swapit.common.exception.ErrorCode;
 import com.example.swapit.domain.dto.TokenDTO;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.UnsupportedJwtException;
 import io.jsonwebtoken.security.Keys;
+import io.jsonwebtoken.security.SignatureException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * AuthenticationProvider: 인증과 관련된 인터페이스. 사용자의 인증을 수행하고, 인증된 사용자 객체를 생성하여 스프링 시큐리티에 전달
  */
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class JwtProvider implements AuthenticationProvider {
@@ -104,12 +111,20 @@ public class JwtProvider implements AuthenticationProvider {
 				.parseClaimsJws(token);
 			return true;
 		} catch (ExpiredJwtException e) {
-			System.out.println("Token expired");
-			return false;
-		} catch (JwtException | IllegalArgumentException e) {
-			System.out.println("Invalid token");
-			return false;
+			log.warn("[JWT 에러][Access] 만료된 토큰입니다. token={}", token, e);
+		} catch (UnsupportedJwtException e) {
+			log.warn("[JWT 에러][Access] 지원되지 않는 형식입니다. token={}", token, e);
+		} catch (MalformedJwtException e) {
+			log.warn("[JWT 에러][Access] 잘못된 형식입니다. token={}", token, e);
+		} catch (SignatureException e) {
+			log.warn("[JWT 에러][Access] 서명 검증 실패. token={}", token, e);
+		} catch (IllegalArgumentException e) {
+			log.warn("[JWT 에러][Access] 잘못된 인자입니다. token={}", token, e);
+		} catch (JwtException e) {
+			log.warn("[JWT 에러][Access] 기타 JWT 처리 오류. token={}", token, e);
 		}
+
+		return false;
 	}
 
 	/**
@@ -127,12 +142,31 @@ public class JwtProvider implements AuthenticationProvider {
 	}
 
 	public String getEmailFromRefreshToken(String token) {
-		Claims claims = Jwts.parserBuilder()
-			.setSigningKey(REFRESH_SECRET_KEY.getBytes(StandardCharsets.UTF_8))
-			.build()
-			.parseClaimsJws(token)
-			.getBody();
-		return claims.getSubject();
+		try {
+			Claims claims = Jwts.parserBuilder()
+				.setSigningKey(REFRESH_SECRET_KEY.getBytes(StandardCharsets.UTF_8))
+				.build()
+				.parseClaimsJws(token)
+				.getBody();
+
+			return claims.getSubject();
+
+		} catch (ExpiredJwtException e) {
+			log.warn("[JWT 에러][Refresh] 만료된 토큰입니다. token={}", token, e);
+			throw new CustomException(ErrorCode.REFRESH_TOKEN_EXPIRED);
+		} catch (UnsupportedJwtException e) {
+			log.warn("[JWT 에러][Refresh] 지원되지 않는 형식입니다. token={}", token, e);
+			throw new CustomException(ErrorCode.UNSUPPORTED_JWT);
+		} catch (MalformedJwtException e) {
+			log.warn("[JWT 에러][Refresh] 잘못된 형식입니다. token={}", token, e);
+			throw new CustomException(ErrorCode.MALFORMED_JWT);
+		} catch (SignatureException e) {
+			log.warn("[JWT 에러][Refresh] 서명 검증 실패. token={}", token, e);
+			throw new CustomException(ErrorCode.INVALID_JWT_SIGNATURE);
+		} catch (IllegalArgumentException e) {
+			log.warn("[JWT 에러][Refresh] 잘못된 인자입니다. token={}", token, e);
+			throw new CustomException(ErrorCode.JWT_PARSING_FAILED);
+		}
 	}
 
 	@Override

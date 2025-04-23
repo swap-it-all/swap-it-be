@@ -1,7 +1,6 @@
 package com.example.swapit.service;
 
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpEntity;
@@ -38,8 +37,6 @@ import com.example.swapit.repository.trade.TradesRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import io.jsonwebtoken.MalformedJwtException;
-import io.jsonwebtoken.security.SignatureException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -73,37 +70,28 @@ public class AuthServiceImpl implements AuthService {
 
 	@Override
 	public synchronized TokenDTO refresh(String token) {
-		try {
-			log.debug("[리프레시 토큰 재발급 시작] token={}", token);
+		log.debug("[리프레시 토큰 재발급 시작] token={}", token);
 
-			if (token.isBlank()) {
-				throw new CustomException(ErrorCode.TOKEN_IS_BLANK);
-			}
-			String refreshToken = token.replace("Bearer ", "");
-			String email = jwtProvider.getEmailFromRefreshToken(refreshToken);
-
-			if (!jwtService.validateRefreshToken(email, refreshToken)) {
-				throw new CustomException(ErrorCode.INVALID_REFRESH_TOKEN);
-			}
-
-			Optional<Users> userOptional = usersRepository.findByEmail(email);
-			if (userOptional.isEmpty()) {
-				throw new CustomException(ErrorCode.USER_NOT_FOUND);
-			}
-
-			TokenDTO newToken = jwtProvider.createToken(email);
-			jwtService.updateRefreshToken(userOptional.get(), newToken.getRefreshToken());
-
-			return newToken;
-		} catch (SignatureException | MalformedJwtException e) {
-			log.error("[리프레시 토큰 에러] 잘못된 서명 또는 토큰 형식 오류", e);
-			throw new CustomException(ErrorCode.INVALID_REFRESH_TOKEN); // 시그니처나 변조된 토큰 처리
-		} catch (CustomException ce) {
-			throw ce;
-		} catch (Exception e) {
-			log.error("[리프레시 토큰 발급 에러] ", e);
-			throw new CustomException(ErrorCode.NEW_REFRESH_TOKEN_FAIL);
+		if (token == null || token.isBlank()) {
+			throw new CustomException(ErrorCode.TOKEN_IS_BLANK);
 		}
+
+		String refreshToken = token.replace("Bearer ", "");
+		String email = jwtProvider.getEmailFromRefreshToken(refreshToken);
+
+		if (!jwtService.validateRefreshToken(email, refreshToken)) {
+			log.warn("[실패 : 리프레시 토큰 불일치] email={}, token={}", email, refreshToken);
+			throw new CustomException(ErrorCode.INVALID_REFRESH_TOKEN);
+		}
+
+		Users user = usersRepository.findByEmail(email)
+			.orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+
+		TokenDTO newToken = jwtProvider.createToken(email);
+		jwtService.updateRefreshToken(user, newToken.getRefreshToken());
+
+		log.debug("[리프레스 토큰 발급 성공 OK] refresh token={}", newToken);
+		return newToken;
 	}
 
 	@Override
