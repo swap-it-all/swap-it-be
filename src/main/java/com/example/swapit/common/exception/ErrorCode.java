@@ -17,6 +17,17 @@ public enum ErrorCode {
 	PAGE_NOT_FOUND(HttpStatus.NOT_FOUND, "페이지를 찾을 수 없습니다."),
 	WEBSOCKET_UNAUTHORIZED_ACCESS(HttpStatus.FORBIDDEN, "웹소켓 권한이 없습니다."),
 
+	// jwt error
+	TOKEN_IS_BLANK(HttpStatus.UNAUTHORIZED, "토큰이 비어있습니다."),
+	REFRESH_TOKEN_EXPIRED(HttpStatus.UNAUTHORIZED, "리프레시 토큰이 만료되었습니다."),
+	UNSUPPORTED_JWT(HttpStatus.UNAUTHORIZED, "지원하지 않는 JWT 형식입니다."),
+	MALFORMED_JWT(HttpStatus.UNAUTHORIZED, "잘못된 JWT 형식입니다."),
+	INVALID_JWT_SIGNATURE(HttpStatus.UNAUTHORIZED, "JWT 서명 검증에 실패했습니다."),
+	JWT_PARSING_FAILED(HttpStatus.UNAUTHORIZED, "JWT 파싱 중 오류가 발생했습니다."),
+	ACCESS_TOKEN_EXPIRED(HttpStatus.UNAUTHORIZED, "엑세스 토큰이 만료되었습니다."),
+	INVALID_ACCESS_TOKEN(HttpStatus.UNAUTHORIZED, "유효하지 않은 엑세스 토큰입니다."),
+	ACCESS_TOKEN_PARSING_FAILED(HttpStatus.UNAUTHORIZED, "엑세스 토큰 파싱 실패"),
+
 	// user error
 	USER_NOT_FOUND(HttpStatus.NOT_FOUND, "회원을 찾을 수 없습니다."),
 	UNAUTHORIZED_ACCESS(HttpStatus.FORBIDDEN, "권한이 없습니다."),
@@ -43,10 +54,8 @@ public enum ErrorCode {
 	CATEGORY_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 카테고리를 찾을 수 없습니다."),
 
 	// login error
-	TOKEN_IS_BLANK(HttpStatus.UNAUTHORIZED, "토큰이 비어있습니다."),
 	INVALID_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "유효하지 않은 리프레시 토큰입니다."),
 	NEW_REFRESH_TOKEN_FAIL(HttpStatus.BAD_REQUEST, "리프레시 토큰 발급에 실패했습니다."),
-	INVALID_ACCESS_TOKEN(HttpStatus.UNAUTHORIZED, "유효하지 않은 액세스 토큰입니다."),
 	GET_USER_INFO_FAIL(HttpStatus.BAD_REQUEST, "사용자 정보 조회에 실패했습니다."),
 	LOGIN_FAIL(HttpStatus.UNAUTHORIZED, "로그인에 실패했습니다."),
 	SOCIAL_UNLINK_FAILED(HttpStatus.BAD_REQUEST, "소셜 연결 해제에 실패했습니다."),
