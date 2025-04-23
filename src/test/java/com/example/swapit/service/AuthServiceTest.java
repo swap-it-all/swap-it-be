@@ -177,7 +177,8 @@ public class AuthServiceTest {
 		String refreshToken = "some_refresh_token";
 		String bearerToken = "Bearer " + refreshToken;
 
-		when(jwtProvider.getEmailFromRefreshToken(refreshToken)).thenThrow(new RuntimeException("예외 발생"));
+		when(jwtProvider.getEmailFromRefreshToken(refreshToken))
+			.thenThrow(new CustomException(ErrorCode.NEW_REFRESH_TOKEN_FAIL));
 
 		// When & Then
 		CustomException exception = assertThrows(CustomException.class, () -> authService.refresh(bearerToken));
