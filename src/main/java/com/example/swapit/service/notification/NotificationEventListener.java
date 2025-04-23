@@ -10,7 +10,9 @@ import org.springframework.stereotype.Component;
 
 import com.example.swapit.common.exception.CustomException;
 import com.example.swapit.common.exception.ErrorCode;
+import com.example.swapit.config.websocket.WebsocketDestination;
 import com.example.swapit.domain.NotificationEvent;
+import com.example.swapit.domain.NotificationType;
 import com.example.swapit.domain.Notifications;
 import com.example.swapit.domain.Users;
 import com.example.swapit.domain.dto.NotificationDto;
@@ -50,36 +52,46 @@ public class NotificationEventListener {
 			return;
 		}
 
-		// 웹소켓 알림 전송 (앱이 온라인 상태) : "/user/queue/notifications" 구독된 상태
+		// 웹소켓 알림 전송 (앱이 온라인 상태)
 		NotificationDto notiDto = NotificationDto.of(noti);
 		String userKey = userId.toString();
-		SimpUser simpUser = simpUserRegistry.getUser(userKey);
-		log.debug("[WS 유저 조회] userId={},  simpUser.getName()={}", userKey,
-			simpUser != null ? simpUser.getName() : "없음");
 
-		boolean isSubscribed = false;
-
-		if (simpUser != null) {
-			sessionLoop:
-			for (SimpSession session : simpUser.getSessions()) {
-				log.debug("[WS 세션] sessionId={}, subscription 수={}", session.getId(),
-					session.getSubscriptions().size());
-				for (SimpSubscription sub : session.getSubscriptions()) {
-					if ("/user/queue/notifications".equals(sub.getDestination())) {
-						isSubscribed = true;
-						break sessionLoop;
-					}
-				}
+		// CHAT 알림 -> 채팅방 구독 중이면 알림 생략
+		if (noti.getType().equals(NotificationType.CHAT)) {
+			String chatTopic = WebsocketDestination.CHAT_TOPIC.withKey(noti.getRelatedData().toString());
+			if (isSubscribed(userKey, chatTopic)) {
+				log.debug("[CHAT 알림 무시] 유저 {}가 채팅방 {} 구독 중 → 알림 전송 생략", userId, noti.getRelatedData().toString());
+				return;
 			}
 		}
 
-		if (isSubscribed) {
+		if (isSubscribed(userKey, WebsocketDestination.NOTIFICATION_QUEUE.getPath())) {
 			messagingTemplate.convertAndSendToUser(userKey, "/queue/notifications", notiDto);
 			log.debug("[WS알림 전송] 유저id={}, payload={} ", userId, notiDto);
 		} else {
 			log.debug("[WS알림 스킵] 유저id={}는 현재 오프라인 상태 → FCM 전송", userId);
 			sendFcm(user, noti);
 		}
+	}
+
+	private boolean isSubscribed(String userKey, String destination) {
+		SimpUser user = simpUserRegistry.getUser(userKey);
+		log.debug("[WS 유저 조회] userId={}, simpUser.getName()={}", userKey,
+			user != null ? user.getName() : "없음");
+
+		if (user == null)
+			return false;
+
+		for (SimpSession session : user.getSessions()) {
+			log.debug("[WS 세션] sessionId={}, subscription 수={}", session.getId(),
+				session.getSubscriptions().size());
+			for (SimpSubscription sub : session.getSubscriptions()) {
+				if (destination.equals(sub.getDestination())) {
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 
 	private void sendFcm(Users user, Notifications noti) {
