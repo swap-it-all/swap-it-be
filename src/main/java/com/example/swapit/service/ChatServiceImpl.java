@@ -84,6 +84,7 @@ public class ChatServiceImpl implements ChatService {
 		// 거래 관계자인지 검증
 		Users me = currentUserService.getCurrentUser();
 		Long myId = me.getUsersId();
+
 		Users targetOwner = trade.getTargetGoods().getUser();
 		Users requestedOwner = trade.getRequestedGoods().getUser();
 		if (!myId.equals(targetOwner.getUsersId()) && !myId.equals(requestedOwner.getUsersId())) {
@@ -91,10 +92,7 @@ public class ChatServiceImpl implements ChatService {
 		}
 
 		// inviter는 항상 “goods 주인이 아닌 쪽”으로 설정
-		Users inviter = targetOwner.equals(me)
-			? requestedOwner
-			: me;
-
+		Users inviter = targetOwner.equals(me) ? requestedOwner : me;
 		Goods goods = trade.getTargetGoods();
 
 		// 같은 채팅방이 있는지 존재 검증 후, 생성

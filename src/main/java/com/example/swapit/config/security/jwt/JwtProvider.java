@@ -111,17 +111,17 @@ public class JwtProvider implements AuthenticationProvider {
 				.parseClaimsJws(token);
 			return true;
 		} catch (ExpiredJwtException e) {
-			log.warn("[JWT 에러][Access] 만료된 토큰입니다. token={}", token, e);
+			log.warn("[JWT 에러][Access] 만료된 토큰입니다. token={}, error={}", token, e.getMessage());
 		} catch (UnsupportedJwtException e) {
-			log.warn("[JWT 에러][Access] 지원되지 않는 형식입니다. token={}", token, e);
+			log.warn("[JWT 에러][Access] 지원되지 않는 형식입니다. token={}, error={}", token, e.getMessage());
 		} catch (MalformedJwtException e) {
-			log.warn("[JWT 에러][Access] 잘못된 형식입니다. token={}", token, e);
+			log.warn("[JWT 에러][Access] 잘못된 형식입니다. token={}, error={}", token, e.getMessage());
 		} catch (SignatureException e) {
-			log.warn("[JWT 에러][Access] 서명 검증 실패. token={}", token, e);
+			log.warn("[JWT 에러][Access] 서명 검증 실패. token={}, error={}", token, e.getMessage());
 		} catch (IllegalArgumentException e) {
-			log.warn("[JWT 에러][Access] 잘못된 인자입니다. token={}", token, e);
+			log.warn("[JWT 에러][Access] 잘못된 인자입니다. token={}, error={}", token, e.getMessage());
 		} catch (JwtException e) {
-			log.warn("[JWT 에러][Access] 기타 JWT 처리 오류. token={}", token, e);
+			log.warn("[JWT 에러][Access] 기타 JWT 처리 오류. token={}, error={}", token, e.getMessage());
 		}
 
 		return false;
@@ -152,19 +152,19 @@ public class JwtProvider implements AuthenticationProvider {
 			return claims.getSubject();
 
 		} catch (ExpiredJwtException e) {
-			log.warn("[JWT 에러][Refresh] 만료된 토큰입니다. token={}", token, e);
+			log.warn("[JWT 에러][Refresh] 만료된 토큰입니다. token={}, error={}", token, e.getMessage());
 			throw new CustomException(ErrorCode.REFRESH_TOKEN_EXPIRED);
 		} catch (UnsupportedJwtException e) {
-			log.warn("[JWT 에러][Refresh] 지원되지 않는 형식입니다. token={}", token, e);
+			log.warn("[JWT 에러][Refresh] 지원되지 않는 형식입니다. token={}, error={}", token, e.getMessage());
 			throw new CustomException(ErrorCode.UNSUPPORTED_JWT);
 		} catch (MalformedJwtException e) {
-			log.warn("[JWT 에러][Refresh] 잘못된 형식입니다. token={}", token, e);
+			log.warn("[JWT 에러][Refresh] 잘못된 형식입니다. token={}, error={}", token, e.getMessage());
 			throw new CustomException(ErrorCode.MALFORMED_JWT);
 		} catch (SignatureException e) {
-			log.warn("[JWT 에러][Refresh] 서명 검증 실패. token={}", token, e);
+			log.warn("[JWT 에러][Refresh] 서명 검증 실패. token={}, error={}", token, e.getMessage());
 			throw new CustomException(ErrorCode.INVALID_JWT_SIGNATURE);
 		} catch (IllegalArgumentException e) {
-			log.warn("[JWT 에러][Refresh] 잘못된 인자입니다. token={}", token, e);
+			log.warn("[JWT 에러][Refresh] 잘못된 인자입니다. token={}, error={}", token, e.getMessage());
 			throw new CustomException(ErrorCode.JWT_PARSING_FAILED);
 		}
 	}

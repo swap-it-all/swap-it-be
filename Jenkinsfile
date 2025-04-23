@@ -12,6 +12,9 @@ pipeline {
             }
         }
         stage('Upload to S3') {
+            when {
+                branch 'develop'
+            }
             steps {
                 sh 'aws s3 cp $JENKINS_ROUTE $S3_ROUTE'
             }
