@@ -12,6 +12,7 @@ import com.example.swapit.common.exception.CustomException;
 import com.example.swapit.common.exception.ErrorCode;
 import com.example.swapit.config.websocket.WebsocketDestination;
 import com.example.swapit.domain.NotificationEvent;
+import com.example.swapit.domain.NotificationType;
 import com.example.swapit.domain.Notifications;
 import com.example.swapit.domain.Users;
 import com.example.swapit.domain.dto.NotificationDto;
@@ -51,13 +52,20 @@ public class NotificationEventListener {
 			return;
 		}
 
-		// 웹소켓 알림 전송 (앱이 온라인 상태) : "/user/queue/notifications" 구독된 상태
+		// 웹소켓 알림 전송 (앱이 온라인 상태)
 		NotificationDto notiDto = NotificationDto.of(noti);
 		String userKey = userId.toString();
 
-		boolean isNotiSubscribed = isSubscribedToNotifications(userKey);
+		// CHAT 알림 -> 채팅방 구독 중이면 알림 생략
+		if (noti.getType().equals(NotificationType.CHAT)) {
+			String chatTopic = WebsocketDestination.CHAT_TOPIC.withKey(noti.getRelatedData().toString());
+			if (isSubscribed(userKey, chatTopic)) {
+				log.debug("[CHAT 알림 무시] 유저 {}가 채팅방 {} 구독 중 → 알림 전송 생략", userId, noti.getRelatedData().toString());
+				return;
+			}
+		}
 
-		if (isNotiSubscribed) {
+		if (isSubscribed(userKey, WebsocketDestination.NOTIFICATION_QUEUE.getPath())) {
 			messagingTemplate.convertAndSendToUser(userKey, "/queue/notifications", notiDto);
 			log.debug("[WS알림 전송] 유저id={}, payload={} ", userId, notiDto);
 		} else {
@@ -66,7 +74,7 @@ public class NotificationEventListener {
 		}
 	}
 
-	private boolean isSubscribedToNotifications(String userKey) {
+	private boolean isSubscribed(String userKey, String destination) {
 		SimpUser user = simpUserRegistry.getUser(userKey);
 		log.debug("[WS 유저 조회] userId={}, simpUser.getName()={}", userKey,
 			user != null ? user.getName() : "없음");
@@ -78,7 +86,7 @@ public class NotificationEventListener {
 			log.debug("[WS 세션] sessionId={}, subscription 수={}", session.getId(),
 				session.getSubscriptions().size());
 			for (SimpSubscription sub : session.getSubscriptions()) {
-				if (WebsocketDestination.NOTIFICATION_QUEUE.getPath().equals(sub.getDestination())) {
+				if (destination.equals(sub.getDestination())) {
 					return true;
 				}
 			}
