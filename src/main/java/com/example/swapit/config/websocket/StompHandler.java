@@ -19,7 +19,6 @@ import org.springframework.messaging.support.MessageBuilder;
 import com.example.swapit.common.exception.CustomException;
 import com.example.swapit.common.exception.ErrorCode;
 import com.example.swapit.config.security.jwt.JwtProvider;
-import com.example.swapit.domain.Users;
 import com.example.swapit.repository.UsersRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -60,14 +59,13 @@ public class StompHandler implements ChannelInterceptor {
 	private void handleConnect(StompHeaderAccessor accessor, String token) {
 		String onlyToken = token.replace("Bearer ", "");
 		validateToken(onlyToken);
-		Users user = usersRepository.findByEmail(jwtProvider.getEmailFromToken(onlyToken))
-			.orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
-		setSessionFromPrincipal(accessor, user.getUsersId());
+		String userId = jwtProvider.getIdFromToken(onlyToken);
+		setSessionFromPrincipal(accessor, userId);
 
 		// 세션 속성에 빈 구독 set 추가 (동시성 안전) : 순서 상관없을 것 같아서 일단 set으로 설정
 		accessor.getSessionAttributes().put(SUBSCRIBED_SET_KEY, ConcurrentHashMap.newKeySet());
 
-		log.debug("[CONNECT] 유저id={}, 세션={}, token={}", user.getUsersId(), accessor.getSessionId(), token);
+		log.debug("[CONNECT] 유저id={}, 세션={}, token={}", userId, accessor.getSessionId(), token);
 	}
 
 	private void handleSubscribe(StompHeaderAccessor accessor) {
@@ -125,6 +123,7 @@ public class StompHandler implements ChannelInterceptor {
 		return MessageBuilder.createMessage(message.getPayload(), new MessageHeaders(newHeaders));
 	}
 
+	@SuppressWarnings("unchecked")
 	private Set<String> getOrInitSubscribedSet(StompHeaderAccessor accessor) {
 		Map<String, Object> session = accessor.getSessionAttributes();
 		return (Set<String>)session.computeIfAbsent(SUBSCRIBED_SET_KEY, k -> ConcurrentHashMap.newKeySet());
@@ -137,8 +136,8 @@ public class StompHandler implements ChannelInterceptor {
 		}
 	}
 
-	private void setSessionFromPrincipal(StompHeaderAccessor accessor, Long userId) {
-		Principal principal = new StompPrincipal(userId.toString()); // Principal 생성
+	private void setSessionFromPrincipal(StompHeaderAccessor accessor, String userId) {
+		Principal principal = new StompPrincipal(userId); // Principal 생성
 		// Principal을 세션에 저장
 		Map<String, Object> sessionAttributes = accessor.getSessionAttributes();
 		if (sessionAttributes != null) {

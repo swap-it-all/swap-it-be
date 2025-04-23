@@ -82,12 +82,18 @@ public class ChatServiceImpl implements ChatService {
 			.orElseThrow(() -> new CustomException(ErrorCode.TRADES_NOT_FOUND));
 
 		// 거래 관계자인지 검증
-		Users inviter = currentUserService.getCurrentUser();
-		Long inviterId = inviter.getUsersId();
-		if (!inviterId.equals(trade.getTargetGoods().getUser().getUsersId()) && !inviterId.equals(
-			trade.getRequestedGoods().getUser().getUsersId())) {
+		Users me = currentUserService.getCurrentUser();
+		Long myId = me.getUsersId();
+		Users targetOwner = trade.getTargetGoods().getUser();
+		Users requestedOwner = trade.getRequestedGoods().getUser();
+		if (!myId.equals(targetOwner.getUsersId()) && !myId.equals(requestedOwner.getUsersId())) {
 			throw new CustomException(ErrorCode.TRADE_UNAUTHORIZED);
 		}
+
+		// inviter는 항상 “goods 주인이 아닌 쪽”으로 설정
+		Users inviter = targetOwner.equals(me)
+			? requestedOwner
+			: me;
 
 		Goods goods = trade.getTargetGoods();
 

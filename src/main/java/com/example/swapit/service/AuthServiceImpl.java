@@ -77,17 +77,17 @@ public class AuthServiceImpl implements AuthService {
 		}
 
 		String refreshToken = token.replace("Bearer ", "");
-		String email = jwtProvider.getEmailFromRefreshToken(refreshToken);
+		String userId = jwtProvider.getIdFromRefreshToken(refreshToken);
 
-		if (!jwtService.validateRefreshToken(email, refreshToken)) {
-			log.warn("[실패 : 리프레시 토큰 불일치] email={}, token={}", email, refreshToken);
+		if (!jwtService.validateRefreshToken(userId, refreshToken)) {
+			log.warn("[실패 : 리프레시 토큰 불일치] email={}, token={}", userId, refreshToken);
 			throw new CustomException(ErrorCode.INVALID_REFRESH_TOKEN);
 		}
 
-		Users user = usersRepository.findByEmail(email)
+		Users user = usersRepository.findById(Long.valueOf(userId))
 			.orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
-		TokenDTO newToken = jwtProvider.createToken(email);
+		TokenDTO newToken = jwtProvider.createToken(userId);
 		jwtService.updateRefreshToken(user, newToken.getRefreshToken());
 
 		log.debug("[리프레스 토큰 발급 성공 OK] refresh token={}", newToken);
@@ -103,8 +103,8 @@ public class AuthServiceImpl implements AuthService {
 				throw new CustomException(ErrorCode.INVALID_ACCESS_TOKEN);
 			}
 
-			String email = jwtProvider.getEmailFromToken(accessToken);
-			Users user = usersRepository.findByEmail(email)
+			String userId = jwtProvider.getIdFromToken(accessToken);
+			Users user = usersRepository.findById(Long.valueOf(userId))
 				.orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
 			return UserResponseDTO.builder()
@@ -124,7 +124,7 @@ public class AuthServiceImpl implements AuthService {
 	public TokenDTO googleLogin(String googleAccessToken) {
 		try {
 			Users user = getGoogleUserInfo(googleAccessToken);
-			TokenDTO jwtToken = jwtProvider.createToken(user.getEmail());
+			TokenDTO jwtToken = jwtProvider.createToken(user.getUsersId().toString());
 			jwtService.saveRefreshToken(user, jwtToken.getRefreshToken());
 			return jwtToken;
 		} catch (Exception e) {
@@ -136,7 +136,7 @@ public class AuthServiceImpl implements AuthService {
 	public TokenDTO kakaoLogin(String kakaoAccessToken) {
 		try {
 			Users user = getKakaoUserInfo(kakaoAccessToken);
-			TokenDTO jwtToken = jwtProvider.createToken(user.getEmail());
+			TokenDTO jwtToken = jwtProvider.createToken(user.getUsersId().toString());
 			jwtService.saveRefreshToken(user, jwtToken.getRefreshToken());
 			return jwtToken;
 		} catch (Exception e) {
