@@ -113,14 +113,14 @@ public class AuthServiceTest {
 	void refreshTokenSuccess() {
 		// Given
 		String validRefreshToken = "valid_refresh_token";
-		String email = "test@example.com";
+		String userId = "1";
 		Users user = new Users();
-		TokenDTO newToken = new TokenDTO("new_access_token", "new_refresh_token", email);
+		TokenDTO newToken = new TokenDTO("new_access_token", "new_refresh_token", userId);
 
-		when(jwtProvider.getEmailFromRefreshToken(validRefreshToken)).thenReturn(email);
-		when(jwtService.validateRefreshToken(email, validRefreshToken)).thenReturn(true);
-		when(usersRepository.findByEmail(email)).thenReturn(Optional.of(user));
-		when(jwtProvider.createToken(email)).thenReturn(newToken);
+		when(jwtProvider.getIdFromRefreshToken(validRefreshToken)).thenReturn(userId);
+		when(jwtService.validateRefreshToken(userId, validRefreshToken)).thenReturn(true);
+		when(usersRepository.findById(Long.valueOf(userId))).thenReturn(Optional.of(user));
+		when(jwtProvider.createToken(userId)).thenReturn(newToken);
 
 		// When
 		TokenDTO tokenDTO = authService.refresh("Bearer " + validRefreshToken);
@@ -128,12 +128,12 @@ public class AuthServiceTest {
 		// Then
 		assertEquals("new_access_token", tokenDTO.getAccessToken());
 		assertEquals("new_refresh_token", tokenDTO.getRefreshToken());
-		assertEquals(email, tokenDTO.getKey());
+		assertEquals(userId, tokenDTO.getKey());
 
-		verify(jwtProvider, times(1)).getEmailFromRefreshToken(validRefreshToken);
-		verify(jwtService, times(1)).validateRefreshToken(email, validRefreshToken);
-		verify(usersRepository, times(1)).findByEmail(email);
-		verify(jwtProvider, times(1)).createToken(email);
+		verify(jwtProvider, times(1)).getIdFromRefreshToken(validRefreshToken);
+		verify(jwtService, times(1)).validateRefreshToken(userId, validRefreshToken);
+		verify(usersRepository, times(1)).findById(Long.valueOf(userId));
+		verify(jwtProvider, times(1)).createToken(userId);
 		verify(jwtService, times(1)).updateRefreshToken(eq(user), eq(newToken.getRefreshToken()));
 	}
 
@@ -143,10 +143,10 @@ public class AuthServiceTest {
 		// Given
 		String invalidRefreshToken = "invalid_refresh_token";
 		String bearerToken = "Bearer " + invalidRefreshToken;
-		String email = "test@example.com";
+		String userId = "1";
 
-		when(jwtProvider.getEmailFromRefreshToken(invalidRefreshToken)).thenReturn(email);
-		when(jwtService.validateRefreshToken(email, invalidRefreshToken)).thenReturn(false);
+		when(jwtProvider.getIdFromRefreshToken(invalidRefreshToken)).thenReturn(userId);
+		when(jwtService.validateRefreshToken(userId, invalidRefreshToken)).thenReturn(false);
 
 		// When & Then
 		CustomException exception = assertThrows(CustomException.class, () -> authService.refresh(bearerToken));
@@ -159,11 +159,11 @@ public class AuthServiceTest {
 		// Given
 		String validRefreshToken = "valid_refresh_token";
 		String bearerToken = "Bearer " + validRefreshToken;
-		String email = "test@example.com";
+		String userId = "1";
 
-		when(jwtProvider.getEmailFromRefreshToken(validRefreshToken)).thenReturn(email);
-		when(jwtService.validateRefreshToken(email, validRefreshToken)).thenReturn(true);
-		when(usersRepository.findByEmail(email)).thenReturn(Optional.empty());
+		when(jwtProvider.getIdFromRefreshToken(validRefreshToken)).thenReturn(userId);
+		when(jwtService.validateRefreshToken(userId, validRefreshToken)).thenReturn(true);
+		when(usersRepository.findByEmail(userId)).thenReturn(Optional.empty());
 
 		// When & Then
 		CustomException exception = assertThrows(CustomException.class, () -> authService.refresh(bearerToken));
@@ -177,7 +177,8 @@ public class AuthServiceTest {
 		String refreshToken = "some_refresh_token";
 		String bearerToken = "Bearer " + refreshToken;
 
-		when(jwtProvider.getEmailFromRefreshToken(refreshToken)).thenThrow(new RuntimeException("예외 발생"));
+		when(jwtProvider.getIdFromRefreshToken(refreshToken))
+			.thenThrow(new CustomException(ErrorCode.NEW_REFRESH_TOKEN_FAIL));
 
 		// When & Then
 		CustomException exception = assertThrows(CustomException.class, () -> authService.refresh(bearerToken));
@@ -190,6 +191,7 @@ public class AuthServiceTest {
 		// Given
 		String validAccessToken = "valid_access_token";
 		String email = "test@example.com";
+		String userId = "1";
 		String imageUrl = "http://presigned-url.com/image.jpg";
 
 		Users user = Users.builder()
@@ -200,8 +202,8 @@ public class AuthServiceTest {
 			.build();
 
 		when(jwtProvider.validateToken(validAccessToken)).thenReturn(true);
-		when(jwtProvider.getEmailFromToken(validAccessToken)).thenReturn(email);
-		when(usersRepository.findByEmail(email)).thenReturn(Optional.of(user));
+		when(jwtProvider.getIdFromToken(validAccessToken)).thenReturn(userId);
+		when(usersRepository.findById(Long.valueOf(userId))).thenReturn(Optional.of(user));
 
 		// When
 		UserResponseDTO userResponseDTO = authService.getUserInfo("Bearer " + validAccessToken);
@@ -213,8 +215,8 @@ public class AuthServiceTest {
 		assertEquals("google", userResponseDTO.getLoginInfo());
 
 		verify(jwtProvider, times(1)).validateToken(validAccessToken);
-		verify(jwtProvider, times(1)).getEmailFromToken(validAccessToken);
-		verify(usersRepository, times(1)).findByEmail(email);
+		verify(jwtProvider, times(1)).getIdFromToken(validAccessToken);
+		verify(usersRepository, times(1)).findById(Long.valueOf(userId));
 	}
 
 	@Test
@@ -237,16 +239,16 @@ public class AuthServiceTest {
 	void getUserInfoUserNotFound() {
 		// Given
 		String validAccessToken = "valid_access_token";
-		String email = "test@example.com";
+		String userId = "1";
 
 		when(jwtProvider.validateToken(validAccessToken)).thenReturn(true);
-		when(usersRepository.findByEmail(email)).thenReturn(Optional.empty()); // 사용자 없음
+		when(usersRepository.findById(Long.valueOf(userId))).thenReturn(Optional.empty()); // 사용자 없음
 
 		// When
 		CustomException exception = assertThrows(CustomException.class,
 			() -> authService.getUserInfo(validAccessToken));
 		// Then
-		assertEquals(ErrorCode.USER_NOT_FOUND, exception.getErrorCode());
+		assertEquals(ErrorCode.GET_USER_INFO_FAIL, exception.getErrorCode());
 	}
 
 	@Test
@@ -270,18 +272,20 @@ public class AuthServiceTest {
 		// Given
 		String validAccessToken = "valid_access_token";
 		String email = "test@example.com";
+		String userId = "1";
 
 		Users user = Users.builder()
+			.usersId(Long.valueOf(userId))
 			.nickname("nickname")
 			.email(email)
 			.profileImageUrl("http://example.com/image.jpg")
 			.loginInfo("google")
 			.build();
 
-		TokenDTO tokenDTO = new TokenDTO("access_token", "refresh_token", email);
+		TokenDTO tokenDTO = new TokenDTO("access_token", "refresh_token", userId);
 
 		doReturn(user).when(authService).getGoogleUserInfo(any());
-		when(jwtProvider.createToken(email)).thenReturn(tokenDTO);
+		when(jwtProvider.createToken(userId)).thenReturn(tokenDTO);
 		doNothing().when(jwtService).saveRefreshToken(user, tokenDTO.getRefreshToken());
 
 		// When
@@ -291,9 +295,9 @@ public class AuthServiceTest {
 		assertNotNull(result);
 		assertEquals("access_token", result.getAccessToken());
 		assertEquals("refresh_token", result.getRefreshToken());
-		assertEquals(email, result.getKey());
+		assertEquals(userId, result.getKey());
 
-		verify(jwtProvider, times(1)).createToken(email);
+		verify(jwtProvider, times(1)).createToken(userId);
 		verify(jwtService, times(1)).saveRefreshToken(eq(user), eq(tokenDTO.getRefreshToken()));
 	}
 
@@ -388,18 +392,20 @@ public class AuthServiceTest {
 		// Given
 		String validAccessToken = "valid_access_token";
 		String email = "test@example.com";
+		String userId = "1";
 
 		Users user = Users.builder()
+			.usersId(Long.valueOf(userId))
 			.nickname("nickname")
 			.email(email)
 			.profileImageUrl("http://example.com/image.jpg")
 			.loginInfo("google")
 			.build();
 
-		TokenDTO tokenDTO = new TokenDTO("access_token", "refresh_token", email);
+		TokenDTO tokenDTO = new TokenDTO("access_token", "refresh_token", userId);
 
 		doReturn(user).when(authService).getKakaoUserInfo(any());
-		when(jwtProvider.createToken(email)).thenReturn(tokenDTO);
+		when(jwtProvider.createToken(userId)).thenReturn(tokenDTO);
 		doNothing().when(jwtService).saveRefreshToken(user, tokenDTO.getRefreshToken());
 
 		// When
@@ -409,9 +415,9 @@ public class AuthServiceTest {
 		assertNotNull(result);
 		assertEquals("access_token", result.getAccessToken());
 		assertEquals("refresh_token", result.getRefreshToken());
-		assertEquals(email, result.getKey());
+		assertEquals(userId, result.getKey());
 
-		verify(jwtProvider, times(1)).createToken(email);
+		verify(jwtProvider, times(1)).createToken(userId);
 		verify(jwtService, times(1)).saveRefreshToken(eq(user), eq(tokenDTO.getRefreshToken()));
 	}
 
@@ -595,7 +601,7 @@ public class AuthServiceTest {
 		// 탈퇴 사유 저장시, userId가 올바르게 전달되었는지 검증
 		verify(withdrawReasonsRepository).save(argThat(wr ->
 			reason.equals(wr.getReason()) &&
-				testUser.getUsersId().equals(wr.getUsersId())
+			testUser.getUsersId().equals(wr.getUsersId())
 		));
 
 		// 사용자 삭제 검증
@@ -604,8 +610,8 @@ public class AuthServiceTest {
 		// DB 트랜잭션 이후 S3 삭제 수행 검증
 		verify(applicationEventPublisher).publishEvent(argThat(event ->
 			event instanceof UserWithdrawCompletedEvent &&
-				((UserWithdrawCompletedEvent)event).getImages().equals(Collections.emptyList()) &&
-				((UserWithdrawCompletedEvent)event).getUser().equals(testUser)
+			((UserWithdrawCompletedEvent)event).getImages().equals(Collections.emptyList()) &&
+			((UserWithdrawCompletedEvent)event).getUser().equals(testUser)
 		));
 	}
 }
