@@ -6,13 +6,13 @@ import org.springframework.security.authentication.AbstractAuthenticationToken;
  * 인증 정보 객체
  */
 public class JwtAuthenticationToken extends AbstractAuthenticationToken {
-	private final String email;
 	private final String token;
+	private final String userId;
 
-	public JwtAuthenticationToken(String email, String token) {
+	public JwtAuthenticationToken(String token, String userId) {
 		super(null);
-		this.email = email;
 		this.token = token;
+		this.userId = userId;
 		setAuthenticated(true);
 	}
 

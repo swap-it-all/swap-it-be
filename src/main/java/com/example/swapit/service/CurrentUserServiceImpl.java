@@ -24,8 +24,8 @@ public class CurrentUserServiceImpl implements CurrentUserService {
 		Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
 		if (principal instanceof UserDetails) {
-			String email = ((UserDetails)principal).getUsername();
-			return usersRepository.findByEmail(email)
+			String userId = ((UserDetails)principal).getUsername();
+			return usersRepository.findById(Long.valueOf(userId))
 				.orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 		} else { // principal이 "anonymousUser" 또는 null일 수 있음.
 			throw new CustomException(ErrorCode.UNAUTHORIZED_ACCESS);

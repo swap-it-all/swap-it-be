@@ -84,7 +84,7 @@ public class ChatServiceImpl implements ChatService {
 		// 거래 관계자인지 검증
 		Users me = currentUserService.getCurrentUser();
 		Long myId = me.getUsersId();
-		
+
 		Users targetOwner = trade.getTargetGoods().getUser();
 		Users requestedOwner = trade.getRequestedGoods().getUser();
 		if (!myId.equals(targetOwner.getUsersId()) && !myId.equals(requestedOwner.getUsersId())) {

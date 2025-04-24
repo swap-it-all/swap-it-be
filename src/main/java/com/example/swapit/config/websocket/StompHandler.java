@@ -60,7 +60,7 @@ public class StompHandler implements ChannelInterceptor {
 	private void handleConnect(StompHeaderAccessor accessor, String token) {
 		String onlyToken = token.replace("Bearer ", "");
 		validateToken(onlyToken);
-		Users user = usersRepository.findByEmail(jwtProvider.getEmailFromToken(onlyToken))
+		Users user = usersRepository.findById(Long.valueOf(jwtProvider.getIdFromToken(onlyToken)))
 			.orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 		setSessionFromPrincipal(accessor, user.getUsersId());
 
@@ -125,6 +125,7 @@ public class StompHandler implements ChannelInterceptor {
 		return MessageBuilder.createMessage(message.getPayload(), new MessageHeaders(newHeaders));
 	}
 
+	@SuppressWarnings("unchecked")
 	private Set<String> getOrInitSubscribedSet(StompHeaderAccessor accessor) {
 		Map<String, Object> session = accessor.getSessionAttributes();
 		return (Set<String>)session.computeIfAbsent(SUBSCRIBED_SET_KEY, k -> ConcurrentHashMap.newKeySet());

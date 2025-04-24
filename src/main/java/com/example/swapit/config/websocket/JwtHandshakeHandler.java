@@ -9,10 +9,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.server.support.DefaultHandshakeHandler;
 
-import com.example.swapit.common.exception.CustomException;
-import com.example.swapit.common.exception.ErrorCode;
 import com.example.swapit.config.security.jwt.JwtProvider;
-import com.example.swapit.domain.Users;
 import com.example.swapit.repository.UsersRepository;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -23,7 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 @RequiredArgsConstructor
 public class JwtHandshakeHandler extends DefaultHandshakeHandler {
-	
+
 	private final JwtProvider jwtProvider;
 	private final UsersRepository usersRepository;
 
@@ -39,13 +36,9 @@ public class JwtHandshakeHandler extends DefaultHandshakeHandler {
 			String token = authHeader.substring(7);
 
 			if (jwtProvider.validateToken(token)) {
-				String email = jwtProvider.getEmailFromToken(token);
-				Users user = usersRepository.findByEmail(email)
-					.orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
-
-				String userIdStr = user.getUsersId().toString();
-				log.info("[Handshake] 유저 인증 성공: userId={}", userIdStr);
-				return new StompPrincipal(userIdStr); // SimpUser.getName()이 이 값이 됨
+				String userId = jwtProvider.getIdFromToken(token);
+				log.info("[Handshake] 유저 인증 성공: userId={}", userId);
+				return new StompPrincipal(userId); // SimpUser.getName()이 이 값이 됨
 			} else {
 				log.warn("[Handshake] JWT 유효성 실패");
 			}

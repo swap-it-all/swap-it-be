@@ -65,17 +65,17 @@ public class JwtProvider implements AuthenticationProvider {
 			throw new BadCredentialsException("Invalid token");
 		}
 		// 토큰에서 사용자 정보 추출 및 인증 객체 반환
-		String email = getEmailFromToken(token);
-		return new JwtAuthenticationToken(email, token);
+		String userId = getIdFromToken(token);
+		return new JwtAuthenticationToken(token, userId);
 	}
 
 	/**
 	 * Access Token, Refresh Token 생성
-	 * @param email
+	 * @param userId
 	 * @return
 	 */
-	public TokenDTO createToken(String email) {
-		Claims claims = Jwts.claims().setSubject(email);
+	public TokenDTO createToken(String userId) {
+		Claims claims = Jwts.claims().setSubject(userId);
 		Date now = new Date();
 
 		Key accessKey = Keys.hmacShaKeyFor(ACCESS_SECRET_KEY.getBytes(StandardCharsets.UTF_8));
@@ -95,7 +95,7 @@ public class JwtProvider implements AuthenticationProvider {
 			.signWith(refreshKey, SignatureAlgorithm.HS256)
 			.compact();
 
-		return TokenDTO.builder().accessToken(accessToken).refreshToken(refreshToken).key(email).build();
+		return TokenDTO.builder().accessToken(accessToken).refreshToken(refreshToken).key(userId).build();
 	}
 
 	/**
@@ -132,7 +132,7 @@ public class JwtProvider implements AuthenticationProvider {
 	 * @param token
 	 * @return
 	 */
-	public String getEmailFromToken(String token) {
+	public String getIdFromToken(String token) {
 		Claims claims = Jwts.parserBuilder()
 			.setSigningKey(ACCESS_SECRET_KEY.getBytes(StandardCharsets.UTF_8))
 			.build()
@@ -141,7 +141,7 @@ public class JwtProvider implements AuthenticationProvider {
 		return claims.getSubject();
 	}
 
-	public String getEmailFromRefreshToken(String token) {
+	public String getIdFromRefreshToken(String token) {
 		try {
 			Claims claims = Jwts.parserBuilder()
 				.setSigningKey(REFRESH_SECRET_KEY.getBytes(StandardCharsets.UTF_8))

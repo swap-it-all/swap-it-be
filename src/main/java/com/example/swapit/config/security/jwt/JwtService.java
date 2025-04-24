@@ -19,7 +19,7 @@ public class JwtService {
 	private final TokensRepository repository;
 
 	public void saveRefreshToken(Users user, String refreshToken) {
-		Optional<Tokens> existingTokenOpt = repository.findByUserEmail(user.getEmail());
+		Optional<Tokens> existingTokenOpt = repository.findByUserUsersId(user.getUsersId());
 
 		Timestamp expiresAt = Timestamp.from(Instant.now().plusSeconds(60 * 60 * 24 * 14));
 
@@ -34,13 +34,13 @@ public class JwtService {
 	}
 
 	public void updateRefreshToken(Users user, String newRefreshToken) {
-		repository.findByUserEmail(user.getEmail())
+		repository.findByUserUsersId(user.getUsersId())
 			.ifPresent(repository::delete);
 		saveRefreshToken(user, newRefreshToken);
 	}
 
-	public boolean validateRefreshToken(String email, String refreshToken) {
-		return repository.findByUserEmail(email)
+	public boolean validateRefreshToken(String userId, String refreshToken) {
+		return repository.findByUserUsersId(Long.valueOf(userId))
 			.filter(token -> token.getRefreshToken().equals(refreshToken))
 			.isPresent();
 	}
