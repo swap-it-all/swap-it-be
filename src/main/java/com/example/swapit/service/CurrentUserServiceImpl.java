@@ -36,8 +36,8 @@ public class CurrentUserServiceImpl implements CurrentUserService {
 		Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
 		if (principal instanceof UserDetails) {
-			String email = ((UserDetails)principal).getUsername();
-			return usersRepository.findByEmail(email); // Optional 반환
+			String userId = ((UserDetails)principal).getUsername();
+			return usersRepository.findById(Long.valueOf(userId)); // Optional 반환
 		}
 		return Optional.empty(); // 인증되지 않은 경우 빈 Optional 반환
 	}
