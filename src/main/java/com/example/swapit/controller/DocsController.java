@@ -21,4 +21,9 @@ public class DocsController {
 		model.addAttribute("cloudfrontBaseUrl", cdnUrl + "docs/withdraw/");
 		return "docs/process/withdrawal-process";
 	}
+
+	@GetMapping("/docs/kids-policy")
+	public String kidsPolicy() {
+		return "docs/policy/kids-policy";
+	}
 }
