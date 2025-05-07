@@ -1,10 +1,12 @@
 package com.example.swapit.domain.dto.chat;
 
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-@RequiredArgsConstructor
-@Getter
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class ReadReceiptRequestDto {
 	private Long lastReadChatId;
 }
