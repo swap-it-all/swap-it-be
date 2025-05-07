@@ -4,6 +4,7 @@ import java.security.Principal;
 
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.RestController;
@@ -45,12 +46,14 @@ public class ChatWebSocketController {
 	}
 
 	@MessageMapping("/chat/read/{chatroomId}")
-	public void updateReadReceipt(@DestinationVariable Long chatroomId, ReadReceiptRequestDto receipt,
+	public void updateReadReceipt(@DestinationVariable Long chatroomId, @Payload ReadReceiptRequestDto receipt,
 		Principal principal) {
 		if (principal == null) {
 			log.error("[ERROR] WebSocket 읽음 이벤트 처리 실패: Principal이 null입니다.");
 			return;
 		}
+
+		log.debug("[WS 마지막메세지 id 저장] chatroomId={}, payload={}", chatroomId, receipt);
 
 		Long userId = Long.parseLong(principal.getName());
 		chatService.updateReadReceipt(chatroomId, userId, receipt.getLastReadChatId());
