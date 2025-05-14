@@ -77,4 +77,9 @@ public interface TradesRepository extends JpaRepository<Trades, Long>, TradeQuer
 		   + "WHERE t.targetGoods = :target AND t.requestedGoods = :request AND t.status = 'INPROGRESS'")
 	boolean existsInProgressTrade(@Param("target") Goods target, @Param("request") Goods request);
 
+	@Query("""
+		SELECT CASE WHEN COUNT(t) > 0 THEN true ELSE false END FROM Trades t
+		WHERE t.status = 'INPROGRESS' AND (t.requestedGoods.user = :users OR t.targetGoods.user = :users)
+		""")
+	boolean existsInProgressTradeByUser(@Param("users") Users users);
 }

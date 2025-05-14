@@ -573,7 +573,7 @@ public class AuthServiceTest {
 		String reason = "테스트 탈퇴 사유";
 
 		// userWithdraw() 메서드 실행 (내부에서 S3 삭제 메서드도 호출됨)
-		authService.userWithdraw(reason);
+		authService.userWithdraw(reason, testUser);
 
 		// FCM 토큰, 리프레시 토큰, 알림 삭제 검증
 		verify(fcmTokenRepository).deleteByUser(testUser);

@@ -59,6 +59,7 @@ public enum ErrorCode {
 	GET_USER_INFO_FAIL(HttpStatus.BAD_REQUEST, "사용자 정보 조회에 실패했습니다."),
 	LOGIN_FAIL(HttpStatus.UNAUTHORIZED, "로그인에 실패했습니다."),
 	SOCIAL_UNLINK_FAILED(HttpStatus.BAD_REQUEST, "소셜 연결 해제에 실패했습니다."),
+	EXIST_INPROGRESS_TRADE(HttpStatus.BAD_REQUEST, "거래중인 스왑이 있어 회원 탈퇴에 실패했습니다."),
 
 	// trades error
 	TRADES_NOT_FOUND(HttpStatus.NOT_FOUND, "거래를 찾을 수 없습니다."),
