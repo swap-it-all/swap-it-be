@@ -216,8 +216,32 @@ public class AuthServiceImpl implements AuthService {
 	}
 
 	@Override
-	@Transactional
 	public void withdrawGoogleUser(String googleToken, String reason) {
+		Users user = currentUserService.getCurrentUser();
+
+		// 거래중인 스왑 있으면 탈퇴 불가능 처리
+		if (tradesRepository.existsInProgressTradeByUser(user)) {
+			throw new CustomException(ErrorCode.EXIST_INPROGRESS_TRADE);
+		}
+
+		callGoogleRevoke(googleToken);
+		userWithdraw(reason, user);
+	}
+
+	@Override
+	public void withdrawKakaoUser(String kakaoToken, String reason) {
+		Users user = currentUserService.getCurrentUser();
+
+		// 거래중인 스왑 있으면 탈퇴 불가능 처리
+		if (tradesRepository.existsInProgressTradeByUser(user)) {
+			throw new CustomException(ErrorCode.EXIST_INPROGRESS_TRADE);
+		}
+
+		callKakaoRevoke(kakaoToken);
+		userWithdraw(reason, user);
+	}
+
+	public void callGoogleRevoke(String googleToken) {
 		RestTemplate restTemplate = new RestTemplate();
 		String revokeUrl = "https://oauth2.googleapis.com/revoke?token=" + googleToken;
 
@@ -229,12 +253,9 @@ public class AuthServiceImpl implements AuthService {
 		}
 
 		log.info("구글 연결 해제 성공");
-		userWithdraw(reason);
 	}
 
-	@Override
-	@Transactional
-	public void withdrawKakaoUser(String kakaoToken, String reason) {
+	public void callKakaoRevoke(String kakaoToken) {
 		RestTemplate restTemplate = new RestTemplate();
 		HttpHeaders headers = new HttpHeaders();
 		headers.setBearerAuth(kakaoToken);
@@ -249,13 +270,10 @@ public class AuthServiceImpl implements AuthService {
 		}
 
 		log.info("카카오 연결 해제 성공");
-		userWithdraw(reason);
 	}
 
 	@Transactional
-	public void userWithdraw(String reason) {
-		Users user = currentUserService.getCurrentUser();
-
+	public void userWithdraw(String reason, Users user) {
 		// FCM 토큰, 리프레시 토큰, 알림
 		fcmTokenRepository.deleteByUser(user);
 		tokensRepository.deleteByUser(user);
