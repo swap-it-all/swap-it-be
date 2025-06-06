@@ -16,6 +16,7 @@ import com.example.swapit.domain.dto.chat.ChatStompRequestDto;
 import com.example.swapit.domain.dto.chat.ChatStompResponseDto;
 import com.example.swapit.domain.dto.chat.ReadReceiptRequestDto;
 import com.example.swapit.service.chat.ChatService;
+import com.example.swapit.service.chat.StompSubscriptionService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 public class ChatWebSocketController {
 	private final SimpMessagingTemplate template;
 	private final ChatService chatService;
+	private final StompSubscriptionService subscriptionService;
 
 	@MessageMapping("/chat/{chatroomId}")
 	@SendTo("/topic/chat/{chatroomId}")
@@ -57,5 +59,14 @@ public class ChatWebSocketController {
 
 		Long userId = Long.parseLong(principal.getName());
 		chatService.updateReadReceipt(chatroomId, userId, receipt.getLastReadChatId());
+	}
+
+	@MessageMapping("/chat/unsubscribe/{chatroomId}")
+	public void unsubscribe(@DestinationVariable Long chatroomId, Principal principal) {
+		Long userId = Long.parseLong(principal.getName());
+		String dest = "/chat/" + chatroomId;
+
+		subscriptionService.unsubscribe(userId, dest);
+		log.debug("[UNSUBSCRIBE] 유저id={}, dest={}", userId, dest);
 	}
 }
