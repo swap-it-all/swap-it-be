@@ -9,6 +9,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.MessageHeaders;
+import org.springframework.messaging.simp.SimpAttributesContextHolder;
 import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
@@ -19,7 +20,6 @@ import com.example.swapit.common.exception.ErrorCode;
 import com.example.swapit.config.security.jwt.JwtProvider;
 import com.example.swapit.domain.Users;
 import com.example.swapit.repository.UsersRepository;
-import com.example.swapit.service.chat.StompSubscriptionService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,7 +31,6 @@ public class StompHandler implements ChannelInterceptor {
 
 	private final JwtProvider jwtProvider;
 	private final UsersRepository usersRepository;
-	private final StompSubscriptionService subscriptionService;
 
 	@Override
 	public Message<?> preSend(Message<?> message, MessageChannel channel) {
@@ -66,12 +65,11 @@ public class StompHandler implements ChannelInterceptor {
 	}
 
 	private void handleSubscribe(StompHeaderAccessor accessor) {
-		log.debug("subscribe 추적");
 		setPrincipalFromSession(accessor);
 		String dest = normalizeDestination(accessor.getDestination());
 		Long userId = Long.parseLong(accessor.getUser().getName());
 
-		subscriptionService.subscribe(userId, dest);
+		accessor.getSessionAttributes().put("chatSub", dest);
 
 		log.debug("[SUBSCRIBE] 유저id={}, 세션={}, dest={}", userId,
 			accessor.getSessionId(), dest);
@@ -79,10 +77,9 @@ public class StompHandler implements ChannelInterceptor {
 
 	private Message<?> handleSend(Message<?> message, StompHeaderAccessor accessor) {
 		setPrincipalFromSession(accessor);
-		Long userId = Long.parseLong(accessor.getUser().getName());
 		String dest = normalizeDestination(accessor.getDestination());
 
-		if (!isAllowedToSend(userId, dest)) {
+		if (!isAllowedToSend(dest)) {
 			String payloadStr = extractPayloadString(message);
 
 			log.warn("[SEND 차단] 유저id={}, 세션={}, dest={}, payload={} → 구독되지 않은 대상",
@@ -98,12 +95,11 @@ public class StompHandler implements ChannelInterceptor {
 		return MessageBuilder.createMessage(message.getPayload(), new MessageHeaders(newHeaders));
 	}
 
-	private boolean isAllowedToSend(Long userId, String destination) {
-		// 예외 목적지 허용
-		if (destination.startsWith("/chat/read/") || destination.startsWith("/chat/unsubscribe/")) {
-			return true;
-		}
-		return subscriptionService.isSubscribed(userId, destination);
+	private boolean isAllowedToSend(String destination) {
+		String currentSub = (String)SimpAttributesContextHolder.currentAttributes().getAttribute("chatSub");
+		return destination.startsWith("/chat/read/")
+			|| destination.startsWith("/chat/unsubscribe/")
+			|| destination.equals(currentSub);
 	}
 
 	private String extractPayloadString(Message<?> message) {
