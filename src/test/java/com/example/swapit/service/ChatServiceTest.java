@@ -42,6 +42,7 @@ import com.example.swapit.repository.GoodsImagesRepository;
 import com.example.swapit.repository.UsersRepository;
 import com.example.swapit.repository.good.GoodsRepository;
 import com.example.swapit.repository.trade.TradesRepository;
+import com.example.swapit.service.chat.ChatServiceImpl;
 import com.example.swapit.service.notification.NotificationEventPublisher;
 
 @ExtendWith(MockitoExtension.class)

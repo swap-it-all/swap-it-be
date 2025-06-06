@@ -29,7 +29,7 @@ import com.example.swapit.domain.dto.chat.ChatRoomAddRequestFromTradeDto;
 import com.example.swapit.domain.dto.chat.ChatRoomInfoDto;
 import com.example.swapit.domain.dto.chat.ChatRoomResponseDto;
 import com.example.swapit.domain.dto.good.TradeInfoDto;
-import com.example.swapit.service.ChatServiceImpl;
+import com.example.swapit.service.chat.ChatServiceImpl;
 
 public class ChatControllerDocsTest extends RestDocsTest {
 	private final ChatServiceImpl chatService = mock(ChatServiceImpl.class);

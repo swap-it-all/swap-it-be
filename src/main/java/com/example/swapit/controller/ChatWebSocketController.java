@@ -15,7 +15,7 @@ import com.example.swapit.config.websocket.StompPrincipal;
 import com.example.swapit.domain.dto.chat.ChatStompRequestDto;
 import com.example.swapit.domain.dto.chat.ChatStompResponseDto;
 import com.example.swapit.domain.dto.chat.ReadReceiptRequestDto;
-import com.example.swapit.service.ChatService;
+import com.example.swapit.service.chat.ChatService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

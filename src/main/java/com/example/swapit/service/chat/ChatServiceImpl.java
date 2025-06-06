@@ -1,4 +1,4 @@
-package com.example.swapit.service;
+package com.example.swapit.service.chat;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -35,6 +35,7 @@ import com.example.swapit.repository.GoodsImagesRepository;
 import com.example.swapit.repository.UsersRepository;
 import com.example.swapit.repository.good.GoodsRepository;
 import com.example.swapit.repository.trade.TradesRepository;
+import com.example.swapit.service.CurrentUserService;
 import com.example.swapit.service.notification.NotificationEventPublisher;
 
 import lombok.RequiredArgsConstructor;

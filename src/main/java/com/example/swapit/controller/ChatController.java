@@ -15,7 +15,7 @@ import com.example.swapit.domain.dto.chat.ChatRoomAddRequestFromGoodDto;
 import com.example.swapit.domain.dto.chat.ChatRoomAddRequestFromTradeDto;
 import com.example.swapit.domain.dto.chat.ChatRoomInfoDto;
 import com.example.swapit.domain.dto.chat.ChatRoomListResponseDto;
-import com.example.swapit.service.ChatService;
+import com.example.swapit.service.chat.ChatService;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
