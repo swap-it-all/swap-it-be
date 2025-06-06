@@ -3,8 +3,6 @@ package com.example.swapit.config.websocket;
 import java.security.Principal;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
@@ -21,6 +19,7 @@ import com.example.swapit.common.exception.ErrorCode;
 import com.example.swapit.config.security.jwt.JwtProvider;
 import com.example.swapit.domain.Users;
 import com.example.swapit.repository.UsersRepository;
+import com.example.swapit.service.chat.StompSubscriptionService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,7 +31,7 @@ public class StompHandler implements ChannelInterceptor {
 
 	private final JwtProvider jwtProvider;
 	private final UsersRepository usersRepository;
-	private static final String SUBSCRIBED_SET_KEY = "subscribedSet";
+	private final StompSubscriptionService subscriptionService;
 
 	@Override
 	public Message<?> preSend(Message<?> message, MessageChannel channel) {
@@ -49,7 +48,6 @@ public class StompHandler implements ChannelInterceptor {
 		switch (command) {
 			case CONNECT -> handleConnect(accessor, token);
 			case SUBSCRIBE -> handleSubscribe(accessor);
-			case UNSUBSCRIBE -> handleUnsubscribe(accessor);
 			case SEND -> {
 				return handleSend(message, accessor);
 			}
@@ -58,59 +56,34 @@ public class StompHandler implements ChannelInterceptor {
 	}
 
 	private void handleConnect(StompHeaderAccessor accessor, String token) {
-		String onlyToken = token.replace("Bearer ", "");
+		String onlyToken = token.replaceFirst("Bearer ", "");
 		validateToken(onlyToken);
 		Users user = usersRepository.findById(Long.valueOf(jwtProvider.getIdFromToken(onlyToken)))
 			.orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 		setSessionFromPrincipal(accessor, user.getUsersId());
 
-		// 세션 속성에 빈 구독 set 추가 (동시성 안전) : 순서 상관없을 것 같아서 일단 set으로 설정
-		accessor.getSessionAttributes().put(SUBSCRIBED_SET_KEY, ConcurrentHashMap.newKeySet());
-
 		log.debug("[CONNECT] 유저id={}, 세션={}, token={}", user.getUsersId(), accessor.getSessionId(), token);
 	}
 
 	private void handleSubscribe(StompHeaderAccessor accessor) {
+		log.debug("subscribe 추적");
 		setPrincipalFromSession(accessor);
-		String dest = accessor.getDestination();
+		String dest = normalizeDestination(accessor.getDestination());
+		Long userId = Long.parseLong(accessor.getUser().getName());
 
-		Set<String> subscribedList = getOrInitSubscribedSet(accessor);
-		if (!subscribedList.contains(dest)) {
-			subscribedList.add(dest);
-		}
+		subscriptionService.subscribe(userId, dest);
 
-		log.debug("[SUBSCRIBE] 유저id={}, 세션={}, dest={}", accessor.getUser().getName(),
-			accessor.getSessionId(), dest);
-	}
-
-	private void handleUnsubscribe(StompHeaderAccessor accessor) {
-		setPrincipalFromSession(accessor);
-		String dest = accessor.getDestination();
-
-		Set<String> subscribedList = getOrInitSubscribedSet(accessor);
-		subscribedList.remove(dest);
-
-		log.debug("[UNSUBSCRIBE] 유저id={}, 세션={}, dest={}", accessor.getUser().getName(),
+		log.debug("[SUBSCRIBE] 유저id={}, 세션={}, dest={}", userId,
 			accessor.getSessionId(), dest);
 	}
 
 	private Message<?> handleSend(Message<?> message, StompHeaderAccessor accessor) {
 		setPrincipalFromSession(accessor);
-		String dest = accessor.getDestination();
+		Long userId = Long.parseLong(accessor.getUser().getName());
+		String dest = normalizeDestination(accessor.getDestination());
 
-		// /app -> /topic 변환
-		String subscribeDest = dest.replaceFirst("^/app", "/topic");
-
-		Set<String> subscribedList = getOrInitSubscribedSet(accessor);
-		if (!subscribeDest.startsWith("/topic/chat/read/") && !subscribedList.contains(subscribeDest)) {
-			// payload 변환
-			Object payload = message.getPayload();
-			String payloadStr = null;
-			if (payload instanceof byte[] byteArray) {
-				payloadStr = new String(byteArray, java.nio.charset.StandardCharsets.UTF_8);
-			} else {
-				payloadStr = payload.toString();
-			}
+		if (!isAllowedToSend(userId, dest)) {
+			String payloadStr = extractPayloadString(message);
 
 			log.warn("[SEND 차단] 유저id={}, 세션={}, dest={}, payload={} → 구독되지 않은 대상",
 				accessor.getUser().getName(), accessor.getSessionId(), dest, payloadStr);
@@ -125,10 +98,21 @@ public class StompHandler implements ChannelInterceptor {
 		return MessageBuilder.createMessage(message.getPayload(), new MessageHeaders(newHeaders));
 	}
 
-	@SuppressWarnings("unchecked")
-	private Set<String> getOrInitSubscribedSet(StompHeaderAccessor accessor) {
-		Map<String, Object> session = accessor.getSessionAttributes();
-		return (Set<String>)session.computeIfAbsent(SUBSCRIBED_SET_KEY, k -> ConcurrentHashMap.newKeySet());
+	private boolean isAllowedToSend(Long userId, String destination) {
+		// 예외 목적지 허용
+		if (destination.startsWith("/chat/read/") || destination.startsWith("/chat/unsubscribe/")) {
+			return true;
+		}
+		return subscriptionService.isSubscribed(userId, destination);
+	}
+
+	private String extractPayloadString(Message<?> message) {
+		Object payload = message.getPayload();
+		if (payload instanceof byte[] byteArray) {
+			return new String(byteArray, java.nio.charset.StandardCharsets.UTF_8);
+		} else {
+			return payload.toString();
+		}
 	}
 
 	private void validateToken(String token) {
@@ -136,6 +120,12 @@ public class StompHandler implements ChannelInterceptor {
 			log.error("[CONNECT 오류] JWT 검증 실패");
 			throw new CustomException(ErrorCode.VALIDATION_FAIL);
 		}
+	}
+
+	private String normalizeDestination(String destination) {
+		if (destination == null || destination.trim().isEmpty())
+			return null;
+		return destination.replaceFirst("^/app", "").replaceFirst("^/topic", "");
 	}
 
 	private void setSessionFromPrincipal(StompHeaderAccessor accessor, Long userId) {

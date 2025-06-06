@@ -1,8 +1,8 @@
 package com.example.swapit.controller;
 
 import static org.hamcrest.Matchers.*;
-import static org.mockito.BDDMockito.any;
 import static org.mockito.BDDMockito.*;
+import static org.mockito.BDDMockito.any;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -27,7 +27,7 @@ import com.example.swapit.domain.dto.chat.ChatRoomAddRequestFromTradeDto;
 import com.example.swapit.domain.dto.chat.ChatRoomInfoDto;
 import com.example.swapit.domain.dto.chat.ChatRoomResponseDto;
 import com.example.swapit.domain.dto.good.TradeInfoDto;
-import com.example.swapit.service.ChatService;
+import com.example.swapit.service.chat.ChatService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @ExtendWith(MockitoExtension.class)

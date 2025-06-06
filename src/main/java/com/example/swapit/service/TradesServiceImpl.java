@@ -34,6 +34,7 @@ import com.example.swapit.repository.ChatRoomsRepository;
 import com.example.swapit.repository.GoodsImagesRepository;
 import com.example.swapit.repository.good.GoodsRepository;
 import com.example.swapit.repository.trade.TradesRepository;
+import com.example.swapit.service.chat.ChatSendService;
 import com.example.swapit.service.notification.NotificationEventPublisher;
 
 import lombok.RequiredArgsConstructor;

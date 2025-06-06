@@ -1,4 +1,4 @@
-package com.example.swapit.service;
+package com.example.swapit.service.chat;
 
 import java.time.LocalDateTime;
 import java.util.List;

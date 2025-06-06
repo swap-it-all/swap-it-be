@@ -1,4 +1,4 @@
-package com.example.swapit.service;
+package com.example.swapit.service.chat;
 
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
@@ -8,6 +8,7 @@ import com.example.swapit.domain.Goods;
 import com.example.swapit.domain.Users;
 import com.example.swapit.domain.dto.chat.ChatStompRequestDto;
 import com.example.swapit.domain.dto.chat.ChatStompResponseDto;
+import com.example.swapit.service.CurrentUserService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
