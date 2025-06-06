@@ -37,7 +37,6 @@ public class JwtHandshakeHandler extends DefaultHandshakeHandler {
 
 			if (jwtProvider.validateToken(token)) {
 				String userId = jwtProvider.getIdFromToken(token);
-				log.info("[Handshake] 유저 인증 성공: userId={}", userId);
 				return new StompPrincipal(userId); // SimpUser.getName()이 이 값이 됨
 			} else {
 				log.warn("[Handshake] JWT 유효성 실패");

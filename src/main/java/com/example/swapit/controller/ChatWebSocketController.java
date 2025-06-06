@@ -6,6 +6,7 @@ import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.handler.annotation.SendTo;
+import org.springframework.messaging.simp.SimpAttributesContextHolder;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -16,7 +17,6 @@ import com.example.swapit.domain.dto.chat.ChatStompRequestDto;
 import com.example.swapit.domain.dto.chat.ChatStompResponseDto;
 import com.example.swapit.domain.dto.chat.ReadReceiptRequestDto;
 import com.example.swapit.service.chat.ChatService;
-import com.example.swapit.service.chat.StompSubscriptionService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,7 +27,6 @@ import lombok.extern.slf4j.Slf4j;
 public class ChatWebSocketController {
 	private final SimpMessagingTemplate template;
 	private final ChatService chatService;
-	private final StompSubscriptionService subscriptionService;
 
 	@MessageMapping("/chat/{chatroomId}")
 	@SendTo("/topic/chat/{chatroomId}")
@@ -39,7 +38,6 @@ public class ChatWebSocketController {
 		}
 
 		if (principal instanceof StompPrincipal stompPrincipal) {
-			log.info("[MESSAGE] Principal 설정 완료: userId = {}", stompPrincipal.getName());
 			Long userId = Long.parseLong(stompPrincipal.getName());
 			return chatService.saveChat(chatroomId, message, userId);
 		} else {
@@ -66,7 +64,8 @@ public class ChatWebSocketController {
 		Long userId = Long.parseLong(principal.getName());
 		String dest = "/chat/" + chatroomId;
 
-		subscriptionService.unsubscribe(userId, dest);
+		// 채팅방 구독 취소
+		SimpAttributesContextHolder.currentAttributes().removeAttribute("chatSub");
 		log.debug("[UNSUBSCRIBE] 유저id={}, dest={}", userId, dest);
 	}
 }
