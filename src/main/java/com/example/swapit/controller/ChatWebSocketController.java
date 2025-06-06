@@ -38,7 +38,6 @@ public class ChatWebSocketController {
 		}
 
 		if (principal instanceof StompPrincipal stompPrincipal) {
-			log.info("[MESSAGE] Principal 설정 완료: userId = {}", stompPrincipal.getName());
 			Long userId = Long.parseLong(stompPrincipal.getName());
 			return chatService.saveChat(chatroomId, message, userId);
 		} else {
