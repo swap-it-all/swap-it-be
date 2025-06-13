@@ -35,3 +35,6 @@ cloud:
 
 firebase:
   config-path: firebase-admin.json
+
+google:
+  web-client-id: ${GOOGLE_WEB_CLIENT_ID}

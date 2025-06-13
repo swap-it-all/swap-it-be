@@ -33,3 +33,6 @@ logging:
   level:
     com.example.swapit: debug
     org.springframework.messaging.simp: debug
+
+google:
+  web-client-id: ${GOOGLE_WEB_CLIENT_ID}
