@@ -257,7 +257,7 @@ public class AuthServiceImpl implements AuthService {
 			throw new CustomException(ErrorCode.EXIST_INPROGRESS_TRADE);
 		}
 
-		callKakaoRevoke(kakaoToken);
+		// callKakaoRevoke(kakaoToken);
 		userWithdraw(reason, user);
 	}
 
