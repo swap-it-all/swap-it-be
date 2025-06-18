@@ -9,11 +9,11 @@ public interface AuthService {
 
 	UserResponseDTO getUserInfo(String token);
 
-	TokenDTO googleLogin(String googleAccessToken);
+	TokenDTO googleLogin(String idTokenString);
 
 	TokenDTO kakaoLogin(String kakaoAccessToken);
 
-	Users getGoogleUserInfo(String accessToken);
+	Users getGoogleUserInfo(String idTokenString);
 
 	Users getKakaoUserInfo(String accessToken);
 

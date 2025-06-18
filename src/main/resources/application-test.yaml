@@ -26,3 +26,6 @@ cloud:
 
     cloudfront:
       url: cloudfront
+
+google:
+  web-client-id: ${GOOGLE_WEB_CLIENT_ID}

@@ -36,6 +36,8 @@ import com.example.swapit.repository.good.GoodsRepository;
 import com.example.swapit.repository.trade.TradesRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -64,6 +66,8 @@ public class AuthServiceImpl implements AuthService {
 
 	private final RestTemplate restTemplate;
 	private final ApplicationEventPublisher applicationEventPublisher;
+
+	private final GoogleIdTokenVerifier verifier;
 
 	private static final String GOOGLE_LOGIN_INFO = "google";
 	private static final String KAKAO_LOGIN_INFO = "kakao";
@@ -121,9 +125,9 @@ public class AuthServiceImpl implements AuthService {
 	}
 
 	@Override
-	public TokenDTO googleLogin(String googleAccessToken) {
+	public TokenDTO googleLogin(String idTokenString) {
 		try {
-			Users user = getGoogleUserInfo(googleAccessToken);
+			Users user = getGoogleUserInfo(idTokenString);
 			TokenDTO jwtToken = jwtProvider.createToken(user.getUsersId().toString());
 			jwtService.saveRefreshToken(user, jwtToken.getRefreshToken());
 			return jwtToken;
@@ -145,19 +149,20 @@ public class AuthServiceImpl implements AuthService {
 	}
 
 	@Override
-	public Users getGoogleUserInfo(String accessToken) {
-		String userInfoUrl = "https://www.googleapis.com/oauth2/v2/userinfo";
-		HttpHeaders headers = new HttpHeaders();
-		headers.add("Authorization", accessToken);
-
+	public Users getGoogleUserInfo(String idTokenString) {
 		try {
-			ResponseEntity<String> response = restTemplate.exchange(userInfoUrl, HttpMethod.GET,
-				new HttpEntity<>(headers), String.class);
+			String token = idTokenString.startsWith("Bearer ")
+				? idTokenString.substring(7)
+				: idTokenString;
 
-			JsonNode responseJson = new ObjectMapper().readTree(response.getBody());
-			String email = responseJson.get("email").asText();
-			String nickname = responseJson.has("name") ? responseJson.get("name").asText() : "Google User";
-			String profileImageUrl = responseJson.has("picture") ? responseJson.get("picture").asText() : "";
+			GoogleIdToken idToken = verifier.verify(token);
+			if (idToken == null) {
+				throw new CustomException(ErrorCode.GET_USER_INFO_FAIL);
+			}
+			GoogleIdToken.Payload payload = idToken.getPayload();
+			String email = payload.getEmail();
+			String nickname = (String)payload.get("name");
+			String profileImageUrl = (String)payload.get("picture");
 			String role = "ROLE_USER";
 
 			return usersRepository.findByEmail(email)
@@ -224,7 +229,7 @@ public class AuthServiceImpl implements AuthService {
 			throw new CustomException(ErrorCode.EXIST_INPROGRESS_TRADE);
 		}
 
-		callGoogleRevoke(googleToken);
+		// callGoogleRevoke(googleToken);
 		userWithdraw(reason, user);
 	}
 
