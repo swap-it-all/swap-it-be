@@ -1,9 +1,7 @@
 package com.example.swapit.service;
 
-import java.util.Collections;
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -40,8 +38,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
-import com.google.api.client.http.javanet.NetHttpTransport;
-import com.google.api.client.json.gson.GsonFactory;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -71,11 +67,10 @@ public class AuthServiceImpl implements AuthService {
 	private final RestTemplate restTemplate;
 	private final ApplicationEventPublisher applicationEventPublisher;
 
+	private final GoogleIdTokenVerifier verifier;
+
 	private static final String GOOGLE_LOGIN_INFO = "google";
 	private static final String KAKAO_LOGIN_INFO = "kakao";
-
-	@Value("${google.web-client-id}")
-	private static String GoogleWebClientId;
 
 	@Override
 	public synchronized TokenDTO refresh(String token) {
@@ -156,21 +151,11 @@ public class AuthServiceImpl implements AuthService {
 	@Override
 	public Users getGoogleUserInfo(String idTokenString) {
 		try {
-			GoogleIdTokenVerifier verifier =
-				new GoogleIdTokenVerifier.Builder(
-					new NetHttpTransport(),
-					GsonFactory.getDefaultInstance()
-				)
-					.setAudience(Collections.singletonList(
-						GoogleWebClientId
-					))
-					.build();
-
-			idTokenString = idTokenString.startsWith("Bearer ")
+			String token = idTokenString.startsWith("Bearer ")
 				? idTokenString.substring(7)
 				: idTokenString;
 
-			GoogleIdToken idToken = verifier.verify(idTokenString);
+			GoogleIdToken idToken = verifier.verify(token);
 			if (idToken == null) {
 				throw new CustomException(ErrorCode.GET_USER_INFO_FAIL);
 			}
