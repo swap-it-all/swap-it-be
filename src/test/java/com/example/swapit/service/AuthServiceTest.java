@@ -42,6 +42,8 @@ import com.example.swapit.repository.WithdrawReasonsRepository;
 import com.example.swapit.repository.good.GoodsRepository;
 import com.example.swapit.repository.trade.TradesRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 
 public class AuthServiceTest {
 
@@ -99,6 +101,9 @@ public class AuthServiceTest {
 
 	@Mock
 	private AwsS3Service awsS3Service;
+
+	@Mock
+	private GoogleIdTokenVerifier verifier;
 
 	private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -321,24 +326,28 @@ public class AuthServiceTest {
 	@DisplayName("Google 사용자 정보 조회 - 신규 사용자 저장")
 	void getGoogleUserInfoNewUser() throws Exception {
 		// Given
-		String accessToken = "Bearer test_google_token";
-		String googleUserInfoUrl = "https://www.googleapis.com/oauth2/v2/userinfo";
+		String idTokenString = "dummy-id-token";
 		String email = "test@example.com";
 		String nickname = "Test User";
 		String profileImageUrl = "https://test.com/profile.jpg";
 		String role = "ROLE_USER";
 
-		String responseJson = objectMapper.writeValueAsString(
-			Map.of("email", email, "name", nickname, "picture", profileImageUrl));
-		ResponseEntity<String> responseEntity = new ResponseEntity<>(responseJson, HttpStatus.OK);
+		GoogleIdToken.Payload payload = new GoogleIdToken.Payload();
+		payload.setEmail(email);
+		payload.set("name", nickname);
+		payload.set("picture", profileImageUrl);
+		payload.setEmailVerified(true);
 
-		when(restTemplate.exchange(eq(googleUserInfoUrl), eq(HttpMethod.GET), any(HttpEntity.class),
-			eq(String.class))).thenReturn(responseEntity);
+		GoogleIdToken idToken = mock(GoogleIdToken.class);
+		when(idToken.getPayload()).thenReturn(payload);
+
+		when(verifier.verify(idTokenString)).thenReturn(idToken);
+
 		when(usersRepository.findByEmail(email)).thenReturn(Optional.empty());
-		when(usersRepository.save(any(Users.class))).thenAnswer(invocation -> invocation.getArgument(0));
+		when(usersRepository.save(any(Users.class))).thenAnswer(inv -> inv.getArgument(0));
 
 		// When
-		Users user = authService.getGoogleUserInfo(accessToken);
+		Users user = authService.getGoogleUserInfo(idTokenString);
 
 		// Then
 		assertNotNull(user);
@@ -356,8 +365,7 @@ public class AuthServiceTest {
 	@DisplayName("Google 사용자 정보 조회 - 기존 사용자 반환")
 	void getGoogleUserInfoExistingUser() throws Exception {
 		// Given
-		String accessToken = "Bearer test_google_token";
-		String googleUserInfoUrl = "https://www.googleapis.com/oauth2/v2/userinfo";
+		String idTokenString = "dummy-id-token";
 		String email = "existing@example.com";
 
 		Users existingUser = Users.builder()
@@ -368,15 +376,18 @@ public class AuthServiceTest {
 			.role("ROLE_USER")
 			.build();
 
-		String responseJson = objectMapper.writeValueAsString(Map.of("email", email));
-		ResponseEntity<String> responseEntity = new ResponseEntity<>(responseJson, HttpStatus.OK);
+		GoogleIdToken.Payload payload = new GoogleIdToken.Payload();
+		payload.setEmail(email);
+		payload.setEmailVerified(true);
 
-		when(restTemplate.exchange(eq(googleUserInfoUrl), eq(HttpMethod.GET), any(HttpEntity.class),
-			eq(String.class))).thenReturn(responseEntity);
+		GoogleIdToken idToken = mock(GoogleIdToken.class);
+		when(idToken.getPayload()).thenReturn(payload);
+
+		when(verifier.verify(idTokenString)).thenReturn(idToken);
 		when(usersRepository.findByEmail(email)).thenReturn(Optional.of(existingUser));
 
 		// When
-		Users user = authService.getGoogleUserInfo(accessToken);
+		Users user = authService.getGoogleUserInfo(idTokenString);
 
 		// Then
 		assertNotNull(user);
@@ -477,30 +488,41 @@ public class AuthServiceTest {
 	}
 
 	@Test
-	@DisplayName("Google 사용자 정보 조회 - 기존 사용자 반환")
-	void getGoogleUserInfo_ExistingUser() throws Exception {
+	@DisplayName("Kakao 사용자 정보 조회 - 기존 사용자 반환")
+	void getKakaoUserInfo_ExistingUser() throws Exception {
 		// Given
-		String accessToken = "Bearer test_google_token";
-		String googleUserInfoUrl = "https://www.googleapis.com/oauth2/v2/userinfo";
-		String email = "existing@example.com";
+		String accessToken = "Bearer test_kakao_token";
+		String kakaoUserInfoUrl = "https://kapi.kakao.com/v2/user/me";
+		String email = "test@example.com";
+		String nickname = "Test User";
+		String profileImageUrl = "https://test.com/profile.jpg";
+		String role = "ROLE_USER";
 
 		Users existingUser = Users.builder()
 			.email(email)
-			.nickname("Existing User")
-			.profileImageUrl("https://test.com/existing.jpg")
-			.loginInfo("google")
-			.role("ROLE_USER")
+			.nickname(nickname)
+			.profileImageUrl(profileImageUrl)
+			.loginInfo("kakao")
+			.role(role)
 			.build();
 
-		String responseJson = objectMapper.writeValueAsString(Map.of("email", email));
+		String responseJson = objectMapper.writeValueAsString(
+			Map.of(
+				"kakao_account", Map.of("email", email),
+				"properties", Map.of(
+					"nickname", nickname,
+					"profile_image", profileImageUrl
+				)
+			)
+		);
 		ResponseEntity<String> responseEntity = new ResponseEntity<>(responseJson, HttpStatus.OK);
 
-		when(restTemplate.exchange(eq(googleUserInfoUrl), eq(HttpMethod.GET), any(HttpEntity.class),
+		when(restTemplate.exchange(eq(kakaoUserInfoUrl), eq(HttpMethod.GET), any(HttpEntity.class),
 			eq(String.class))).thenReturn(responseEntity);
 		when(usersRepository.findByEmail(email)).thenReturn(Optional.of(existingUser));
 
 		// When
-		Users user = authService.getGoogleUserInfo(accessToken);
+		Users user = authService.getKakaoUserInfo(accessToken);
 
 		// Then
 		assertNotNull(user);
