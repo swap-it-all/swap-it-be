@@ -229,7 +229,7 @@ public class AuthServiceImpl implements AuthService {
 			throw new CustomException(ErrorCode.EXIST_INPROGRESS_TRADE);
 		}
 
-		callGoogleRevoke(googleToken);
+		// callGoogleRevoke(googleToken);
 		userWithdraw(reason, user);
 	}
 
