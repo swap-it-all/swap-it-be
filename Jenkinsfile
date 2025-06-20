@@ -43,7 +43,7 @@ pipeline {
                         export REDIS_HOST=$REDIS_HOST && \
                         export FIREBASE_CONFIG=\'$(echo $FIREBASE_CONFIG_B64 | base64 -d)\' && \
                         export CLOUDFRONT_URL=$CLOUDFRONT_URL && \
-                        export GOOGLE_WEB_CLIENT_ID=GOOGLE_WEB_CLIENT_ID && \
+                        export GOOGLE_WEB_CLIENT_ID=$GOOGLE_WEB_CLIENT_ID && \
                         bash ./deploy.sh"
                     '''
                 }
