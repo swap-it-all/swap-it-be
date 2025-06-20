@@ -221,6 +221,7 @@ public class AuthServiceImpl implements AuthService {
 	}
 
 	@Override
+	@Transactional
 	public void withdrawGoogleUser(String googleToken, String reason) {
 		Users user = currentUserService.getCurrentUser();
 
@@ -234,6 +235,7 @@ public class AuthServiceImpl implements AuthService {
 	}
 
 	@Override
+	@Transactional
 	public void withdrawKakaoUser(String kakaoToken, String reason) {
 		Users user = currentUserService.getCurrentUser();
 
