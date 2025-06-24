@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import com.example.swapit.common.exception.CustomException;
@@ -263,20 +264,26 @@ public class AuthServiceImpl implements AuthService {
 	}
 
 	public void callKakaoRevoke(String kakaoToken) {
-		RestTemplate restTemplate = new RestTemplate();
-		HttpHeaders headers = new HttpHeaders();
-		headers.setBearerAuth(kakaoToken);
-		HttpEntity<String> entity = new HttpEntity<>(headers);
+		try {
+			RestTemplate restTemplate = new RestTemplate();
+			HttpHeaders headers = new HttpHeaders();
+			headers.setBearerAuth(kakaoToken);
+			headers.add("Content-type", "application/x-www-form-urlencoded;charset=utf-8");
+			HttpEntity<String> entity = new HttpEntity<>(headers);
 
-		String unlinkUrl = "https://kapi.kakao.com/v1/user/unlink";
-		ResponseEntity<String> response = restTemplate.exchange(unlinkUrl, HttpMethod.POST, entity, String.class);
+			String unlinkUrl = "https://kapi.kakao.com/v1/user/unlink";
+			ResponseEntity<String> response = restTemplate.exchange(unlinkUrl, HttpMethod.POST, entity, String.class);
 
-		if (response.getStatusCode() != HttpStatus.OK) {
-			log.error("카카오 연결 해제 실패");
+			if (response.getStatusCode() != HttpStatus.OK) {
+				log.error("카카오 연결 해제 실패");
+				throw new CustomException(ErrorCode.SOCIAL_UNLINK_FAILED);
+			}
+
+			log.info("카카오 연결 해제 성공");
+		} catch (HttpClientErrorException.Unauthorized ex) {
+			log.warn("카카오 토큰이 유효하지 않거나 만료되었습니다.", ex);
 			throw new CustomException(ErrorCode.SOCIAL_UNLINK_FAILED);
 		}
-
-		log.info("카카오 연결 해제 성공");
 	}
 
 	@Transactional
@@ -309,8 +316,10 @@ public class AuthServiceImpl implements AuthService {
 		usersRepository.delete(user);
 
 		// DB 트랜잭션 이후 S3 삭제 수행
-		applicationEventPublisher.publishEvent(
-			new UserWithdrawCompletedEvent(this, goodsImagesList, user));
+		if (!goodsImagesList.isEmpty()) {
+			applicationEventPublisher.publishEvent(
+				new UserWithdrawCompletedEvent(this, goodsImagesList, user));
+		}
 	}
 
 	@TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
