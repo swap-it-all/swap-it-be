@@ -17,6 +17,7 @@ import com.example.swapit.common.exception.CustomException;
 import com.example.swapit.common.exception.ErrorCode;
 import com.example.swapit.config.security.jwt.JwtProvider;
 import com.example.swapit.config.security.jwt.JwtService;
+import com.example.swapit.domain.ChatRooms;
 import com.example.swapit.domain.Goods;
 import com.example.swapit.domain.GoodsImages;
 import com.example.swapit.domain.Users;
@@ -244,8 +245,8 @@ public class AuthServiceImpl implements AuthService {
 			throw new CustomException(ErrorCode.EXIST_INPROGRESS_TRADE);
 		}
 
-		callKakaoRevoke(kakaoToken);
 		userWithdraw(reason, user);
+		callKakaoRevoke(kakaoToken);
 	}
 
 	public void callGoogleRevoke(String googleToken) {
@@ -281,36 +282,81 @@ public class AuthServiceImpl implements AuthService {
 
 	@Transactional
 	public void userWithdraw(String reason, Users user) {
-		// FCM 토큰, 리프레시 토큰, 알림
-		fcmTokenRepository.deleteByUser(user);
-		tokensRepository.deleteByUser(user);
-		notificationRepository.deleteAllByUser(user);
+		log.info("[회원탈퇴 시작] 사용자 ID: {}", user.getUsersId());
 
-		// 후기, 채팅 메시지
-		reviewRepository.deleteAllByWriterOrReviewee(user, user);
-		chatsRepository.deleteAllBySender(user);
+		try {
+			// FCM 토큰, 리프레시 토큰, 알림
+			log.info("[회원탈퇴] FCM 토큰 삭제 시작");
+			fcmTokenRepository.deleteByUser(user);
+			log.info("[회원탈퇴] FCM 토큰 삭제 완료");
 
-		// 채팅방
-		chatRoomsRepository.deleteAll(chatRoomsRepository.findMyChatRooms(user.getUsersId()));
+			log.info("[회원탈퇴] 리프레시 토큰 삭제 시작");
+			tokensRepository.deleteByUser(user);
+			log.info("[회원탈퇴] 리프레시 토큰 삭제 완료");
 
-		// 거래
-		tradesRepository.deleteAll(tradesRepository.findAllByUser(user.getUsersId()));
+			log.info("[회원탈퇴] 알림 삭제 시작");
+			notificationRepository.deleteAllByUser(user);
+			log.info("[회원탈퇴] 알림 삭제 완료");
 
-		// 물건 및 물건 사진
-		List<Goods> goodsList = goodsRepository.findByUserOrderByCreatedAtDesc(user);
-		List<GoodsImages> goodsImagesList = goodsImagesRepository.findByGoodIn(goodsList);
-		goodsImagesRepository.deleteAll(goodsImagesList);
-		goodsRepository.deleteAll(goodsList);
+			// 후기, 채팅 메시지
+			log.info("[회원탈퇴] 후기 삭제 시작");
+			reviewRepository.deleteAllByWriterOrReviewee(user, user);
+			log.info("[회원탈퇴] 후기 삭제 완료");
 
-		// 사유 저장
-		withdrawReasonsRepository.save(new WithdrawReasons(reason, user.getUsersId()));
+			log.info("[회원탈퇴] 채팅 메시지 삭제 시작");
+			chatsRepository.deleteAllBySender(user);
+			log.info("[회원탈퇴] 채팅 메시지 삭제 완료");
 
-		// 사용자 삭제
-		usersRepository.delete(user);
+			// 채팅방
+			log.info("[회원탈퇴] 채팅방 조회 시작");
+			List<ChatRooms> myChatRooms = chatRoomsRepository.findMyChatRooms(user.getUsersId());
+			log.info("[회원탈퇴] 채팅방 조회 완료 - 개수: {}", myChatRooms.size());
 
-		// DB 트랜잭션 이후 S3 삭제 수행
-		applicationEventPublisher.publishEvent(
-			new UserWithdrawCompletedEvent(this, goodsImagesList, user));
+			log.info("[회원탈퇴] 채팅방 삭제 시작");
+			chatRoomsRepository.deleteAll(myChatRooms);
+			log.info("[회원탈퇴] 채팅방 삭제 완료");
+
+			// 거래
+			log.info("[회원탈퇴] 거래 삭제 시작");
+			tradesRepository.deleteAll(tradesRepository.findAllByUser(user.getUsersId()));
+			log.info("[회원탈퇴] 거래 삭제 완료");
+
+			// 물건 및 물건 사진
+			log.info("[회원탈퇴] 물건 조회 시작");
+			List<Goods> goodsList = goodsRepository.findByUserOrderByCreatedAtDesc(user);
+			List<GoodsImages> goodsImagesList = goodsImagesRepository.findByGoodIn(goodsList);
+			log.info("[회원탈퇴] 물건 조회 완료 - 물건 개수: {}, 이미지 개수: {}", goodsList.size(), goodsImagesList.size());
+
+			log.info("[회원탈퇴] 물건 이미지 삭제 시작");
+			goodsImagesRepository.deleteAll(goodsImagesList);
+			log.info("[회원탈퇴] 물건 이미지 삭제 완료");
+
+			log.info("[회원탈퇴] 물건 삭제 시작");
+			goodsRepository.deleteAll(goodsList);
+			log.info("[회원탈퇴] 물건 삭제 완료");
+
+			// 사유 저장
+			log.info("[회원탈퇴] 탈퇴 사유 저장 시작");
+			withdrawReasonsRepository.save(new WithdrawReasons(reason, user.getUsersId()));
+			log.info("[회원탈퇴] 탈퇴 사유 저장 완료");
+
+			// 사용자 삭제
+			log.info("[회원탈퇴] 사용자 삭제 시작");
+			usersRepository.delete(user);
+			log.info("[회원탈퇴] 사용자 삭제 완료");
+
+			// DB 트랜잭션 이후 S3 삭제 수행
+			log.info("[회원탈퇴] S3 삭제 이벤트 발행 시작");
+			applicationEventPublisher.publishEvent(
+				new UserWithdrawCompletedEvent(this, goodsImagesList, user));
+			log.info("[회원탈퇴] S3 삭제 이벤트 발행 완료");
+
+		} catch (Exception e) {
+			log.error("[회원탈퇴 실패] 사용자 ID: {}, 오류: {}", user.getUsersId(), e.getMessage(), e);
+			throw e;
+		}
+
+		log.info("[회원탈퇴 완료] 사용자 ID: {}", user.getUsersId());
 	}
 
 	@TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
