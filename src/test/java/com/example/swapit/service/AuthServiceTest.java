@@ -630,10 +630,7 @@ public class AuthServiceTest {
 		verify(usersRepository).delete(testUser);
 
 		// DB 트랜잭션 이후 S3 삭제 수행 검증
-		verify(applicationEventPublisher).publishEvent(argThat(event ->
-			event instanceof UserWithdrawCompletedEvent &&
-			((UserWithdrawCompletedEvent)event).getImages().equals(Collections.emptyList()) &&
-			((UserWithdrawCompletedEvent)event).getUser().equals(testUser)
-		));
+		verify(applicationEventPublisher, never())
+			.publishEvent(any(UserWithdrawCompletedEvent.class));
 	}
 }
