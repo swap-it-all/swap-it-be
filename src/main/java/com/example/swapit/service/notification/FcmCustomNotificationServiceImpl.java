@@ -35,7 +35,7 @@ public class FcmCustomNotificationServiceImpl implements FcmNotificationService 
 		data.put("type", noti.getType().toString());
 		data.put("title", noti.getTitle());
 		data.put("body", noti.getBody());
-		data.put("relatedData", noti.getRelatedData().toString());
+		data.put("relatedData", noti.getRelatedData() != null ? noti.getRelatedData().toString() : "");
 
 		// createdAt은 formatter로 문자형식으로 바꿔서 보냄.
 		DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
