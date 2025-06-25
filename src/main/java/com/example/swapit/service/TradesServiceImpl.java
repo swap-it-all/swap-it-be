@@ -218,7 +218,7 @@ public class TradesServiceImpl implements TradesService {
 		// 거래 상대방에게 알림 전송
 		Long tradingPartnerId = trade.getTradingPartnerId(userId);
 		notificationEventPublisher.publishNotification(
-			tradingPartnerId, NotificationType.COMPLETED, null
+			tradingPartnerId, NotificationType.COMPLETED, trade.getId()
 		);
 	}
 
